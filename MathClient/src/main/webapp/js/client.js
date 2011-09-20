@@ -29,7 +29,10 @@ org.weblogo.selectors = {
     start: ".flc-math-start",
     stop: ".flc-math-stop",
     frameNumber: ".flc-math-frameNumber",
-    frameRate: ".flc-math-frameRate"
+    frameRate: ".flc-math-frameRate",
+    frameSize: ".flc-math-frameSize",
+    dataRate: ".flc-math-dataRate",
+    serverStatus: ".flc-math-serverStatus"
 };
 
 org.weblogo.binder = function(container, selectors) {
@@ -40,6 +43,25 @@ org.weblogo.binder = function(container, selectors) {
     }
 };
 
+org.weblogo.postImage = function(time, dataURL, postURL, that) {
+    var image64 = dataURL.replace(/data:image\/png;base64,/, '');
+    console.log(image64.length);
+    try {
+    var xhr = new XMLHttpRequest();
+        xhr.loadend = function(pe) {
+            that.locate("serverStatus").text(pe);
+        }
+        xhr.open("POST", postURL);
+        xhr.send("Frame time: " + time + "\n"+image64+"\n");
+    }
+    catch(e) {
+      
+    }
+    //var bb = new BlobBuilder();
+    //bb.append(image64);
+    //var blob = bb.getBlob('image/png');
+};
+
 org.weblogo.stub = function(container, options) {
   
     var period = 1500;
@@ -47,40 +69,49 @@ org.weblogo.stub = function(container, options) {
   
     var that = {};
     that.locate = org.weblogo.binder(container, org.weblogo.selectors).locate;
+    that.receiveBlob = function(blob) {
+        that.locate("frameSize").text(blob.size);
+    };
     
     that.draw = function() {
-       var now = Date.now();
-       var phase = (now - that.initTime) / period;
-       var x = radius * Math.cos(phase);
-       var y = radius * Math.sin(phase);
-       var shift = org.weblogo.mult(org.weblogo.colshift, [x, y, 0]);
-       shift = org.weblogo.add(shift, [128, 128, 128]);
-       var colour = "rgb(" + Math.round(shift[0]) + "," + Math.round(shift[1]) + "," + Math.round(shift[2]) + ")";
+        var now = Date.now();
+        var phase = (now - that.initTime) / period;
+        var x = radius * Math.cos(phase);
+        var y = radius * Math.sin(phase);
+        var shift = org.weblogo.mult(org.weblogo.colshift, [x, y, 0]);
+        shift = org.weblogo.add(shift, [128, 128, 128]);
+        var colour = "rgb(" + Math.round(shift[0]) + "," + Math.round(shift[1]) + "," + Math.round(shift[2]) + ")";
+        
+        that.context.fillStyle = colour;
+        that.context.fillRect(0, 0, that.width, that.height);
        
-       that.context.fillStyle = colour;
-       that.context.fillRect(0, 0, that.width, that.height);
-       
-       that.context.fillStyle = "white";
+        that.context.fillStyle = "white";
 
-       that.context.fillText("Frame time: " + (now - that.initTime)/1000 + "s", 0, that.height / 2);
+        that.context.fillText("Frame time: " + (now - that.initTime)/1000 + "s", 0, that.height / 2);
        
-       ++that.frameNo;
-       that.locate("frameNumber").text(that.frameNo);
-       var rate = 1000.0 / (now - that.lastFrame);
-       that.locate("frameRate").text(rate.toFixed(2));
-       that.lastFrame = now;
+        var url = that.element.toDataURL("image/png");
+        org.weblogo.postImage("Frame Time: " + now - that.initTime, url, "server/postreceive", that);
+        
+        that.locate("frameSize").text(url.length);
+        
+        ++that.frameNo;
+        that.locate("frameNumber").text(that.frameNo);
+        var rate = 1000.0 / (now - that.lastFrame);
+        that.locate("frameRate").text(rate.toFixed(2));
+        that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
+        that.lastFrame = now;
     }
     
     that.start = function() {
         that.initTime = Date.now();
         that.lastFrame = that.initTime;
-        var element = that.locate("canvas")[0];
-        that.context = element.getContext('2d');
+        that.element = that.locate("canvas")[0];
+        that.context = that.element.getContext('2d');
         
         that.context.font = "50px Arial";
         
-        that.width = element.width;
-        that.height = element.height;
+        that.width = that.element.width;
+        that.height = that.element.height;
         that.intervalID = window.setInterval(that.draw, 33);
         that.frameNo = 0;
     };
