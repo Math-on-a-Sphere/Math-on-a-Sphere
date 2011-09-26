@@ -33,8 +33,15 @@ org.weblogo.renderingExecutor = function(executor, events, tickInterval) {
     
     that.tick = function() {
         var now = Date.now();
-        var finished = that.execution.toTick(now);
-        events.draw();
+        var finished;
+        try {
+            var finished = that.execution.toTick(now);
+            events.draw();
+        }
+        catch (e) {
+            finished = true;
+            events.error({message: "Error during rendering: " + e});
+        }
         if (finished) {
             that.stop();
         }

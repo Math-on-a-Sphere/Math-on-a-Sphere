@@ -50,7 +50,10 @@ org.weblogo.geom.polar_to_3 = function(theta, phi) {
  * @return [theta, phi]
  */
 org.weblogo.geom.polar_from_3 = function(n) {
-    return [Math.asin(n[2]), Math.atan2(n[0], -n[1])];
+    var z = n[2];
+    // slight numerical error may cause n to become denormalised
+    z = z > 1? 1 : (z < -1? -1 : z);
+    return [Math.asin(z), Math.atan2(n[0], -n[1])];
 };
 
 /** Convert standard spherical polar coordinates to quaternion unit vector
