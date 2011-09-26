@@ -1,19 +1,37 @@
-<html>  
-  <head>  
-    <title>Math On A Sphere - Stub Client</title>
+<!DOCTYPE html      PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+    <title>Math On A Sphere</title>
+    
+    <script type="text/javascript" src="lib/js/jquery.js"></script>
+    <script type="text/javascript" src="lib/js/fluidLite.js"></script>
+    <script type="text/javascript" src="lib/js/jquery.terminal-0.3.6.js"></script>
+        
+    <script type="text/javascript" src="js/geometry.js"></script>
+    <script type="text/javascript" src="js/turtle.js"></script>
+    <script type="text/javascript" src="js/commands.js"></script>
+    <script type="text/javascript" src="js/executor.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
-    <script type="text/javascript" src="js/jquery.js"></script>
+
+    <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
     
     <style type="text/css">  
-      canvas { border: 1px solid black; }  
+      canvas { border: 1px solid black; 
+               background: black
+             }
+      .flc-math-errors: { color: red; font-weight: bold; } 
+      }
     </style>  
   </head>  
   <body>  
+    <table><tbody><tr><td>
     <canvas id="canvas" width="1024" height="512" class="flc-canvas"></canvas>
-    
+    </td><td>
+    <div class="flc-math-commands"></textarea>
+    <//td></tr></tbody></table>
     <br/>
-    <input type="button" value="Start" class="flc-math-start"/>
-    <input type="button" value="Stop" class="flc-math-stop"/>
+    <input type="button" value="Stop Command" class="flc-math-stop"/>
     <br/>
     
     Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
@@ -22,8 +40,15 @@
     Data rate: <span class="flc-math-dataRate">&nbsp;&nbsp;&nbsp;</span>KB/s
     <br/>
     Server status: <span class="flc-math-serverStatus">&nbsp;&nbsp;&nbsp;</span>
+    <br/>
+    Connect to server at: <input class="flc-math-serverUrl" type="text" value="server/postreceive"/>
+    <input type="button" value="Connect" class="flc-math-connect" />
+    <input type="button" value="Disconnect" class="flc-math-disconnect" />
   </body>
   <script>
-      org.weblogo.stub("body");
+      var client = org.weblogo.client("body");
+      $(document).ready(function() {
+          client.locate("commands").focus();
+          });
   </script>
 </html>  

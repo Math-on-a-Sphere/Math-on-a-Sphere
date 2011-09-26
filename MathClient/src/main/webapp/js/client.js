@@ -1,19 +1,4 @@
-var org = org || {};
-org.weblogo = {};
-
 (function() {
-
-org.weblogo.mult = function(m, v) {
-    return [
-       m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] + v[2],
-       m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] + v[2],
-       m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] + v[2],
-    ];
-};
-
-org.weblogo.add = function(a, b) {
-    return [ a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-}
 
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
@@ -32,7 +17,12 @@ org.weblogo.selectors = {
     frameRate: ".flc-math-frameRate",
     frameSize: ".flc-math-frameSize",
     dataRate: ".flc-math-dataRate",
-    serverStatus: ".flc-math-serverStatus"
+    serverStatus: ".flc-math-serverStatus",
+    connect: ".flc-math-connect",
+    disconnect: ".flc-math-disconnect",
+    serverUrl: ".flc-math-serverUrl",
+    commands: ".flc-math-commands",
+    errors: ".flc-math-errors"
 };
 
 org.weblogo.binder = function(container, selectors) {
@@ -62,69 +52,126 @@ org.weblogo.postImage = function(time, dataURL, postURL, that) {
     //var blob = bb.getBlob('image/png');
 };
 
-org.weblogo.stub = function(container, options) {
-  
+org.weblogo.defaultConfigOptions = {
+    rasterStep: Math.PI / 100
+};
+
+org.weblogo.makeConfig = function(element, options) {
+    var that = {
+        element: element,
+        context: element.getContext('2d'),
+    
+        width: element.width,
+        height: element.height,
+        turtles: [org.weblogo.turtle()]
+    };
+    $.extend(true, that, org.weblogo.defaultConfigOptions, options);
+    return that;
+};
+
+
+org.weblogo.turtle.commands.demo = function() {
+    return {type: "demo"}
+}
+org.weblogo.turtle.commands.demo.arguments = [];
+
+org.weblogo.executors.demo = function(config, command, tick) {
     var period = 1500;
     var radius = 50;
-  
+    
+    var that = {
+        initTime: tick
+    };
+    that.toTick = function(now) {
+        var geom = org.weblogo.geom;
+        var phase = (now - that.initTime) / period;
+        var x = radius * Math.cos(phase);
+        var y = radius * Math.sin(phase);
+        var shift = geom.mult_33(org.weblogo.colshift, [x, y, 0]);
+        shift = geom.add_3(shift, [128, 128, 128]);
+        var colour = org.weblogo.colour.cssFromRGB(shift);
+        
+        var context = config.context;
+        
+        context.fillStyle = colour;
+        context.fillRect(0, 0, config.width, config.height);
+       
+        context.fillStyle = "white";
+
+        context.fillText("Frame time: " + (now - that.initTime)/1000 + "s", 0, config.height / 2);
+        return false;
+    };
+    return that;
+};
+
+org.weblogo.client = function(container, options) {
     var that = {};
     that.locate = org.weblogo.binder(container, org.weblogo.selectors).locate;
     that.receiveBlob = function(blob) {
         that.locate("frameSize").text(blob.size);
     };
     
-    that.draw = function() {
-        var now = Date.now();
-        var phase = (now - that.initTime) / period;
-        var x = radius * Math.cos(phase);
-        var y = radius * Math.sin(phase);
-        var shift = org.weblogo.mult(org.weblogo.colshift, [x, y, 0]);
-        shift = org.weblogo.add(shift, [128, 128, 128]);
-        var colour = "rgb(" + Math.round(shift[0]) + "," + Math.round(shift[1]) + "," + Math.round(shift[2]) + ")";
-        
-        that.context.fillStyle = colour;
-        that.context.fillRect(0, 0, that.width, that.height);
-       
-        that.context.fillStyle = "white";
-
-        that.context.fillText("Frame time: " + (now - that.initTime)/1000 + "s", 0, that.height / 2);
-       
+    that.error = function(error) {
+        that.terminal.error(error.message);
+    };
+    
+    that.commandStart = function() {
+        that.frameNo = 0;
+        that.initTime = Date.now();
+        that.lastFrame = that.initTime;
+    };
+    
+    that.commandDone = function() {
+        // damnable thing behaves badly in synchronous case
+        window.setTimeout(that.terminal.enable, 1);
+    };
+    
+    that.draw = function(execution) {
         var url = that.element.toDataURL("image/png");
-        org.weblogo.postImage("Frame Time: " + now - that.initTime, url, "server/postreceive", that);
+        if (that.serverUrl) {
+            org.weblogo.postImage("Frame Time: " + now - that.initTime, url, serverUrl, that);
+        }
         
         that.locate("frameSize").text(url.length);
         
         ++that.frameNo;
         that.locate("frameNumber").text(that.frameNo);
+        var now = Date.now();
         var rate = 1000.0 / (now - that.lastFrame);
         that.locate("frameRate").text(rate.toFixed(2));
         that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
         that.lastFrame = now;
-    }
-    
-    that.start = function() {
-        that.initTime = Date.now();
-        that.lastFrame = that.initTime;
-        that.element = that.locate("canvas")[0];
-        that.context = that.element.getContext('2d');
-        
-        that.context.font = "50px Arial";
-        
-        that.width = that.element.width;
-        that.height = that.element.height;
-        that.intervalID = window.setInterval(that.draw, 33);
-        that.frameNo = 0;
     };
     
-    that.stop = function() {
-        if (that.intervalID) {
-            window.clearInterval(that.intervalID);
-            delete that.intervalID;
+    that.element = that.locate("canvas")[0];
+        
+    that.config = org.weblogo.makeConfig(that.element);
+    that.executor = org.weblogo.renderingExecutor(
+            org.weblogo.executor(that.config), that, 33);
+    
+    that.config.context.font = "50px Arial";
+    
+    that.locate("commands").terminal(function(command, terminal) {
+        that.executor.execute(command);
+        that.terminal.disable();
+    }, {
+        greetings: "WebLogo Command Interpreter © Math on a Sphere, 2011-",
+        width: 500,
+        height: 400,
+        prompt: "weblogo>",
+        onInit: function(terminal) {
+            that.terminal = terminal;
         }
-    }
+    });
     
     that.locate("start").click(that.start);
-    that.locate("stop").click(that.stop);
+    that.locate("stop").click(that.executor.stop);
+    that.locate("connect").click(function() {
+        that.serverUrl = that.locate("serverUrl").val();
+    });
+    that.locate("disconnect").click(function() {
+        that.serverUrl = null;  
+    });
     
     return that;
 }
