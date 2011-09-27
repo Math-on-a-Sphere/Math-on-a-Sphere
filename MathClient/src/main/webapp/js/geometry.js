@@ -19,14 +19,31 @@ org.weblogo.geom.add_3 = function(a, b) {
     return [ a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 };
 
+org.weblogo.geom.cross_3 = function(a, b) {
+    return [ 
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0]
+    ]
+};
+
 org.weblogo.geom.dot_3 = function(a, b) {
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];  
 };
 
+org.weblogo.geom.scale_3 = function(a, l) {
+    return [a[0] * l, a[1] * l, a[2] * l];
+}
+
+org.weblogo.geom.norm_3 = function(a) {
+    var norm = Math.sqrt(geom.dot_3(a, a));
+    return geom.scale_3(a, 1/norm);
+}
+
 org.weblogo.geom.dist_3 = function(a, b) {
     var diff = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     return geom.dot_3(diff, diff); 
-}
+};
 
 /** Converts a unit 3-d vector into a unit quaternion by prepending 0 as the real part **/
 
@@ -46,14 +63,12 @@ org.weblogo.geom.polar_to_3 = function(theta, phi) {
             -Math.cos(theta) * Math.cos(phi),
              Math.sin(theta)];
 };
-/** Convert a 3-dimensional unit vector back into spherical polars, inverting polar_to_3 
- * @return [theta, phi]
+/** Convert a 3-dimensional vector back into spherical polars, inverting polar_to_3 
+ * @return [theta, phi, r]
  */
 org.weblogo.geom.polar_from_3 = function(n) {
-    var z = n[2];
-    // slight numerical error may cause n to become denormalised
-    z = z > 1? 1 : (z < -1? -1 : z);
-    return [Math.asin(z), Math.atan2(n[0], -n[1])];
+    var norm = Math.sqrt(geom.dot_3(n, n));
+    return [Math.asin(n[2] / norm), Math.atan2(n[0], -n[1]), norm];
 };
 
 /** Convert standard spherical polar coordinates to quaternion unit vector
@@ -127,5 +142,85 @@ org.weblogo.geom.pixel_from_3 = function(n, width, height) {
              height * (Math.PI/2 - polar[0]) / Math.PI];
 };
 
+/** Given an array of 4 great circle axes, (left, top, right, bottom), 
+  * return an array of their intersections (bl, tl, tr, br)
+  */
+org.weblogo.geom.edges_to_corners = function(edges) {
+    var togo = []
+    for (var i = 0; i < 4; ++ i) {
+        var ni = (i + 1) % 4;
+        var cross = geom.cross_3(edges[i], edges[ni]);
+        togo[ni] = geom.norm_3(cross);
+    }
+    return togo;
+};
+
+/** Given point and versor for a line segment, compute the polygon bounded
+ * by great circles that expands the line segment to angle options.width */
+org.weblogo.geom.polygon_line_elem = function(start, end, versor, options) {
+    var perpVersor = geom.versor_from_parts(start, Math.PI/2);
+    var perpHeading = geom.quat_conj(perpVersor, options.heading);
+    // leftVersor and rightVersor take points along the midpoint of the path
+    // and rotate them to the edges of the path to be filled
+    var leftVersor = geom.versor_from_parts(perpHeading, options.width / 2);
+    var rightVersor = geom.quat_inv(leftVersor);
+
+    // Four great circles bounding the area, in order left, top, right, bottom
+    var edges = [geom.quat_conj(leftVersor, options.heading),
+                 geom.quat_conj(versor, perpHeading),
+                 geom.quat_conj(rightVersor, options.heading),
+                 perpHeading];
+    // Flip the two middle edges so that square is traversed in consistent orientation
+    edges[3] = geom.scale_3(edges[3], -1);
+    edges[2] = geom.scale_3(edges[2], -1);
+    var corners = geom.edges_to_corners(edges);
+    return {edges: edges, corners: corners};
+};
+
+org.weblogo.geom.check_poles = function(polygon) {
+    var makeDots = function(pole, polygon) {
+        return fluid.transform(polygon.edges, function(edge) {
+            return geom.dot_3(edge, pole);
+        });
+    };
+    var hasPlus = function(dots) {
+        return fluid.find(dots, function(dot) {
+            return dot < 0? undefined: true;
+        });
+    };
+    var northDots = makeDots([0, 0, 1], polygon);
+    var southDots = makeDots([0, 0, -1], polygon);
+    //console.log("northDots: ", northDots);
+    return [!hasPlus(northDots), !hasPlus(southDots)];
+};
+
+/** Determines whether values intended to be close together have wrapped either
+ * backwards or forward around a range of size "period"*/
+org.weblogo.geom.hop = function(val1, val2, period) {
+    if (val2 - val1 > period/2) {
+        return period;
+    }
+    else if (val1 - val2 > period / 2) {
+        return -period;
+    }
+    else return 0;
+}
+
+/** Determine wrapping of points forming a polygon across x-direction of rectangle */
+org.weblogo.geom.closification = function(points, width) {
+    var firstHop = 0;
+    var runHop = 0;
+    var togo = {points: [points[0]]};
+    for (var i = 1; i < points.length; ++ i) {
+        var hop = geom.hop(points[i - 1][0], points[i][0], width);
+        runHop += -hop;
+        if (hop != 0 & firstHop === 0) {
+            firstHop = hop;
+        }
+        togo.points[i] = [points[i][0] + runHop, points[i][1]];
+    }
+    togo.wrap_x = firstHop === 0? [0] : [0, firstHop];
+    return togo;
+};
 
 }());

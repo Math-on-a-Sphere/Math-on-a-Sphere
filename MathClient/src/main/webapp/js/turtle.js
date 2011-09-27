@@ -10,7 +10,7 @@ org.weblogo.turtleDefaults = {
     position: geom.polar_to_3(0, 0),
     heading: null,  // computed to be towards the pole in creator
     colour: "white",
-    width: 0,
+    width: Math.PI/80,
     drawing: true,
     speed: Math.PI // travel halfway round sphere in 1 second
 };
@@ -32,51 +32,44 @@ org.weblogo.turtle = function(userOptions) {
 org.weblogo.raster = {};
 var raster = org.weblogo.raster;
 
-raster.close = function(val1, val2, period) {
-    var togo = {val1: val1, val2: val2};
-    if (val2 - val1 > period/2) {
-        togo.wrap = [0, -period];
-        togo.val1 += period;
-    }
-    else if (val1 - val2 > period / 2) {
-        togo.wrap = [0, -period];
-        togo.val2 += period;
-    }
-    if (!togo.wrap) {
-        togo.wrap = [0];
-    }
-    return togo;
-}
 
-org.weblogo.raster.closification = function(start2, end2, width, height) {
-    var closx = raster.close(start2[0], end2[0], width);
-    var closy = raster.close(start2[1], end2[1], height);
-    return {
-        start: [closx.val1, closy.val1],
-        end:   [closx.val2, closy.val2],
-        wrap_x: closx.wrap,
-        wrap_y: closy.wrap
-    }; 
-};
-
-org.weblogo.raster.stroke_line_elem = function(start, end, options) {
+org.weblogo.raster.stroke_line_elem = function(start, end, versor, options) {
     var width = options.config.width;
     var height = options.config.height;
-    var start2 = geom.pixel_from_3(start, width, height);
-    var end2 = geom.pixel_from_3(end, width, height);
-    var close = org.weblogo.raster.closification(start2, end2, width, height);
+
     var canvas = options.config.context;
+    var corners;  
+    if (options.width > 0) {
+        var poly = geom.polygon_line_elem(start, end, versor, options);
+        var poles = geom.check_poles(poly);
+        //console.log("Poles: ", poles);
+        if (poles[0] || poles[1]) {
+            return;
+        }
+        corners = poly.corners;
+    }
+    else {
+        corners = [start, end];
+    }
+    var corners2 = fluid.transform(corners, function(corner) {
+        return geom.pixel_from_3(corner, width, height);
+        });
+    var close = geom.closification(corners2, width);
+    var p = close.points;
     for (var i = 0; i < close.wrap_x.length; ++ i) {
         canvas.beginPath();
-        canvas.moveTo(close.start[0] + close.wrap_x[i], close.start[1]);
-        canvas.lineTo(close.end  [0] + close.wrap_x[i], close.end  [1]);
+        canvas.moveTo(p[0][0] + close.wrap_x[i], p[0][1]);
+        for (var j = 1; j < p.length; ++ j) {
+            canvas.lineTo(p[j][0] + close.wrap_x[i], p[j][1]);
+        }
+        canvas.closePath();
         if (options.width === 0) {
             canvas.stroke();  
         }
         else {
             canvas.fill();
         }
-    } 
+    }
 };
 
 org.weblogo.raster.stroke_line = function(options) {
@@ -90,7 +83,8 @@ org.weblogo.raster.stroke_line = function(options) {
         }
         var versor = geom.versor_from_parts(options.heading, newDistance);
         newPos = geom.quat_conj(versor, options.start);
-        org.weblogo.raster.stroke_line_elem(pos, newPos, options); 
+        
+        org.weblogo.raster.stroke_line_elem(pos, newPos, versor, options); 
         if (newDistance >= options.distance) {
             break;
         }
@@ -177,7 +171,6 @@ org.weblogo.netLogoColourToRGB = function(num) {
     }
     return togo;
 };
-
 
 
 })();

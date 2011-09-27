@@ -63,6 +63,7 @@ org.weblogo.makeConfig = function(element, options) {
     
         width: element.width,
         height: element.height,
+        backgroundColour: "black",
         turtles: [org.weblogo.turtle()]
     };
     $.extend(true, that, org.weblogo.defaultConfigOptions, options);
@@ -73,7 +74,7 @@ org.weblogo.makeConfig = function(element, options) {
 org.weblogo.turtle.commands.demo = function() {
     return {type: "demo"}
 }
-org.weblogo.turtle.commands.demo.arguments = [];
+org.weblogo.turtle.commands.demo.args = [];
 
 org.weblogo.executors.demo = function(config, command, tick) {
     var period = 1500;
@@ -104,6 +105,56 @@ org.weblogo.executors.demo = function(config, command, tick) {
     return that;
 };
 
+org.weblogo.turtle.commands["test-card"] = function() {
+    return {type: "testCard"}
+}
+org.weblogo.turtle.commands["test-card"].args = [];
+
+function makeTestCommands() {
+    var togo = [];
+    for (var i = 0; i < 10; ++ i) {
+        togo.push("set color " + (10*i + 5));
+        togo.push("set pen-size " + (20 - 2*i));
+        togo.push("left 40");
+        togo.push("forward 360");
+        togo.push("right 80");
+        togo.push("forward 360");
+        togo.push("left 40");
+    }
+    return togo;
+};
+
+org.weblogo.executors.testCard = function(config, command, tick) {
+    var executor = org.weblogo.executor(config);
+    function quickExec(commandString) {
+        var parsed = org.weblogo.stubParser(commandString);
+        var now = Date.now();
+        execution = executor.execute(parsed.command, now);
+        return execution;
+    }
+
+    var commands = makeTestCommands();
+    var index = 0;
+    var execution;
+    function hopalong() {
+        while (!execution && index < commands.length) {
+            execution = quickExec(commands[index]);
+            ++index;
+        }
+    }
+    hopalong();
+    var that = {};
+    that.toTick = function(newTick) {
+        var finished = execution.toTick(newTick);
+        if (finished) {
+            execution = null;
+            hopalong();
+            return index === commands.length;
+        }
+    };
+    return that;
+};
+
 org.weblogo.client = function(container, options) {
     var that = {};
     that.locate = org.weblogo.binder(container, org.weblogo.selectors).locate;
@@ -113,15 +164,18 @@ org.weblogo.client = function(container, options) {
     
     that.error = function(error) {
         that.terminal.error(error.message);
+        that.commandDone();
     };
     
     that.commandStart = function() {
+        that.busy = true;
         that.frameNo = 0;
         that.initTime = Date.now();
         that.lastFrame = that.initTime;
     };
     
     that.commandDone = function() {
+        that.busy = false;
         // damnable thing behaves badly in synchronous case
         window.setTimeout(that.terminal.enable, 1);
     };
@@ -149,6 +203,9 @@ org.weblogo.client = function(container, options) {
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
     
+    // TODO: poor cyclic linkage here
+    that.config.client = that;
+    
     that.config.context.font = "50px Arial";
     
     that.locate("commands").terminal(function(command, terminal) {
@@ -172,6 +229,12 @@ org.weblogo.client = function(container, options) {
     that.locate("disconnect").click(function() {
         that.serverUrl = null;  
     });
+    
+    var hash = window.location.hash;
+    if (hash) {
+        that.executor.execute(hash.substring(1));
+        that.terminal.disable();
+    }
     
     return that;
 }

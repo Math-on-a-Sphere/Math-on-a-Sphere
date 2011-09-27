@@ -63,6 +63,49 @@ org.weblogo.executors.turn = function(config, command) {
     });
 };
 
+org.weblogo.executors.clearDrawing = function(config, command) {
+    var colour = org.weblogo.colour.cssFromColour(config.backgroundColour);
+    config.context.fillStyle = colour;
+    config.context.fillRect(0, 0, config.width, config.height);
+};
+
+org.weblogo.executors.clearAll = function(config, command) {
+    org.weblogo.executors.clearDrawing(config, command);
+    // TODO: different modes for initial state
+    config.turtles = [org.weblogo.turtle()]
+}
+
+org.weblogo.executors.set = function(config, command) {
+    var as = org.weblogo.turtle.accessors;
+    var accessor = as[command.variable];
+    if (!accessor) {
+        return {
+            type: "error",
+            message: "No variable name " + command.variable + " is defined for turtle: you can use " + 
+                fluid.keys(as).join(", ")
+        };
+    }
+    var parsed = org.weblogo.parseToType(command.value, accessor.type);
+    if (parsed.type === "error") {
+        return parsed;
+    }
+    if (accessor.rejector) {
+        var error = accessor.rejector(parsed);
+        if (error) {
+            return {
+                type: "error",
+                message: error
+            }
+        }
+    }
+    if (accessor.lens) {
+        parsed = accessor.lens.write(parsed);
+    }
+    var property = accessor.property || command.variable;
+    fluid.each(config.turtles, function(turtle) {
+        turtle[property] = parsed;
+    });
+};
 
 /** Turtle commands definitions **/
 
@@ -75,7 +118,7 @@ commands.forward = function (distance) {
         distance: Math.PI * distance / 180
     }
 };
-commands.forward.arguments = ["number"];
+commands.forward.args = ["number"];
 
 commands.fd = commands.forward;
 
@@ -85,7 +128,7 @@ commands.back = function (distance) {
         distance: - Math.PI * distance / 180
     }
 };
-commands.back.arguments = ["number"];
+commands.back.args = ["number"];
 commands.bk = commands.back;
 
 commands.left = function (angle) {
@@ -94,7 +137,7 @@ commands.left = function (angle) {
         angle: Math.PI * angle / 180
     }
 };
-commands.left.arguments = ["number"];
+commands.left.args = ["number"];
 commands.lt = commands.left;
 
 commands.right = function (angle) {
@@ -103,23 +146,74 @@ commands.right = function (angle) {
         angle: - Math.PI * angle / 180
     }
 };
-commands.right.arguments = ["number"];
+commands.right.args = ["number"];
 commands.rt = commands.right;
 
+commands.set = function (variable, value) {
+    return {
+        type: "set",
+        variable: variable,
+        value: value
+    }  
+};
+
+commands.cd = function() {
+    return {
+        type: "clearDrawing"
+    }
+};
+commands.cd.args = [];
+commands["clear-drawing"] = commands.cd;
+
+commands.ca = function() {
+    return {
+        type: "clearAll"
+    }
+};
+commands.ca.args = [];
+commands["clear-all"] = commands.ca;
+
+// actual value type will be parsed by the accessor
+commands.set.args = ["string", "string"];
+
+var scaleLens = function(scale) {
+    return {
+        write: function(value) {
+            return value / scale;
+        },
+        read: function(value) {
+            return value * scale;
+        }
+    }  
+};
 /** Turtle "accessors", to model those turtle aspects which are represented as "variables" **/
 
 org.weblogo.turtle.accessors = {};
 var accessors = org.weblogo.turtle.accessors;
 
 accessors["pen-size"] = {
-    property: "width"
-}
+    property: "width",
+    type: "number",
+    rejector: function(value) {
+        if (value > 90) {
+            return "Cannot set pen size to greater than a quarter circle"  
+        }
+        else if (value < 0) {
+            return "Pen size must be positive"
+        }
+    },
+    lens: scaleLens(180 / Math.PI)
+};
 
 accessors["color"] = {
     property: "colour",
-    shadowProperty: "userColour",  
-}
-
-
+    type: "number|string",
+    rejector: function(value) {
+        var cnames = org.weblogo.netLogoColourNames;
+        if (typeof(value) === "string" && !cnames[value]) {
+            return value + " is not a valid colour name: you can use " + cnames.join(", ")
+        }
+    }
+};
 
 }());
