@@ -182,9 +182,10 @@ org.weblogo.client = function(container, options) {
     
     that.draw = function(execution) {
         var url = that.element.toDataURL("image/png");
-        if (that.serverUrl) {
-            org.weblogo.postImage("Frame Time: " + now - that.initTime, url, serverUrl, that);
-        }
+        //if (that.serverUrl) {
+            //org.weblogo.postImage("Frame Time: " + now - that.initTime, url, serverUrl, that);
+        org.weblogo.postImage("Frame Time: " + now - that.initTime, url, "server/postreceive", that);
+        //}
         
         that.locate("frameSize").text(url.length);
         
@@ -195,6 +196,7 @@ org.weblogo.client = function(container, options) {
         that.locate("frameRate").text(rate.toFixed(2));
         that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
         that.lastFrame = now;
+        //webGLStart();
     };
     
     that.element = that.locate("canvas")[0];

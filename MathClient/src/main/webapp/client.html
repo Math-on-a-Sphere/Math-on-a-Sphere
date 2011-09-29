@@ -14,6 +14,9 @@
     <script type="text/javascript" src="js/executor.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
 
+    <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="js/webgl-utils.js"></script>
+
     <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
     
     <style type="text/css">  
@@ -23,32 +26,139 @@
       .flc-math-errors: { color: red; font-weight: bold; } 
       }
     </style>  
-  </head>  
-  <body>  
-    <table><tbody><tr><td>
-    <canvas id="canvas" width="1024" height="512" class="flc-canvas"></canvas>
-    </td><td>
-    <div class="flc-math-commands"></textarea>
-    <//td></tr></tbody></table>
-    <br/>
-    <input type="button" value="Stop Command" class="flc-math-stop"/>
-    <br/>
-    
-    Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
-    Frame rate: <span class="flc-math-frameRate">&nbsp;&nbsp;&nbsp;</span> fps&nbsp;&nbsp;&nbsp;
-    Frame size: <span class="flc-math-frameSize">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
-    Data rate: <span class="flc-math-dataRate">&nbsp;&nbsp;&nbsp;</span>KB/s
-    <br/>
-    Server status: <span class="flc-math-serverStatus">&nbsp;&nbsp;&nbsp;</span>
-    <br/>
-    Connect to server at: <input class="flc-math-serverUrl" type="text" value="server/postreceive"/>
-    <input type="button" value="Connect" class="flc-math-connect" />
-    <input type="button" value="Disconnect" class="flc-math-disconnect" />
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+      #ifdef GL_ES
+      precision highp float;
+      #endif
+
+      varying vec2 vTextureCoord;
+      varying vec3 vLightWeighting;
+
+      uniform sampler2D uSampler;
+
+      void main(void) {
+      vec4 textureColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+      gl_FragColor = vec4(textureColor.rgb * vLightWeighting, textureColor.a);
+      }
+    </script>
+
+    <script id="shader-vs" type="x-shader/x-vertex">
+      attribute vec3 aVertexPosition;
+      attribute vec3 aVertexNormal;
+      attribute vec2 aTextureCoord;
+      
+      uniform mat4 uMVMatrix;
+      uniform mat4 uPMatrix;
+      uniform mat3 uNMatrix;
+      
+      uniform vec3 uAmbientColor;
+
+      uniform vec3 uLightingDirection;
+      uniform vec3 uDirectionalColor;
+      
+      uniform bool uUseLighting;
+      
+      varying vec2 vTextureCoord;
+      varying vec3 vLightWeighting;
+      
+      void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+      
+        if (!uUseLighting) {
+          vLightWeighting = vec3(1.0, 1.0, 1.0);
+        } 
+        else {
+          vec3 transformedNormal = uNMatrix * aVertexNormal;
+          float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+          vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+        }
+      }
+    </script>
+
+    <script type="text/javascript" src="js/preview.js"></script>
+
+    <script>
+    function webGLStart() {
+        var canvas = document.getElementById("lesson11-canvas");
+        initGL(canvas);
+        initShaders();
+        initBuffers();
+        initTexture();
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+
+        canvas.onmousedown = handleMouseDown;
+        document.onmouseup = handleMouseUp;
+        document.onmousemove = handleMouseMove;
+
+        tick();
+    }
+    </script>
+
+    </head>
+
+      <body onload="webGLStart();">  
+        <table>
+          <tbody>
+            <tr>
+              <td>
+                <!-- command line interface -->
+                <div class="flc-math-commands"></textarea>
+              </td>
+              <td>
+                <!-- preview sphere canvas -->
+                <canvas id="lesson11-canvas" style="border: none;" width="500" height="500"></canvas>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">
+                <!-- preview image canvas -->
+                <canvas id="canvas" width="1024" height="512" class="flc-canvas"></canvas>
+              </td>
+            </tr>
+            <tr>
+              <td>
+              <input type="button" value="Stop Command" class="flc-math-stop"/>
+
+              Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+              Frame rate: <span class="flc-math-frameRate">&nbsp;&nbsp;&nbsp;</span> fps&nbsp;&nbsp;&nbsp;
+              Frame size: <span class="flc-math-frameSize">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+              Data rate: <span class="flc-math-dataRate">&nbsp;&nbsp;&nbsp;</span>KB/s
+              <br/>
+              Server status: <span class="flc-math-serverStatus">&nbsp;&nbsp;&nbsp;</span>
+              <br/>
+              Connect to server at: <input class="flc-math-serverUrl" type="text" value="server/postreceive"/>
+              <input type="button" value="Connect" class="flc-math-connect" />
+              <input type="button" value="Disconnect" class="flc-math-disconnect" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+
+      <script>
+          var client = org.weblogo.client("body");
+          $(document).ready(function() {
+          client.locate("commands").focus(); });
+      </script>
+
+      <!-- Google Analytics stuff, please ignore - nothing to do with WebGL :-) -->
+      <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      </script>
+      <script type="text/javascript">
+        try {
+        var pageTracker = _gat._getTracker("UA-2240015-5");
+        pageTracker._trackPageview();
+        } catch(err) {
+        }
+      </script>
+
   </body>
-  <script>
-      var client = org.weblogo.client("body");
-      $(document).ready(function() {
-          client.locate("commands").focus();
-          });
-  </script>
+
 </html>  
