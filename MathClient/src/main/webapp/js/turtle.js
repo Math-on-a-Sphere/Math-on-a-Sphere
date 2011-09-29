@@ -42,7 +42,6 @@ org.weblogo.raster.stroke_line_elem = function(start, end, versor, options) {
     if (options.width > 0) {
         var poly = geom.polygon_line_elem(start, end, versor, options);
         var poles = geom.check_poles(poly);
-        //console.log("Poles: ", poles);
         if (poles[0] || poles[1]) {
             return;
         }
@@ -63,12 +62,8 @@ org.weblogo.raster.stroke_line_elem = function(start, end, versor, options) {
             canvas.lineTo(p[j][0] + close.wrap_x[i], p[j][1]);
         }
         canvas.closePath();
-        if (options.width === 0) {
-            canvas.stroke();  
-        }
-        else {
-            canvas.fill();
-        }
+        canvas.stroke();  
+        canvas.fill();
     }
 };
 

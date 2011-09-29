@@ -155,6 +155,19 @@ org.weblogo.geom.edges_to_corners = function(edges) {
     return togo;
 };
 
+/** Given an array of 4 corner points (bl, tl, tr, br), return an array of great circles
+  * which have them as intersections (left, top, right, bottom)
+  * return an array of their intersections 
+  */
+org.weblogo.geom.corners_to_edges = function(corners) {
+    var togo = [];
+    for (var i = 0; i < 4; ++ i) {
+        var ni = (i + 1) % 4;
+        togo[i] = geom.axis_from_heading(corners[i], corners[ni]);
+    }
+    return togo;
+};
+
 /** Given point and versor for a line segment, compute the polygon bounded
  * by great circles that expands the line segment to angle options.width */
 org.weblogo.geom.polygon_line_elem = function(start, end, versor, options) {
@@ -164,16 +177,19 @@ org.weblogo.geom.polygon_line_elem = function(start, end, versor, options) {
     // and rotate them to the edges of the path to be filled
     var leftVersor = geom.versor_from_parts(perpHeading, options.width / 2);
     var rightVersor = geom.quat_inv(leftVersor);
-
+    
+    var perpVersorEnd = geom.versor_from_parts(end, Math.PI/2);
+    var perpHeadingEnd = geom.quat_conj(perpVersorEnd, options.heading);
+    var leftVersorEnd = geom.versor_from_parts(perpHeadingEnd, options.width / 2);
+    var rightVersorEnd = geom.quat_inv(leftVersorEnd);
+    
+    var corners = [geom.quat_conj(leftVersor, start),
+                   geom.quat_conj(leftVersorEnd, end),
+                   geom.quat_conj(rightVersorEnd, end),
+                   geom.quat_conj(rightVersor, start)];
+    
     // Four great circles bounding the area, in order left, top, right, bottom
-    var edges = [geom.quat_conj(leftVersor, options.heading),
-                 geom.quat_conj(versor, perpHeading),
-                 geom.quat_conj(rightVersor, options.heading),
-                 perpHeading];
-    // Flip the two middle edges so that square is traversed in consistent orientation
-    edges[3] = geom.scale_3(edges[3], -1);
-    edges[2] = geom.scale_3(edges[2], -1);
-    var corners = geom.edges_to_corners(edges);
+    var edges = geom.corners_to_edges(corners);
     return {edges: edges, corners: corners};
 };
 
@@ -190,7 +206,6 @@ org.weblogo.geom.check_poles = function(polygon) {
     };
     var northDots = makeDots([0, 0, 1], polygon);
     var southDots = makeDots([0, 0, -1], polygon);
-    //console.log("northDots: ", northDots);
     return [!hasPlus(northDots), !hasPlus(southDots)];
 };
 
