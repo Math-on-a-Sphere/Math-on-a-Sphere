@@ -195,6 +195,7 @@ org.weblogo.client = function(container, options) {
         that.locate("frameRate").text(rate.toFixed(2));
         that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
         that.lastFrame = now;
+        //webGLStart();
     };
     
     that.element = that.locate("canvas")[0];

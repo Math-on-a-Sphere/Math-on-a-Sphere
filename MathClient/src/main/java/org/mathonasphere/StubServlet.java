@@ -28,7 +28,7 @@ public class StubServlet extends HttpServlet {
       String header = br.readLine();
       String body = br.readLine();
       byte[] bytes = Base64.decodeBase64(body);
-      fos = new FileOutputStream("output.png");
+      fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/output.png");
       fos.write(bytes);
     }
     catch (Exception e) {
