@@ -12,7 +12,7 @@ org.weblogo.turtleDefaults = {
     colour: "white",
     width: Math.PI/80,
     drawing: true,
-    speed: Math.PI // travel halfway round sphere in 1 second
+    speed: Math.PI - .001 // travel halfway round sphere in 1 second
 };
  
 org.weblogo.turtle = function(userOptions) {
@@ -33,18 +33,16 @@ org.weblogo.raster = {};
 var raster = org.weblogo.raster;
 
 
-org.weblogo.raster.stroke_line_elem = function(start, end, versor, options) {
+org.weblogo.raster.stroke_line_elem = function(start, end, options) {
     var width = options.config.width;
     var height = options.config.height;
 
     var canvas = options.config.context;
-    var corners;  
+    var corners;
+    var poles;
     if (options.width > 0) {
-        var poly = geom.polygon_line_elem(start, end, versor, options);
-        var poles = geom.check_poles(poly);
-        if (poles[0] || poles[1]) {
-            return;
-        }
+        var poly = geom.polygon_line_elem(start, end, options);
+        poles = geom.check_poles(poly);
         corners = poly.corners;
     }
     else {
@@ -53,7 +51,14 @@ org.weblogo.raster.stroke_line_elem = function(start, end, versor, options) {
     var corners2 = fluid.transform(corners, function(corner) {
         return geom.pixel_from_3(corner, width, height);
         });
-    var close = geom.closification(corners2, width);
+    var close;
+    if (poles[0] || poles[1]) {
+        var polar_y = poles[0]? 0 : height;
+        close = geom.convert_polar_polygon(corners2, width, polar_y);
+    }
+    else {
+        close = geom.closification(corners2, width);
+    }
     var p = close.points;
     for (var i = 0; i < close.wrap_x.length; ++ i) {
         canvas.beginPath();
@@ -71,19 +76,28 @@ org.weblogo.raster.stroke_line = function(options) {
     options.config.context.fillStyle = options.config.context.strokeStyle =  
        org.weblogo.colour.cssFromColour(options.colour);
     var distance = 0, pos = options.start;
+    // Add tiny amount of jitter to compensate for rendering bugs, especially on Chrome
+    //  - ensure that successive polygons abut - experimental
+    var jitter = 1e-3;
     while (true) {
-        var newDistance = distance + options.config.rasterStep;
+        var cosy = Math.cos(geom.polar_from_3(pos)[0]);
+        // take smaller steps close to the poles
+        var sfac = (cosy*cosy + 1/40) * 5;
+
+        var step = options.config.rasterStep * sfac; 
+        var newDistance = distance + step + jitter;
         if (newDistance > options.distance) {
-            newDistance = options.distance;
+            newDistance = options.distance + jitter;
         }
-        var versor = geom.versor_from_parts(options.heading, newDistance);
-        newPos = geom.quat_conj(versor, options.start);
+
+        newPos = geom.rotate_by(options.start, options.heading, newDistance);
         
-        org.weblogo.raster.stroke_line_elem(pos, newPos, versor, options); 
+        org.weblogo.raster.stroke_line_elem(pos, newPos, options); 
         if (newDistance >= options.distance) {
             break;
         }
-        pos = newPos; distance = newDistance;
+        distance = newDistance - jitter;
+        pos = geom.rotate_by(options.start, options.heading, distance); 
     }
 };
 
