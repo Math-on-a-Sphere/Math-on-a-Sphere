@@ -71,13 +71,19 @@
         var c = structure.corners;
         var e = structure.edges;
         
-        var Cstep = Math.cos(step);
-        var Cwidth = Math.cos(width);
-        
-        testUtil.assertClose("Edge 0 to edge 2", -Cwidth, 
-           geom.dot_3(e[0], e[2]));
-        testUtil.assertClose("Edge 1 to edge 3", -Cstep,
-           geom.dot_3(e[1], e[3]));
+        var distanceTests = [
+            [ "Edge 1 to edge 3", e[1], e[3], Math.PI - step],
+ // in the "new model" this measurement is sacrificed, to enable start and end points
+ // to match up
+ //         [ "Edge 0 to edge 2", e[0], e[2], Math.PI - width],
+            [ "bl to start", c[0], start, width/2],
+            [ "br to start", c[3], start, width/2],
+            [ "tl to end", c[1], end, width / 2],
+            [ "tr to end", c[2], end, width / 2]
+            ];
+        fluid.each(distanceTests, function(t) {
+            testUtil.assertClose(t[0], Math.cos(t[3]), geom.dot_3(t[1], t[2])); 
+        });
         
         var tolerance = Math.cos(Math.PI/6);
         

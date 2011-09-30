@@ -182,10 +182,9 @@ org.weblogo.client = function(container, options) {
     
     that.draw = function(execution) {
         var url = that.element.toDataURL("image/png");
-        //if (that.serverUrl) {
-            //org.weblogo.postImage("Frame Time: " + now - that.initTime, url, serverUrl, that);
-        org.weblogo.postImage("Frame Time: " + now - that.initTime, url, "server/postreceive", that);
-        //}
+        if (that.serverUrl) {
+            org.weblogo.postImage("Frame Time: " + now - that.initTime, url, that.serverUrl, that);
+        }
         
         that.locate("frameSize").text(url.length);
         
@@ -225,12 +224,18 @@ org.weblogo.client = function(container, options) {
     
     that.locate("start").click(that.start);
     that.locate("stop").click(that.executor.stop);
-    that.locate("connect").click(function() {
+    var connect = that.locate("connect");
+    var disconnect = that.locate("disconnect");
+    connect.click(function() {
         that.serverUrl = that.locate("serverUrl").val();
+        disconnect.prop("disabled", false);
+        connect.prop("disabled", true);
     });
-    that.locate("disconnect").click(function() {
-        that.serverUrl = null;  
-    });
+    disconnect.click(function() {
+        that.serverUrl = null;
+        connect.prop("disabled", false);
+        disconnect.prop("disabled", true);
+    }).prop("disabled", true);
     
     var hash = window.location.hash;
     if (hash) {
