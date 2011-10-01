@@ -64,7 +64,7 @@ org.weblogo.makeConfig = function(element, options) {
         width: element.width,
         height: element.height,
         backgroundColour: "black",
-        turtles: [org.weblogo.turtle()]
+        turtles: []
     };
     $.extend(true, that, org.weblogo.defaultConfigOptions, options);
     return that;
@@ -203,10 +203,7 @@ org.weblogo.client = function(container, options) {
     that.config = org.weblogo.makeConfig(that.element);
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
-    
-    // TODO: poor cyclic linkage here
-    that.config.client = that;
-    
+        
     that.config.context.font = "50px Arial";
     
     that.locate("commands").terminal(function(command, terminal) {
@@ -242,6 +239,8 @@ org.weblogo.client = function(container, options) {
         that.executor.execute(hash.substring(1));
         that.terminal.disable();
     }
+    
+    org.weblogo.executors.clearAll(that.config);
     
     return that;
 }

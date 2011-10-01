@@ -133,6 +133,11 @@ org.weblogo.geom.versor_from_parts = function(n, W) {
     return [Math.cos(W / 2), sinW * n[0], sinW * n[1], sinW * n[2]]; 
 };
 
+org.weblogo.geom.rotate_by = function(v, axis, angle) {
+    var versor = geom.versor_from_parts(axis, angle);
+    return geom.quat_conj(versor, v);  
+};
+
 /** Converts a unit vector in 3d into "ECE" coordinates in pixels, given
  * rectangular width and height */
 
@@ -170,16 +175,15 @@ org.weblogo.geom.corners_to_edges = function(corners) {
 
 /** Given point and versor for a line segment, compute the polygon bounded
  * by great circles that expands the line segment to angle options.width */
-org.weblogo.geom.polygon_line_elem = function(start, end, versor, options) {
-    var perpVersor = geom.versor_from_parts(start, Math.PI/2);
-    var perpHeading = geom.quat_conj(perpVersor, options.heading);
+org.weblogo.geom.polygon_line_elem = function(start, end, options) {
+    var perpHeading = geom.rotate_by(options.heading, start, Math.PI/2);
+    
     // leftVersor and rightVersor take points along the midpoint of the path
     // and rotate them to the edges of the path to be filled
     var leftVersor = geom.versor_from_parts(perpHeading, options.width / 2);
     var rightVersor = geom.quat_inv(leftVersor);
     
-    var perpVersorEnd = geom.versor_from_parts(end, Math.PI/2);
-    var perpHeadingEnd = geom.quat_conj(perpVersorEnd, options.heading);
+    var perpHeadingEnd = geom.rotate_by(options.heading, end, Math.PI/2);
     var leftVersorEnd = geom.versor_from_parts(perpHeadingEnd, options.width / 2);
     var rightVersorEnd = geom.quat_inv(leftVersorEnd);
     
@@ -207,6 +211,23 @@ org.weblogo.geom.check_poles = function(polygon) {
     var northDots = makeDots([0, 0, 1], polygon);
     var southDots = makeDots([0, 0, -1], polygon);
     return [!hasPlus(northDots), !hasPlus(southDots)];
+};
+
+org.weblogo.geom.convert_polar_polygon = function(corners, width, polar_y) {
+    var sorted = corners.sort(function(p1, p2) {
+        return p1[1] - p2[1];
+    });
+    var last = sorted.length - 1;
+    var extras = [
+        [sorted[0][0] + width, sorted[0][1]], // right image of 0th point
+        [width, polar_y],
+        [0, polar_y],
+        [sorted[last][0] - width, sorted[last][1]]
+        ];
+    return {
+        points: sorted.concat(extras),
+        wrap_x: [0]
+    };
 };
 
 /** Determines whether values intended to be close together have wrapped either
