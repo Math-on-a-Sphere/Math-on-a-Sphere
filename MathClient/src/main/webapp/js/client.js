@@ -2,6 +2,8 @@
 
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
+var counter = 0;
+var TOTAL_FRAMES = 100;
 
 org.weblogo.colshift = [
    [0,    -1/s2, 1/s3],
@@ -195,7 +197,10 @@ org.weblogo.client = function(container, options) {
         that.locate("frameRate").text(rate.toFixed(2));
         that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
         that.lastFrame = now;
-        webGLStart();
+        //webGLStart();
+        //counter++;
+        initTexture(url);
+
     };
     
     that.element = that.locate("canvas")[0];

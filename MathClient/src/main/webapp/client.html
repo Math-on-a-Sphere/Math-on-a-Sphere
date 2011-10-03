@@ -181,14 +181,14 @@
 
     var moonTexture;
 
-    function initTexture() {
+    function initTexture(t_url) {
         moonTexture = gl.createTexture();
         moonTexture.image = new Image();
         moonTexture.image.onload = function () {
             handleLoadedTexture(moonTexture)
         }
 
-        moonTexture.image.src = "output.png";
+        moonTexture.image.src = t_url;
     }
 
 
@@ -410,9 +410,10 @@
         initGL(canvas);
         initShaders();
         initBuffers();
-        initTexture();
+        initTexture("output_0.png");
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+        gl.clearColor(0.0, 0.0, 0.5, 1.0);
         gl.enable(gl.DEPTH_TEST);
 
         canvas.onmousedown = handleMouseDown;

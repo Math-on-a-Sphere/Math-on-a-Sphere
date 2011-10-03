@@ -1,6 +1,7 @@
 
 var gl;
-
+var counter = 0;
+var TOTAL_FRAMES = 100;
 
 function initGL(canvas) {
     try {
@@ -109,7 +110,11 @@ function initTexture() {
         handleLoadedTexture(moonTexture)
     }
 
-    moonTexture.image.src = "output.png";
+    moonTexture.image.src = "output_"+counter+".png";
+    if(counter == TOTAL_FRAMES-1) {
+        counter = 0;
+    }
+    counter++;
 }
 
 
