@@ -231,6 +231,7 @@
 
     var moonRotationMatrix = mat4.create();
     mat4.identity(moonRotationMatrix);
+    mat4.rotate(moonRotationMatrix, degToRad(90), [0, 1, 0]);
 
     function handleMouseDown(event) {
         mouseDown = true;
