@@ -67,7 +67,7 @@
         var start = [0, -1, 0]; // equator zero meridian
         var versor = geom.versor_from_parts(options.heading, step);
         var end = geom.quat_conj(versor, start);
-        var structure = geom.polygon_line_elem(start, end, versor, options);
+        var structure = geom.polygon_line_elem(start, end, options);
         var c = structure.corners;
         var e = structure.edges;
         
