@@ -177,18 +177,17 @@
 
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
-
-
     var moonTexture;
 
     function initTexture(t_url) {
-        moonTexture = gl.createTexture();
-        moonTexture.image = new Image();
-        moonTexture.image.onload = function () {
-            handleLoadedTexture(moonTexture)
+        var moonTexture2 = gl.createTexture();
+        moonTexture2.image = new Image();
+        moonTexture2.image.onload = function () {
+            moonTexture = moonTexture2;
+            handleLoadedTexture(moonTexture2);
         }
 
-        moonTexture.image.src = t_url;
+        moonTexture2.image.src = t_url;
     }
 
 
@@ -449,7 +448,7 @@
               </td>
             </tr>
             <tr>
-              <td>
+              <td colspan="2">
               <input type="button" value="Stop Command" class="flc-math-stop"/>
 
               Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
