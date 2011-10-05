@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar"/>
 	<classpathentry kind="var" path="M2_REPO/commons-codec/commons-codec/1.5/commons-codec-1.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/jcraft/jsch/0.1.44-1/jsch-0.1.44-1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
