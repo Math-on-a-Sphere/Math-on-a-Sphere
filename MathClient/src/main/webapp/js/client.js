@@ -238,14 +238,13 @@ org.weblogo.client = function(container, options) {
         connect.prop("disabled", false);
         disconnect.prop("disabled", true);
     }).prop("disabled", true);
+    org.weblogo.executors.clearAll(that.config);
     
     var hash = window.location.hash;
     if (hash) {
         that.executor.execute(hash.substring(1));
         that.terminal.disable();
     }
-    
-    org.weblogo.executors.clearAll(that.config);
     
     return that;
 }

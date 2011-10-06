@@ -426,7 +426,7 @@
 
     </head>
 
-      <body onload="webGLStart();">  
+      <body">  
         <table>
           <tbody>
             <tr>
@@ -469,6 +469,7 @@
 
 
       <script>
+          webGLStart();
           var client = org.weblogo.client("body");
           $(document).ready(function() {
           client.locate("commands").focus(); });
