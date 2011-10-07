@@ -199,8 +199,7 @@ org.weblogo.client = function(container, options) {
         that.lastFrame = now;
         //webGLStart();
         //counter++;
-        initTexture(url);
-
+        canvasToTexture(that.element);
     };
     
     that.element = that.locate("canvas")[0];

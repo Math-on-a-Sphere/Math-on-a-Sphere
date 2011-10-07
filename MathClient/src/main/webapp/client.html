@@ -79,7 +79,7 @@
 
  
     <script>
- var gl;
+    var gl;
 
     function initGL(canvas) {
         try {
@@ -167,29 +167,20 @@
     }
 
 
-    function handleLoadedTexture(texture) {
+    function canvasToTexture(canvas) {
+        var texture = gl.createTexture();
+        moonTexture = texture;
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         gl.generateMipmap(gl.TEXTURE_2D);
 
         gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
     }
     var moonTexture;
-
-    function initTexture(t_url) {
-        var moonTexture2 = gl.createTexture();
-        moonTexture2.image = new Image();
-        moonTexture2.image.onload = function () {
-            moonTexture = moonTexture2;
-            handleLoadedTexture(moonTexture2);
-        }
-
-        moonTexture2.image.src = t_url;
-    }
-
 
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
@@ -410,8 +401,7 @@
         initGL(canvas);
         initShaders();
         initBuffers();
-        initTexture("output_0.png");
-
+        canvasToTexture(document.getElementById("canvas"));
 
         gl.clearColor(0.0, 0.0, 0.5, 1.0);
         gl.enable(gl.DEPTH_TEST);
