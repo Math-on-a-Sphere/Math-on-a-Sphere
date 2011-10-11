@@ -28,65 +28,63 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+ 
+org.weblogo.webgl = {};
+ 
+(function() {
 
+org.weblogo.webgl.textToShader = function(gl, text, type, events) {
+    var shader;
+    console.log("Beginning convert " + type);
+    if (type === "fragment") {
+        shader = gl.createShader(gl.FRAGMENT_SHADER);
+    } else if (type === "vertex") {
+        shader = gl.createShader(gl.VERTEX_SHADER);
+    } else {
+        events.error({message: "Unrecognised shader type " + type});
+    }
 
-/**
- * @fileoverview This file contains functions every webgl program will need
- * a version of one way or another.
- *
- * Instead of setting up a context manually it is recommended to
- * use. This will check for success or failure. On failure it
- * will attempt to present an approriate message to the user.
- *
- *       gl = WebGLUtils.setupWebGL(canvas);
- *
- * For animated WebGL apps use of setTimeout or setInterval are
- * discouraged. It is recommended you structure your rendering
- * loop like this.
- *
- *       function render() {
- *         window.requestAnimFrame(render, canvas);
- *
- *         // do rendering
- *         ...
- *       }
- *       render();
- *
- * This will call your rendering function up to the refresh rate
- * of your display but will stop rendering if your app is not
- * visible.
- */
+    gl.shaderSource(shader, text);
+    gl.compileShader(shader);
 
-WebGLUtils = function() {
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        events.error({message: "Error compiling " + type + " shader: " + 
+            gl.getShaderInfoLog(shader)});
+    }
+    return shader;
+}  
 
-/**
- * Creates the HTLM for a failure message
- * @param {string} canvasContainerId id of container of th
- *        canvas.
- * @return {string} The html.
- */
-var makeFailHTML = function(msg) {
-  return '' +
-    '<table style="background-color: #8CE; width: 100%; height: 100%;"><tr>' +
-    '<td align="center">' +
-    '<div style="display: table-cell; vertical-align: middle;">' +
-    '<div style="">' + msg + '</div>' +
-    '</div>' +
-    '</td></tr></table>';
+org.weblogo.webgl.loadShaders = function(gl, shaderSpecs, events, callback) {
+    var deferreds = [];
+    var shaders = {};
+    fluid.each(shaderSpecs, function(file, key) {
+        deferreds.push($.ajax({
+            type: "GET",
+            dataType: "text",
+            url: file,
+            success: function(data) {
+                shaders[key] = org.weblogo.webgl.textToShader(gl, data, key, events)
+                console.log("Ajax success for " + key);    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.log("Ajax Error " + textStatus);
+                events.error({message: textStatus + " " + errorThrown});
+            },
+            complete: function() {
+                console.log("Ajax complete for " + key);
+            }
+        }));
+    });
+    $.when.apply($, deferreds).then(function() {
+        console.log("All Ajax done");
+        callback(shaders);
+        });
 };
 
-/**
- * Mesasge for getting a webgl browser
- * @type {string}
- */
 var GET_A_WEBGL_BROWSER = '' +
   'This page requires a browser that supports WebGL.<br/>' +
   '<a href="http://get.webgl.org">Click here to upgrade your browser.</a>';
 
-/**
- * Mesasge for need better hardware
- * @type {string}
- */
 var OTHER_PROBLEM = '' +
   "It doesn't appear your computer can support WebGL.<br/>" +
   '<a href="http://get.webgl.org/troubleshooting/">Click here for more information.</a>';
@@ -103,34 +101,27 @@ var OTHER_PROBLEM = '' +
  *     if there is an error during creation.
  * @return {WebGLRenderingContext} The created context.
  */
-var setupWebGL = function(canvas, opt_attribs, opt_onError) {
-  function handleCreationError(msg) {
-    var container = canvas.parentNode;
-    if (container) {
-      var str = window.WebGLRenderingContext ?
-           OTHER_PROBLEM :
-           GET_A_WEBGL_BROWSER;
-      if (msg) {
-        str += "<br/><br/>Status: " + msg;
-      }
-      container.innerHTML = makeFailHTML(str);
+org.weblogo.webgl.setupWebGL = function(canvas, opt_attribs, events) {
+    function signal(msg) {
+        var str = window.WebGLRenderingContext ?
+                 OTHER_PROBLEM :
+                 GET_A_WEBGL_BROWSER;
+        str += "\nError: " + msg;
+        events.error(str)
+    };
+    
+    if (canvas.addEventListener) {
+        canvas.addEventListener("webglcontextcreationerror", function(event) {
+            signal(event.statusMessage);
+          }, false);
     }
-  };
-
-  opt_onError = opt_onError || handleCreationError;
-
-  if (canvas.addEventListener) {
-    canvas.addEventListener("webglcontextcreationerror", function(event) {
-          opt_onError(event.statusMessage);
-        }, false);
-  }
-  var context = create3DContext(canvas, opt_attribs);
-  if (!context) {
-    if (!window.WebGLRenderingContext) {
-      opt_onError("");
+    var context = org.weblogo.webgl.createGLContext(canvas, opt_attribs);
+    if (!context) {
+        if (!window.WebGLRenderingContext) {
+            signal("");
+        }
     }
-  }
-  return context;
+    return context;
 };
 
 /**
@@ -139,37 +130,41 @@ var setupWebGL = function(canvas, opt_attribs, opt_onError) {
  *     from. If one is not passed in one will be created.
  * @return {!WebGLContext} The created context.
  */
-var create3DContext = function(canvas, opt_attribs) {
-  var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-  var context = null;
-  for (var ii = 0; ii < names.length; ++ii) {
-    try {
-      context = canvas.getContext(names[ii], opt_attribs);
-    } catch(e) {}
-    if (context) {
-      break;
+org.weblogo.webgl.createGLContext = function(canvas, opt_attribs) {
+    var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+    var context = null;
+    for (var ii = 0; ii < names.length; ++ii) {
+        try {
+            context = canvas.getContext(names[ii], opt_attribs);
+        } catch(e) {}
+        if (context) {
+            break;
+        }
     }
-  }
-  return context;
-}
-
-return {
-  create3DContext: create3DContext,
-  setupWebGL: setupWebGL
+    return context;
 };
-}();
 
-/**
- * Provides requestAnimationFrame in a cross browser way.
- */
-window.requestAnimFrame = (function() {
-  return window.requestAnimationFrame ||
+org.weblogo.webgl.animator = function(callback) {
+    var requestor = window.requestAnimationFrame ||
          window.webkitRequestAnimationFrame ||
          window.mozRequestAnimationFrame ||
          window.oRequestAnimationFrame ||
-         window.msRequestAnimationFrame ||
-         function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
-           window.setTimeout(callback, 1000/60);
+         window.msRequestAnimationFrame || function(callback) {
+             window.setTimeout(callback, 1000/60);
          };
+    var that = {cancelled: false};
+    that.ticker = function() {
+        if (!that.cancelled) {
+             callback();
+             requestor(that.ticker);
+        };
+    };
+    that.cancel = function() {
+        that.cancelled = true;
+    }
+    that.ticker();
+    return that;
+    };
+    
 })();
 
