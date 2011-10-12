@@ -50,6 +50,8 @@
         shaderProgram.vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
         gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
 
+        shaderProgram.moonMatrixUniform = gl.getUniformLocation(shaderProgram, "uMoonMatrix");
+
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
         shaderProgram.nMatrixUniform = gl.getUniformLocation(shaderProgram, "uNMatrix");
@@ -80,6 +82,8 @@
     var pMatrix = mat4.create();
 
     function setMatrixUniforms(gl) {
+        gl.uniformMatrix3fv(shaderProgram.moonMatrixUniform, false, mat3.transpose(mat4.toMat3(moonRotationMatrix)));
+        
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
 
@@ -101,7 +105,7 @@
 
     var moonRotationMatrix = mat4.create();
     mat4.identity(moonRotationMatrix);
-    mat4.rotate(moonRotationMatrix, degToRad(90), [0, 1, 0]);
+    mat4.rotate(moonRotationMatrix, Math.PI / 2, [0, 1, 0]);
 
     function handleMouseDown(event) {
         mouseDown = true;
