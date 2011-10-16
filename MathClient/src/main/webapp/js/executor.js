@@ -130,7 +130,7 @@ org.weblogo.stubParser = function(commandString) {
     if (tokens.length != record.args.length + 1) {
         return {
             type: "error",
-            message: "too many args for command " + command + " - " + record.args.length + " expected"
+            message: "incorrect number of args for command " + command + " - " + record.args.length + " expected"
         }  
     }
     var args = [];

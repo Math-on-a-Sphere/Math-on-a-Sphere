@@ -73,7 +73,25 @@ org.weblogo.executors.clearAll = function(config, command) {
     org.weblogo.executors.clearDrawing(config, command);
     // TODO: different modes for initial state
     config.turtles = [org.weblogo.turtle()]
-}
+};
+
+org.weblogo.executors.penUp = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        turtle.drawing = false; 
+    });
+};
+
+org.weblogo.executors.penDown = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        turtle.drawing = true; 
+    });
+};
+
+org.weblogo.executors.position = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        turtle.position = geom.polar_to_3(command.x,command.y); 
+    });
+};
 
 org.weblogo.executors.set = function(config, command) {
     var as = org.weblogo.turtle.accessors;
@@ -149,6 +167,16 @@ commands.right = function (angle) {
 commands.right.args = ["number"];
 commands.rt = commands.right;
 
+commands.setpos = function (vert, horz) {
+    return {
+        type: "position",
+        x: Math.PI * horz / 180,
+        y: Math.PI * vert /180
+    }
+};
+commands.setpos.args = ["number","number"];
+commands.sp = commands.setpos;
+
 commands.set = function (variable, value) {
     return {
         type: "set",
@@ -156,6 +184,22 @@ commands.set = function (variable, value) {
         value: value
     }  
 };
+
+commands.penup = function () {
+    return {
+        type: "penUp"
+    }  
+};
+commands.penup.args = [];
+commands["pen-up"] = commands.penup;
+
+commands.pendown = function () {
+    return {
+        type: "penDown"
+    }  
+};
+commands.pendown.args = [];
+commands["pen-down"] = commands.pendown;
 
 commands.cd = function() {
     return {
