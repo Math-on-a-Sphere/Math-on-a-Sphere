@@ -14,11 +14,20 @@ import org.apache.commons.codec.binary.Base64;
 public class StubServlet extends HttpServlet {
   int counter = 0;
   int TOTAL_FRAMES = 100;
-  
+  SOSConnection sos;
+
+  public void init() {
+      //sos = new SOSConnection("localhost", 2468);
+      //sos.connect();
+      //System.out.println(sos.sendCommand("enable"));
+      //System.out.println(sos.sendCommand("play images"));
+  }
+
   public void service(ServletRequest req, ServletResponse res) {
     HttpServletRequest hreq = (HttpServletRequest) req;
     System.out.println(hreq.getMethod() + ": " + req.getContentLength());
     if (hreq.getMethod() == "POST") {
+        // sos.sendCommand("get_frame_number");
       decodePostRequest(req);
     }
   }
@@ -49,6 +58,7 @@ public class StubServlet extends HttpServlet {
         br.close();
       }
       catch (Exception e) {
+          e.printStackTrace(System.err);
       }
     }
   }
