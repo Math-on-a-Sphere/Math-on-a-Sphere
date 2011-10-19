@@ -1,59 +1,22 @@
 (function() {
     org.weblogo.preview = {};
-        
-    org.weblogo.preview.initGL = function(canvas, events) {
-        try {
-            var gl = org.weblogo.webgl.setupWebGL(canvas, events);
-            
-            gl.viewportWidth = canvas.width;
-            gl.viewportHeight = canvas.height;
-        } catch (e) {
-        }
-        if (!gl) {
-            alert("Could not initialise WebGL, sorry :-(");
-        }
-        return gl;
+
+    org.weblogo.preview.glConfig = {
+        shaders: {
+            vertex: "shaders/nullVertex.c",
+            fragment: "shaders/directSphereFragment.c"
+        },
+        variables: {
+            vertexPosition: {storage: "attribute", type: "vertexAttribArray"}, 
+            moonMatrix: "uniform",
+            sampler: "uniform",
+            useLighting: "uniform",
+            ambientColor: "uniform",
+            lightingDirection: "uniform",
+            directionalColor: "uniform"
+        },
+        animate: true
     };
-
-    org.weblogo.preview.shaders = {
-        vertex: "shaders/polySphereVertex.c",
-        fragment: "shaders/polySphereFragment.c"
-    };
-
-    var shaderProgram;
-
-    function initShaders(gl, shaders, events) {
-
-        shaderProgram = gl.createProgram();
-        console.log("code " +  gl.getError());
-        gl.attachShader(shaderProgram, shaders.vertex);
-        console.log("code " +  gl.getError());
-        gl.attachShader(shaderProgram, shaders.fragment);
-        console.log("code " +  gl.getError());
-        gl.linkProgram(shaderProgram);
-
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-            events.error({message: "Could not link shaders: " +
-                gl.getProgramInfoLog(shaderProgram) + " code " + gl.getError()});
-        //    throw("fail");
-        }
-
-        gl.useProgram(shaderProgram);
-        console.log("code " +  gl.getError());
-
-        shaderProgram.aVertexPosition = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        shaderProgram.moonMatrixUniform = gl.getUniformLocation(shaderProgram, "uMoonMatrix");
-
-        shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
-        shaderProgram.useLightingUniform = gl.getUniformLocation(shaderProgram, "uUseLighting");
-        shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-        shaderProgram.lightingDirectionUniform = gl.getUniformLocation(shaderProgram, "uLightingDirection");
-        shaderProgram.directionalColorUniform = gl.getUniformLocation(shaderProgram, "uDirectionalColor");
-        console.log("code " +  gl.getError());
-    }
-
 
     function canvasToTexture(gl, canvas) {
         var texture = gl.createTexture();
@@ -110,74 +73,56 @@
         lastMouseY = newY;
     }
 
-    var vertexBuffer;
-
-    function initBuffers(gl) {
-        var vertices = new Float32Array([
-            -1, 1,   1,  1,   1, -1,  // Triangle 1
-            -1, 1,   1, -1,  -1, -1   // Triangle 2
-        ]);
- 
-        vertexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);                                        
-        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    }
-
-
-    function drawScene(gl) {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    org.weblogo.preview.userDraw = function(that) {
+        var shaderProgram = that.shaderProgram;
+        var gl = that.gl;
+        that.gl.clearColor(0.0, 0.0, 0.5, 1.0);
 
         var lighting = document.getElementById("lighting").checked;
-        gl.uniform1i(shaderProgram.useLightingUniform, lighting);
+        gl.uniform1i(shaderProgram.useLighting, lighting);
         if (lighting) {
-            gl.uniform3f(shaderProgram.ambientColorUniform, 0.2, 0.2, 0.2);
+            gl.uniform3f(shaderProgram.ambientColor, 0.2, 0.2, 0.2);
 
             var lightingDirection = [ -1, -1, -1 ];
             var adjustedLD = vec3.normalize(lightingDirection);
             vec3.scale(adjustedLD, -1);
-            gl.uniform3fv(shaderProgram.lightingDirectionUniform, adjustedLD);
+            gl.uniform3fv(shaderProgram.lightingDirection, adjustedLD);
 
-            gl.uniform3f(shaderProgram.directionalColorUniform, 0.8, 0.8, 0.8);
+            gl.uniform3f(shaderProgram.directionalColor, 0.8, 0.8, 0.8);
         }
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, moonTexture);
-        gl.uniform1i(shaderProgram.samplerUniform, 0);
-
-        // http://stackoverflow.com/questions/3665671/is-vertexattribpointer-needed-after-each-bindbuffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);                                        
-        gl.vertexAttribPointer(shaderProgram.aVertexPosition, 2, gl.FLOAT, false, 0, 0);
-      
+        gl.uniform1i(shaderProgram.sampler, 0);
+        
         // inverse rotation matrix since we are rotating the viewport BACKWARDS to
         // recover the sphere in absolute space
-        gl.uniformMatrix3fv(shaderProgram.moonMatrixUniform, false, mat3.transpose(mat4.toMat3(moonRotationMatrix)));
-        
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
-
-
-    org.weblogo.preview.webGLStart = function(canvas3d, canvas2d, events) {
-        var canvas = $(canvas3d);
-        var gl = org.weblogo.preview.initGL(canvas[0]);
-        var that = {};
-        that.updateTexture = function() {
-            canvasToTexture(gl, $(canvas2d)[0]);
-        };
-        org.weblogo.webgl.loadShaders(gl, org.weblogo.preview.shaders, events, function(shaders) {
-            initShaders(gl, shaders, events);
-            initBuffers(gl);
-            that.updateTexture();
+        gl.uniformMatrix3fv(shaderProgram.moonMatrix, false, mat3.transpose(mat4.toMat3(moonRotationMatrix)));
+    };
+ 
+    org.weblogo.preview.componentInit = function(that) {
+       that.updateTexture = function() {
+           canvasToTexture(that.gl, that.canvas2d);
+       };
+       that.updateTexture();
+       that.events.onDraw.addListener(that.updateTexture);
+       
+       that.gl.clearColor(0.0, 0.0, 0.5, 1.0);
     
-            gl.clearColor(0.0, 0.0, 0.5, 0.1);
-            gl.enable(gl.DEPTH_TEST);
-    
-            canvas.mousedown(handleMouseDown);
-            $(document).mouseup(handleMouseUp);
-            $(document).mousemove(handleMouseMove);
-            
-            org.weblogo.webgl.animator(function() {drawScene(gl)});
-        });
+       that.container.mousedown(handleMouseDown);
+       $(document).mouseup(handleMouseUp);
+       $(document).mousemove(handleMouseMove);
+    };
+
+    org.weblogo.preview.webGLStart = function(canvas3d, canvas2d, client) {
+      
+        var that = org.weblogo.webgl.initWebGLComponent(canvas3d, 
+            org.weblogo.preview.glConfig, {
+                userDraw: org.weblogo.preview.userDraw,
+                initBuffers: org.weblogo.webgl.makeSquareVertexBuffer,
+                canvas2d: $(canvas2d)[0],
+                events: client.events
+            }, org.weblogo.preview.componentInit);
         return that;
     }
     

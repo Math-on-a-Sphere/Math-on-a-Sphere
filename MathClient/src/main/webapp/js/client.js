@@ -163,11 +163,15 @@ org.weblogo.client = function(container, options) {
     that.receiveBlob = function(blob) {
         that.locate("frameSize").text(blob.size);
     };
+    that.events = {
+        onError: fluid.makeEventFirer(),
+        onDraw: fluid.makeEventFirer()
+    };
     
-    that.error = function(error) {
+    that.events.onError.addListener(function(error) {
         that.terminal.error(error.message);
         that.commandDone();
-    };
+    });
     
     that.commandStart = function() {
         that.busy = true;
@@ -197,11 +201,8 @@ org.weblogo.client = function(container, options) {
         that.locate("frameRate").text(rate.toFixed(2));
         that.locate("dataRate").text((url.length * rate / 1000).toFixed(1));
         that.lastFrame = now;
-        //webGLStart();
-        //counter++;
-        if (that.drawListener) {
-            that.drawListener();
-        }
+        
+        that.events.onDraw.fire();
     };
     
     that.element = that.locate("canvas")[0];

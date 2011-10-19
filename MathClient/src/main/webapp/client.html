@@ -17,15 +17,8 @@
     <script type="text/javascript" src="js/preview.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
 
+    <link rel="stylesheet" media="screen" href="css/client.css" />
     <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
-    
-    <style type="text/css">  
-      canvas { border: 1px solid black; 
-               background: black
-             }
-      .flc-math-errors: { color: red; font-weight: bold; } 
-      }
-    </style>  
 
     </head>
 
@@ -35,19 +28,22 @@
             <tr>
               <td style="vertical-align:top">
                 <!-- command line interface -->
-                <div class="flc-math-commands"></textarea>
+                <div class="flc-math-commands unselectable"></div>
               </td>
               <td style="vertical-align:top">
                 <!-- preview sphere canvas -->
-                <canvas id="webgl-canvas" style="border: none;" width="420" height="420"></canvas>
-                <input type="checkbox" id="lighting" checked /> Use lighting<br/>
+                <canvas id="webgl-canvas" class="unselectable" style="border: none;" width="420" height="420"></canvas>
+                <span>
+                <input type="checkbox" id="lighting" checked /><label for="lighting">Use lighting</label>
+                </span>
+                <br/>
                 Spin the moon by dragging it with the mouse.
               </td>
             </tr>
             <tr>
               <td colspan="2">
                 <!-- preview image canvas -->
-                <canvas width="1024" height="512" class="flc-canvas"></canvas>
+                <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas>
               </td>
             </tr>
             <tr>

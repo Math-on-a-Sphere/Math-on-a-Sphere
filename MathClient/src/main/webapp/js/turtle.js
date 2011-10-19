@@ -51,8 +51,10 @@ org.weblogo.raster.stroke_line_elem = function(start, end, options) {
     var corners2 = fluid.transform(corners, function(corner) {
         return geom.pixel_from_3(corner, width, height);
         });
+    // console.log("Corners: " + JSON.stringify(corners2));
     var close;
     if (poles[0] || poles[1]) {
+        // console.log("Pole");
         var polar_y = poles[0]? 0 : height;
         close = geom.convert_polar_polygon(corners2, width, polar_y);
     }
@@ -80,6 +82,8 @@ org.weblogo.raster.stroke_line = function(options) {
     //  - ensure that successive polygons abut - experimental
     var jitter = 1e-3;
     while (true) {
+        options.config.context.fillStyle = options.config.context.strokeStyle =  
+            org.weblogo.colour.cssFromColour(options.colour);
         var cosy = Math.cos(geom.polar_from_3(pos)[0]);
         // take smaller steps close to the poles
         var sfac = (cosy*cosy + 1/40) * 5;

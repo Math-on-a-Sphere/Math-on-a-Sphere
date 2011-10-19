@@ -54,9 +54,7 @@ var fluid = fluid || fluid_1_4;
         return zeropad(date.getHours()) + ":" + zeropad(date.getMinutes()) + ":" + zeropad(date.getSeconds()) + "." + zeropad(date.getMilliseconds(), 3);
     };
     
-    /** Log a message to a suitable environmental console. If the standard "console" 
-     * stream is available, the message will be sent there - otherwise either the
-     * YAHOO logger or the Opera "postError" stream will be used. Logging must first
+    /** Log a message to a suitable environmental console. Logging must first
      * be enabled with a call to the fluid.setLogging(true) function.
      */
     fluid.log = function (message /*, ... */) { // jslint:ok - whitespace in arg list
@@ -354,6 +352,96 @@ var fluid = fluid || fluid_1_4;
                 delete target[i];
             }
         }
+    };
+    
+    fluid.parseEL = function (EL) {
+        return EL.toString().split('.');
+    };
+    
+    fluid.composePath = function (prefix, suffix) {
+        return prefix === ""? suffix : prefix + "." + suffix;
+    }
+  
+    fluid.set = function (root, EL, newValue) {
+        var segs = fluid.parseEL(EL);
+        for (var i = 0; i < segs.length - 1; ++i) {
+            if (!root[segs[i]]) {
+                root[segs[i]] = {};
+            }
+            root = root[segs[i]];
+        }
+        root[segs[segs.length - 1]] = newValue;
+    };
+    
+    /** Evaluates an EL expression by fetching a dot-separated list of members
+     * recursively from a provided root.
+     * @param root The root data structure in which the EL expression is to be evaluated
+     * @param {string} EL The EL expression to be evaluated
+     * @param environment An optional "environment" which, if it contains any members
+     * at top level, will take priority over the root data structure.
+     * @return The fetched data value.
+     */
+    
+    fluid.get = function (root, EL) {
+        if (EL === "" || EL === null || EL === undefined) {
+            return root;
+        }
+        var segs = fluid.model.parseEL(EL);
+        for (var i = 0; i < segs.length; ++i) {
+            if (!root) {
+                return root;
+            }
+            root = root[segs[i]];
+        }
+        return root;
+    };
+    
+    fluid.invokeGlobalFunction = function (functionPath, args, environment) {
+        var func = fluid.get(window, functionPath, environment);
+        if (!func) {
+            fluid.fail("Error invoking global function: " + functionPath + " could not be located");
+        } 
+        else return func.apply(null, args);
+    };
+    
+    var fluid_guid = 1;
+    
+    fluid.makeEventFirer = function (preventable) {
+        var listeners = {};
+        return {
+            addListener: function (listener, namespace) {
+                if (!listener) {
+                    return;
+                }
+                if (!namespace) {
+                    if (!listener.$$guid) {
+                        listener.$$guid = fluid_guid++;
+                    }
+                    namespace = listener.$$guid;
+                }
+
+                listeners[namespace] = {listener: listener};
+            },
+
+            removeListener: function (listener) {
+                if (typeof(listener) === 'string') {
+                    delete listeners[listener];
+                }
+                else if (typeof(listener) === 'object' && listener.$$guid) {
+                    delete listeners[listener.$$guid];
+                }
+            },
+        
+            fire: function () {
+                for (var i in listeners) {
+                    var ret = listeners[i].listener.apply(null, arguments);
+                    if (preventable && ret === false) {
+                        return false;
+                    }
+                    return ret;
+                }
+            }
+        };
     };
     
 })(jQuery, fluid_1_4);
