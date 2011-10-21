@@ -31,7 +31,8 @@ org.weblogo.quickStringExecutor = function(executor) {
     };
 };
 
-org.weblogo.renderingExecutor = function(executor, events, tickInterval) {
+org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
+    var events = client.events;
     var that = {};
     
     that.tick = function() {
@@ -39,11 +40,11 @@ org.weblogo.renderingExecutor = function(executor, events, tickInterval) {
         var finished;
         try {
             var finished = that.execution.toTick(now);
-            events.draw();
+            client.draw();
         }
         catch (e) {
             finished = true;
-            events.error({message: "Error during rendering: " + e});
+            events.onError.fire({message: "Error during rendering: " + e});
         }
         if (finished) {
             that.stop();
@@ -53,21 +54,21 @@ org.weblogo.renderingExecutor = function(executor, events, tickInterval) {
     that.execute = function(commandString) {
         var parsed = org.weblogo.stubParser(commandString);
         if (parsed.type === "error") {
-            events.error(parsed);
+            events.onError.fire(parsed);
         }
         else {
             that.execution = executor.execute(parsed.command, Date.now());
             if (that.execution && that.execution.type === "error") {
-                events.error(that.execution);
+                events.onError.fire(that.execution);
                 delete that.execution;
             }
             else {
-                events.commandStart(that.execution);
+                client.commandStart(that.execution);
                 if (that.execution && that.execution.toTick) {
                     that.intervalID = window.setInterval(that.tick, tickInterval);
                 }
                 else {
-                    events.draw(that.execution);
+                    client.draw(that.execution);
                     that.stop();
                 }
             }
@@ -75,7 +76,7 @@ org.weblogo.renderingExecutor = function(executor, events, tickInterval) {
         return that.execution;
     };
     that.stop = function() {        
-        events.commandDone(that.execution);
+        client.commandDone(that.execution);
         delete that.execution;
         if (that.intervalID) {
             window.clearInterval(that.intervalID);

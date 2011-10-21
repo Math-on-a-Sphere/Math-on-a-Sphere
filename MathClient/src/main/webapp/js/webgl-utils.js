@@ -136,13 +136,141 @@ org.weblogo.webgl.createGLContext = function(canvas, opt_attribs) {
     for (var ii = 0; ii < names.length; ++ii) {
         try {
             context = canvas.getContext(names[ii], opt_attribs);
-        } catch(e) {}
+        } catch(e) {
+            console.log(e);
+        }
         if (context) {
             break;
         }
     }
     return context;
 };
+
+// Create a vertex buffer which will draw a simple square - that is, a scene
+// which will cause the fragment shader to execute for every pixel
+org.weblogo.webgl.makeSquareVertexBuffer = function(that) {
+    var gl = that.gl;
+    var vertices = new Float32Array([
+            -1, 1,   1,  1,   1, -1,  // Triangle 1
+            -1, 1,   1, -1,  -1, -1   // Triangle 2
+        ]);
+    that.vertexSize = 2;
+    that.vertexCount = vertices.length / that.vertexSize;
+ 
+    that.vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, that.vertexBuffer);                                        
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+};
+
+org.weblogo.webgl.makeDraw = function(that, userDraw) {
+    return function() {
+        var gl = that.gl;
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        userDraw(that);
+          // http://stackoverflow.com/questions/3665671/is-vertexattribpointer-needed-after-each-bindbuffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, that.vertexBuffer);                                        
+        gl.vertexAttribPointer(that.shaderProgram.vertexPosition, that.vertexSize, gl.FLOAT, false, 0, 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, that.vertexCount);
+    };
+};
+
+
+org.weblogo.webgl.initGL = function(that) {
+    try {
+        var canvas = that.container[0];
+        var gl = org.weblogo.webgl.setupWebGL(canvas, that.events);
+        
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+    } catch (e) {
+    }
+    if (!gl) {
+        alert("Could not initialise WebGL, sorry :-(");
+    }
+    that.gl = gl;
+};
+
+
+org.weblogo.webgl.initShaders = function(that, shaders) {
+    var gl = that.gl;
+
+    var shaderProgram = gl.createProgram();
+    console.log("code " +  gl.getError());
+    gl.attachShader(shaderProgram, shaders.vertex);
+    console.log("code " +  gl.getError());
+    gl.attachShader(shaderProgram, shaders.fragment);
+    console.log("code " +  gl.getError());
+    gl.linkProgram(shaderProgram);
+
+    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        that.events.error({message: "Could not link shaders: " +
+            gl.getProgramInfoLog(shaderProgram) + " code " + gl.getError()});
+    //    throw("fail");
+    }
+
+    gl.useProgram(shaderProgram);
+    console.log("code " +  gl.getError());
+    fluid.each(that.variables, function(info, variable) {
+        function error(message) {
+            that.events.onError.fire({message: message});
+        }
+        if (typeof(info) === "string") {
+            if (info === "uniform") {
+                shaderProgram[variable] = gl.getUniformLocation(shaderProgram, variable);
+            }
+            else {
+                error("Unrecognised variable storage type " + info);    
+            }
+        }
+        else {
+            if (info.storage === "attribute") {
+                var pos = gl.getAttribLocation(shaderProgram, variable);
+                if (info.type === "vertexAttribArray") {
+                    gl.enableVertexAttribArray(pos);
+                }
+                else {
+                    error("Unrecognised attribute type " + info.type);
+                }
+                shaderProgram[variable] = pos;
+            }
+            else {
+                error("Unrecognised variable storage type " + info.storage);
+            }
+        }
+    });
+         
+
+    console.log("code " +  gl.getError());
+    that.shaderProgram = shaderProgram;
+};
+
+
+// The main entry point - create a WebGL-enabled "component" using the supplied configuration
+
+// Silly non-standard signature - fix this up when we can port a bit more of Fluid to "Lite"
+org.weblogo.webgl.initWebGLComponent = function(container, options, userOptions, onCreate) {
+    var that = {
+        container: $(container),
+    };
+    // Yes, we really stick all the options onto the object
+    $.extend(true, that, options, userOptions);
+    org.weblogo.webgl.initGL(that);
+
+    org.weblogo.webgl.loadShaders(that.gl, that.shaders, that.events, function(shaders) {
+        org.weblogo.webgl.initShaders(that, shaders);
+        that.initBuffers(that);
+        
+        onCreate(that);
+        that.draw = org.weblogo.webgl.makeDraw(that, that.userDraw);
+        if (that.animate) {
+            org.weblogo.webgl.animator(that.draw);
+        }
+    });
+    return that;
+};
+
 
 org.weblogo.webgl.animator = function(callback) {
     var requestor = window.requestAnimationFrame ||
