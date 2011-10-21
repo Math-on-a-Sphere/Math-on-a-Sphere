@@ -72,10 +72,18 @@ org.weblogo.makeConfig = function(element, options) {
     return that;
 };
 
+org.weblogo.turtle.commands.sph = function() {
+    return {type: "sph"}
+};
+org.weblogo.turtle.commands.sph.args = [];
+
+org.weblogo.executors.sph = function(config, command, tick) {
+  
+};
 
 org.weblogo.turtle.commands.demo = function() {
     return {type: "demo"}
-}
+};
 org.weblogo.turtle.commands.demo.args = [];
 
 org.weblogo.executors.demo = function(config, command, tick) {
