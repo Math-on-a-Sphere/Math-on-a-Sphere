@@ -1,5 +1,8 @@
 package org.mathonasphere;
 
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+//import java.lang.Thread;
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 
@@ -15,12 +18,57 @@ public class StubServlet extends HttpServlet {
   int counter = 0;
   int TOTAL_FRAMES = 100;
   SOSConnection sos;
+  ArrayBlockingQueue<byte[]> dataQueue;
 
   public void init() {
-      //sos = new SOSConnection("localhost", 2468);
+      sos = new SOSConnection("localhost", 2468);
+      dataQueue = new ArrayBlockingQueue(10,true);
       //sos.connect();
       //System.out.println(sos.sendCommand("enable"));
       //System.out.println(sos.sendCommand("play images"));
+      Thread t = new Thread() 
+          {
+              int lastFN = 0;
+              public void run() 
+              {
+                  while(true)
+                  {
+                      try
+                      {
+                          int fn = 0;
+                          // int fn = sos.sendCommand("get_frame_number");
+                          if(fn == lastFN)
+                          {
+                              FileOutputStream fos = null;
+                              fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/images/"+counter+".png");
+                              //Byte[] data = dataQueue.peek();
+                              fos.write(dataQueue.peek());
+                              fos.close();
+                              
+                              if(dataQueue.size() > 1)
+                              {
+                                  dataQueue.take();
+                              }
+                          }
+                          counter = (counter == TOTAL_FRAMES) ? 0 : counter+1;
+                          sleep(100);
+                      }
+                      catch(Exception e) 
+                      {
+                          System.out.println("Thread failed.");
+                      }
+                  }
+              }
+          };
+
+      try
+      {
+          t.start();
+      }
+      catch(Exception e)
+      {
+          System.out.println("Failed to start thread.");
+      }
   }
 
   public void service(ServletRequest req, ServletResponse res) {
@@ -33,28 +81,22 @@ public class StubServlet extends HttpServlet {
   }
 
   private void decodePostRequest(ServletRequest req) {
-    FileOutputStream fos = null;
+      //FileOutputStream fos = null;
     BufferedReader br = null;
     try {
       br = req.getReader();
       String header = br.readLine();
       String body = br.readLine();
       byte[] bytes = Base64.decodeBase64(body);
-      fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/output_"+counter+".png");
-      fos.write(bytes);
-      if(counter == TOTAL_FRAMES-1) {
-          counter = 0;
-      }
-      else {
-          counter++;
-      }
+      dataQueue.offer(bytes);
+      //      fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/output_"+counter+".png");
+      //fos.write(bytes);
     }
     catch (Exception e) {
       e.printStackTrace(System.err);
     }
     finally {
       try {
-        fos.close();
         br.close();
       }
       catch (Exception e) {
