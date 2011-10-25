@@ -40,22 +40,25 @@ public class StubServlet extends HttpServlet {
                           if(fn == lastFN)
                           {
                               FileOutputStream fos = null;
-                              fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/images/"+counter+".png");
-                              //Byte[] data = dataQueue.peek();
-                              fos.write(dataQueue.peek());
+                              fos = new FileOutputStream(System.getenv("MOS_IMAGES")+"/"+counter+".png");
+                              byte[] data = null;
+                              if((data = dataQueue.peek()) != null)
+                              {
+                                  fos.write(data);
+                                  if(dataQueue.size() > 1)
+                                  {
+                                      dataQueue.take();
+                                  }
+                              }
                               fos.close();
                               
-                              if(dataQueue.size() > 1)
-                              {
-                                  dataQueue.take();
-                              }
                           }
                           counter = (counter == TOTAL_FRAMES) ? 0 : counter+1;
                           sleep(100);
                       }
                       catch(Exception e) 
                       {
-                          System.out.println("Thread failed.");
+                          e.printStackTrace();
                       }
                   }
               }
