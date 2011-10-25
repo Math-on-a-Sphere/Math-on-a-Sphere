@@ -89,7 +89,10 @@ org.weblogo.executors.penDown = function(config, command) {
 
 org.weblogo.executors.position = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
-        turtle.position = geom.polar_to_3(command.x,command.y); 
+        turtle.position = geom.polar_to_3(command.theta,command.phi); 
+        var pole = geom.polar_to_3(Math.PI/2, 0);
+        var newHeading = geom.axis_from_heading(turtle.position, pole);
+        turtle.heading = newHeading;
     });
 };
 
@@ -167,11 +170,11 @@ commands.right = function (angle) {
 commands.right.args = ["number"];
 commands.rt = commands.right;
 
-commands.setpos = function (vert, horz) {
+commands.setpos = function (t, p) {
     return {
         type: "position",
-        x: Math.PI * horz / 180,
-        y: Math.PI * vert /180
+        theta: Math.PI * t / 180,
+        phi: Math.PI * p /180
     }
 };
 commands.setpos.args = ["number","number"];
