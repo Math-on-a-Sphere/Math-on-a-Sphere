@@ -21,11 +21,14 @@ public class StubServlet extends HttpServlet {
   ArrayBlockingQueue<byte[]> dataQueue;
 
   public void init() {
+      final String dir = System.getenv("MOS_IMAGES");
       sos = new SOSConnection("localhost", 2468);
       dataQueue = new ArrayBlockingQueue(10,true);
-      //sos.connect();
-      //System.out.println(sos.sendCommand("enable"));
-      //System.out.println(sos.sendCommand("play images"));
+      sos.connect();
+      System.out.println(sos.sendCommand("enable"));
+      System.out.println(sos.sendCommand("load "+dir));
+      System.out.println(sos.sendCommand("play"));
+      
       Thread t = new Thread() 
           {
               int lastFN = 0;
@@ -36,11 +39,12 @@ public class StubServlet extends HttpServlet {
                       try
                       {
                           int fn = 0;
-                          // int fn = sos.sendCommand("get_frame_number");
+			  //int fn = sos.sendCommand("get_frame_number");
                           if(fn == lastFN)
                           {
+			      String str = String.format("%03d", counter);
                               FileOutputStream fos = null;
-                              fos = new FileOutputStream(System.getenv("MOS_IMAGES")+"/"+counter+".png");
+                              fos = new FileOutputStream(dir+"/"+str+".png");
                               byte[] data = null;
                               if((data = dataQueue.peek()) != null)
                               {
@@ -54,7 +58,7 @@ public class StubServlet extends HttpServlet {
                               
                           }
                           counter = (counter == TOTAL_FRAMES) ? 0 : counter+1;
-                          sleep(100);
+                          sleep(10);
                       }
                       catch(Exception e) 
                       {
