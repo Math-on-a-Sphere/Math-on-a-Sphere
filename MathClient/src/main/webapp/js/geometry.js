@@ -7,6 +7,14 @@ org.weblogo = {
 
 var geom = org.weblogo.geom;
 
+org.weblogo.geom.rad2deg = function(r) {
+    return (r*180)/Math.PI
+};
+org.weblogo.geom.deg2rad = function(d) {
+    return (d*Math.PI)/180
+};
+
+
 org.weblogo.geom.mult_33 = function(m, v) {
     return [
        m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] + v[2],
@@ -44,6 +52,7 @@ org.weblogo.geom.dist_3 = function(a, b) {
     var diff = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     return geom.dot_3(diff, diff); 
 };
+
 
 /** Converts a unit 3-d vector into a unit quaternion by prepending 0 as the real part **/
 

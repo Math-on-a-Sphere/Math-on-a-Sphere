@@ -63,6 +63,9 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
                 delete that.execution;
             }
             else {
+                if(that.execution && that.execution.type === "info") {
+                    events.onInfo.fire(that.execution);
+                }
                 client.commandStart(that.execution);
                 if (that.execution && that.execution.toTick) {
                     that.intervalID = window.setInterval(that.tick, tickInterval);

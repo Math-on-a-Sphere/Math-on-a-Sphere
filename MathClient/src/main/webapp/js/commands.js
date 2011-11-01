@@ -87,12 +87,43 @@ org.weblogo.executors.penDown = function(config, command) {
     });
 };
 
+org.weblogo.executors.getHeading = function(config, command) {
+    var output;
+    fluid.each(config.turtles, function(turtle) {
+        var pole = geom.polar_to_3(Math.PI/2, 0);
+        var ang = geom.rad2deg(Math.acos(geom.dot_3(turtle.heading, pole)));
+        var cross = geom.cross_3(turtle.heading, turtle.position);
+        var heading = 0;
+        if (cross[2] > 0) {
+            heading = 90 - ang;
+        }
+        else {
+            heading = 90 + ang;
+        }
+        output = {
+            type: "info",
+            message: heading
+        };
+    });
+    return output;
+};
+
 org.weblogo.executors.position = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
+        var oldv = turtle.position;
+        var oldpos = geom.polar_from_3(oldv);
+        var theta1 = geom.rad2deg(oldpos[0]);
+        var phi1 = geom.rad2deg(oldpos[1]);
+        var dTheta = command.theta - theta1;
+        var dPhi = command.phi - phi1;
+        //var y = Math.sin(dLon) * Math.cos(lat2);
+        var y = Math.sin(dPhi) * Math.cos(command.theta);
+        //var x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+        var x = Math.cos(theta1)*Math.sin(command.theta) - Math.sin(theta1)*Math.cos(command.theta)*Math.cos(dPhi);
+        var brng = Math.atan2(y, x);
+
         turtle.position = geom.polar_to_3(command.theta,command.phi); 
-        var pole = geom.polar_to_3(Math.PI/2, 0);
-        var newHeading = geom.axis_from_heading(turtle.position, pole);
-        turtle.heading = newHeading;
+        turtle.heading = geom.axis_from_heading(oldv, turtle.position); 
     });
 };
 
@@ -169,6 +200,14 @@ commands.right = function (angle) {
 };
 commands.right.args = ["number"];
 commands.rt = commands.right;
+
+commands.getheading = function () {
+    return {
+        type: "getHeading"
+    }
+};
+commands.getheading.args = [];
+commands.sp = commands.getheading;
 
 commands.setpos = function (t, p) {
     return {

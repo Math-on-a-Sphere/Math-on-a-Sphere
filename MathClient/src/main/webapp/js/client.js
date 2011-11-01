@@ -164,14 +164,21 @@ org.weblogo.client = function(container, options) {
         that.locate("frameSize").text(blob.size);
     };
     that.events = {
+        onInfo: fluid.makeEventFirer(),
         onError: fluid.makeEventFirer(),
         onDraw: fluid.makeEventFirer()
     };
     
+    that.events.onInfo.addListener(function(info) {
+        that.terminal.echo(info.message);
+        that.commandDone();
+    });
+
     that.events.onError.addListener(function(error) {
         that.terminal.error(error.message);
         that.commandDone();
     });
+
     
     that.commandStart = function() {
         that.busy = true;
