@@ -157,6 +157,52 @@ org.weblogo.executors.testCard = function(config, command, tick) {
     return that;
 };
 
+org.weblogo.turtle.commands["test-heading"] = function() {
+    return {type: "testHeading"}
+}
+org.weblogo.turtle.commands["test-heading"].args = [];
+
+function makeHeadingTestCommands() {
+    var togo = [];
+    for (var i = 0; i < 20; ++ i) {
+        togo.push("set color " + (10*i + 5));
+        togo.push("setheading 45");
+        togo.push("forward 370");
+    }
+    return togo;
+};
+
+org.weblogo.executors.testHeading = function(config, command, tick) {
+    var executor = org.weblogo.executor(config);
+    function quickExec(commandString) {
+        var parsed = org.weblogo.stubParser(commandString);
+        var now = Date.now();
+        execution = executor.execute(parsed.command, now);
+        return execution;
+    }
+
+    var commands = makeHeadingTestCommands();
+    var index = 0;
+    var execution;
+    function hopalong() {
+        while (!execution && index < commands.length) {
+            execution = quickExec(commands[index]);
+            ++index;
+        }
+    }
+    hopalong();
+    var that = {};
+    that.toTick = function(newTick) {
+        var finished = execution.toTick(newTick);
+        if (finished) {
+            execution = null;
+            hopalong();
+            return index === commands.length;
+        }
+    };
+    return that;
+};
+
 org.weblogo.client = function(container, options) {
     var that = {};
     that.locate = org.weblogo.binder(container, org.weblogo.selectors).locate;

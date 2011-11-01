@@ -87,6 +87,16 @@ org.weblogo.executors.penDown = function(config, command) {
     });
 };
 
+org.weblogo.executors.setHeading = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        var pole = geom.polar_to_3(Math.PI/2, 0);
+        turtle.heading = geom.axis_from_heading(turtle.position, pole); 
+        var versor = geom.versor_from_parts(turtle.position, command.angle);
+        var newHeading = geom.quat_conj(versor, turtle.heading);
+        turtle.heading = newHeading; 
+    });
+}
+
 org.weblogo.executors.getHeading = function(config, command) {
     var output;
     fluid.each(config.turtles, function(turtle) {
@@ -111,16 +121,16 @@ org.weblogo.executors.getHeading = function(config, command) {
 org.weblogo.executors.position = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
         var oldv = turtle.position;
-        var oldpos = geom.polar_from_3(oldv);
-        var theta1 = geom.rad2deg(oldpos[0]);
-        var phi1 = geom.rad2deg(oldpos[1]);
-        var dTheta = command.theta - theta1;
-        var dPhi = command.phi - phi1;
+        //var oldpos = geom.polar_from_3(oldv);
+        //var theta1 = geom.rad2deg(oldpos[0]);
+        //var phi1 = geom.rad2deg(oldpos[1]);
+        //var dTheta = command.theta - theta1;
+        //var dPhi = command.phi - phi1;
         //var y = Math.sin(dLon) * Math.cos(lat2);
-        var y = Math.sin(dPhi) * Math.cos(command.theta);
+        //var y = Math.sin(dPhi) * Math.cos(command.theta);
         //var x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-        var x = Math.cos(theta1)*Math.sin(command.theta) - Math.sin(theta1)*Math.cos(command.theta)*Math.cos(dPhi);
-        var brng = Math.atan2(y, x);
+        //var x = Math.cos(theta1)*Math.sin(command.theta) - Math.sin(theta1)*Math.cos(command.theta)*Math.cos(dPhi);
+        //var brng = Math.atan2(y, x);
 
         turtle.position = geom.polar_to_3(command.theta,command.phi); 
         turtle.heading = geom.axis_from_heading(oldv, turtle.position); 
@@ -208,6 +218,15 @@ commands.getheading = function () {
 };
 commands.getheading.args = [];
 commands.sp = commands.getheading;
+
+commands.setheading = function (angle) {
+    return {
+        type: "setHeading",
+        angle: - Math.PI * angle / 180
+    }
+};
+commands.setheading.args = ["number"];
+commands.sp = commands.setheading;
 
 commands.setpos = function (t, p) {
     return {
