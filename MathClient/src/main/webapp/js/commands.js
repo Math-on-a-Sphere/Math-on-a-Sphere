@@ -101,15 +101,9 @@ org.weblogo.executors.getHeading = function(config, command) {
     var output;
     fluid.each(config.turtles, function(turtle) {
         var pole = geom.polar_to_3(Math.PI/2, 0);
-        var ang = geom.rad2deg(Math.acos(geom.dot_3(turtle.heading, pole)));
-        var cross = geom.cross_3(turtle.heading, turtle.position);
-        var heading = 0;
-        if (cross[2] > 0) {
-            heading = 90 - ang;
-        }
-        else {
-            heading = 90 + ang;
-        }
+        var tan = geom.cross_3(turtle.heading, turtle.position);
+        var ang = geom.rad2deg(Math.acos(geom.dot_3(tan, pole)));
+        var heading = ang;
         output = {
             type: "info",
             message: heading
