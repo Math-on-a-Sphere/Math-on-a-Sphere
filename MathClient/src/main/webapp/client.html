@@ -8,6 +8,8 @@
     <script type="text/javascript" src="lib/js/fluidLite.js"></script>
     <script type="text/javascript" src="lib/js/jquery.terminal-0.3.6.js"></script>
     <script type="text/javascript" src="lib/js/gl-matrix.js"></script>
+    <script type="text/javascript" src="lib/js/codemirror.js"></script>
+    <script type="text/javascript" src="lib/mode/scheme/scheme.js"></script>
         
     <script type="text/javascript" src="js/geometry.js"></script>
     <script type="text/javascript" src="js/turtle.js"></script>
@@ -16,19 +18,25 @@
     <script type="text/javascript" src="js/webgl-utils.js"></script>
     <script type="text/javascript" src="js/preview.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
-
     <link rel="stylesheet" media="screen" href="css/client.css" />
+
+    <script type="text/javascript" src="js/calculator.js"></script>
+
     <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
+    <link rel="stylesheet" href="lib/css/codemirror.css">
+    <link rel="stylesheet" media="screen" href="lib/css/default.css">
 
     </head>
 
-      <body">  
+      <body>  
         <table>
           <tbody>
             <tr>
               <td style="vertical-align:top">
                 <!-- command line interface -->
-                <div class="flc-math-commands unselectable"></div>
+                <form><textarea id="code" class="code" name="code" style="border: none;" rows="30" cols="50"></textarea></form>
+                <button id="button">compile</button>
+                <!--<div class="flc-math-commands unselectable"></div>-->
               </td>
               <td style="vertical-align:top">
                 <!-- preview sphere canvas -->
@@ -66,13 +74,28 @@
         </table>
 
       <script>
-          var client = org.weblogo.client("body");
-          var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
-          client.drawListener = preview.updateTexture;
-          $(document).ready(function() {
-          client.locate("commands").focus(); });
+        var client = org.weblogo.client("body");
+        var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
+        client.drawListener = preview.updateTexture;
+
+        var myCodeMirror = CodeMirror(document.getElementById("code"), {
+        lineNumbers: "true",
+        mode: "javascript"
+        });
+
+
+        window.onload = function () {
+        document.getElementById("button").onclick = function () {
+        var code = $("#code").val();
+        var value = calculator.parse(code);
+        $("#code").val(value);
+        };
+        };        
+
+        $(document).ready(function() {
+         });
+
       </script>
 
   </body>
-
 </html>  
