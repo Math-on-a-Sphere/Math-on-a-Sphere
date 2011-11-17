@@ -9,7 +9,7 @@
     <script type="text/javascript" src="lib/js/jquery.terminal-0.3.6.js"></script>
     <script type="text/javascript" src="lib/js/gl-matrix.js"></script>
     <script type="text/javascript" src="lib/js/codemirror.js"></script>
-    <script type="text/javascript" src="lib/mode/scheme/scheme.js"></script>
+    <script type="text/javascript" src="lib/mode/javascript/javascript.js"></script>
         
     <script type="text/javascript" src="js/geometry.js"></script>
     <script type="text/javascript" src="js/turtle.js"></script>
@@ -21,6 +21,7 @@
     <link rel="stylesheet" media="screen" href="css/client.css" />
 
     <script type="text/javascript" src="js/calculator.js"></script>
+    <script type="text/javascript" src="jison/grammar.js"></script>
 
     <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
     <link rel="stylesheet" href="lib/css/codemirror.css">
@@ -36,7 +37,7 @@
                 <!-- command line interface -->
                 <form><textarea id="code" class="code" name="code" style="border: none;" rows="30" cols="50"></textarea></form>
                 <button id="button">compile</button>
-                <!--<div class="flc-math-commands unselectable"></div>-->
+                <div class="flc-math-commands unselectable"></div>
               </td>
               <td style="vertical-align:top">
                 <!-- preview sphere canvas -->
@@ -87,7 +88,7 @@
         window.onload = function () {
         document.getElementById("button").onclick = function () {
         var code = $("#code").val();
-        var value = calculator.parse(code);
+        var value = grammar.parse(code);
         $("#code").val(value);
         };
         };        
