@@ -1614,7 +1614,7 @@ function get_stack(caller) {
             focus: function(toggle) {
                 //console.log('focus on ' + options.prompt + '\n' + 
                 //            get_stack(arguments.callee.caller).join(''));
-                /* REMOVED AMB - if disabled we really want it to stay that way
+                // REMOVED AMB - if disabled we really want it to stay that way
                 self.oneTime(1, function() {
                     if (terminals.length() == 1) {
                         if (toggle === false) {
@@ -1632,7 +1632,7 @@ function get_stack(caller) {
                         }
 
                     }
-                });*/
+                });
                 return self;
             },
             enable: function() {

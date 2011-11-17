@@ -91,7 +91,12 @@
         var value = grammar.parse(code);
         $("#code").val(value);
         };
+
+        document.getElementById("code").onclick = function () {
+        client.terminal.focus(false);
         };        
+
+        };
 
         $(document).ready(function() {
          });
