@@ -23,7 +23,8 @@ org.weblogo.selectors = {
     connect: ".flc-math-connect",
     disconnect: ".flc-math-disconnect",
     serverUrl: ".flc-math-serverUrl",
-    commands: ".code",
+    //commands: ".code",
+    commands: ".flc-math-commands",
     errors: ".flc-math-errors"
 };
 
@@ -266,12 +267,13 @@ org.weblogo.client = function(container, options) {
         
     that.config.context.font = "50px Arial";
     
-    /*
+    
     that.locate("commands").terminal(function(command, terminal) {
         that.executor.execute(command);
         that.terminal.disable();
     }, {
         greetings: "WebLogo Command Interpreter © Math on a Sphere, 2011-",
+        enabled: false,
         width: 500,
         height: 100,
         prompt: "weblogo>",
@@ -279,7 +281,7 @@ org.weblogo.client = function(container, options) {
             that.terminal = terminal;
         }
     });
-    */  
+      
 
     that.locate("start").click(that.start);
     that.locate("stop").click(that.executor.stop);
