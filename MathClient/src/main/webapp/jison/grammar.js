@@ -3,19 +3,23 @@ var grammar = (function(){
 
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"file":3,"weblogo_schema":4,"EOF":5,"FORWARD":6,"NUMBER":7,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",6:"FORWARD",7:"NUMBER"},
-productions_: [0,[3,2],[4,2]],
+symbols_: {"error":2,"file":3,"weblogo_schema":4,"EOF":5,"FORWARD":6,"NUMBER":7,"RIGHT":8,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",6:"FORWARD",7:"NUMBER",8:"RIGHT"},
+productions_: [0,[3,2],[4,2],[4,2]],
 performAction: function anonymous(yytext,yyleng,yylineno,yy,yystate,$$,_$) {
 
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:return $$[$0-1]
 break;
+case 2:this.$ = [$$[$0-1], Number(yytext)];
+break;
+case 3:this.$ = [$$[$0-1], Number(yytext)];
+break;
 }
 },
-table: [{3:1,4:2,6:[1,3]},{1:[3]},{5:[1,4]},{7:[1,5]},{1:[2,1]},{5:[2,2]}],
-defaultActions: {4:[2,1],5:[2,2]},
+table: [{3:1,4:2,6:[1,3],8:[1,4]},{1:[3]},{5:[1,5]},{7:[1,6]},{7:[1,7]},{1:[2,1]},{5:[2,2]},{5:[2,3]}],
+defaultActions: {5:[2,1],6:[2,2],7:[2,3]},
 parseError: function parseError(str, hash) {
     throw new Error(str);
 },
@@ -350,16 +354,18 @@ case 13:return 'ENDTO'
 break;
 case 14:return 6
 break;
-case 15:return 'IDENTIFIER'
+case 15:return 8
 break;
-case 16:return 5
+case 16:return 'IDENTIFIER'
 break;
-case 17:return 'INVALID'
+case 17:return 5
+break;
+case 18:return 'INVALID'
 break;
 }
 };
-lexer.rules = [/^\s+/,/^[0-9]+(\.[0-9]+)?\b/,/^\*/,/^\//,/^-/,/^\+/,/^\^/,/^!/,/^%/,/^\(/,/^\)/,/^PI\b/,/^(TO|to)\b/,/^(ENDTO|endto)\b/,/^(FORWARD|forward)\b/,/^[a-zA-Z]+([a-zA-Z_]*)?\b/,/^$/,/^./];
-lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17],"inclusive":true}};return lexer;})()
+lexer.rules = [/^\s+/,/^[0-9]+(\.[0-9]+)?\b/,/^\*/,/^\//,/^-/,/^\+/,/^\^/,/^!/,/^%/,/^\(/,/^\)/,/^PI\b/,/^(TO|to)\b/,/^(ENDTO|endto)\b/,/^(FORWARD|forward)\b/,/^(RIGHT|right)\b/,/^[a-zA-Z]+([a-zA-Z_]*)?\b/,/^$/,/^./];
+lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],"inclusive":true}};return lexer;})()
 parser.lexer = lexer;
 return parser;
 })();
