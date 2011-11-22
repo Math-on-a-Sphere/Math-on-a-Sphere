@@ -22,6 +22,7 @@
 
     <script type="text/javascript" src="js/calculator.js"></script>
     <script type="text/javascript" src="jison/grammar.js"></script>
+    <script type="text/javascript" src="jison/grammar2.js"></script>
 
     <link rel="stylesheet" media="screen" href="lib/css/jquery.terminal.css" />
     <link rel="stylesheet" href="lib/css/codemirror.css">
@@ -89,7 +90,9 @@
         document.getElementById("button").onclick = function () {
         var code = $("#code").val();
         var value = grammar.parse(code);
-        $("#code").val(value);
+        var block = org.weblogo.executors.block(client.config, value, 33);
+        //$("#code").val(value);
+        
         };
 
         document.getElementById("code").onclick = function () {

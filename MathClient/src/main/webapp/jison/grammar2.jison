@@ -1,214 +1,217 @@
-%token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
-%token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
-%token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
-%token SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
-%token XOR_ASSIGN OR_ASSIGN TYPE_NAME
 
-%token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
+/* description: Adapted from Orderly Normative Grammar */
 
-%start translation_unit
+
+/* author: Zach Carter */
+
+%lex
+digit                       [0-9]
+esc                         "\\"
+int                         "-"?(?:[0-9]|[1-9][0-9]+)
+exp                         (?:[eE][-+]?[0-9]+)
+frac                        (?:\.[0-9]+)
+
+%%
+\s+                                                          /* skip whitespace */
+\/\/[^\n]*                                                   /* skip comment */
+\#[^\n]*                                                     /* skip comment */
+";"                                                          return ';'
+","                                                          return ','
+"{"                                                          return '{'
+"}"                                                          return '}'
+"["                                                          return '['
+"]"                                                          return ']'
+"`"                                                          return '`'
+"<"                                                          return '<'
+">"                                                          return '>'
+":"                                                          return ':'
+("FORWARD"|"forward")                                        return 'FORWARD'
+\"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
+{int}{frac}?{exp}?\b                                         return 'NUMBER_LIT';
+[A-Za-z_0-9-]+                                               return 'PROPERTY';
+"?"                                                          return '?'
+"*"                                                          return '*'
+"="                                                          return '='
+\/(?:[^\/]|"\\/")*\/                                         return 'REGEX';
+<<EOF>>                                                      return 'EOF';
+
+/lex
+
 %%
 
-primary_expression
-	: IDENTIFIER
-	| CONSTANT
-	| '(' expression ')'
-	;
-
-postfix_expression
-	: primary_expression
-	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')'
-	| postfix_expression '(' argument_expression_list ')'
-	| postfix_expression '.' IDENTIFIER
-	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP
-	| postfix_expression DEC_OP
-	;
-
-argument_expression_list
-	: assignment_expression
-	| argument_expression_list ',' assignment_expression
-	;
-
-unary_expression
-	: postfix_expression
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
-	| unary_operator cast_expression
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
-	;
-
-unary_operator
-	: '&'
-	| '*'
-	| '+'
-	| '-'
-	| '~'
-	| '!'
-	;
-
-cast_expression
-	: unary_expression
-	| '(' type_name ')' cast_expression
-	;
-
-multiplicative_expression
-	: cast_expression
-	| multiplicative_expression '*' cast_expression
-	| multiplicative_expression '/' cast_expression
-	| multiplicative_expression '%' cast_expression
-	;
-
-additive_expression
-	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
-	;
-
-shift_expression
-	: additive_expression
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
-	;
-
-relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LE_OP shift_expression
-	| relational_expression GE_OP shift_expression
-	;
-
-equality_expression
-	: relational_expression
-	| equality_expression EQ_OP relational_expression
-	| equality_expression NE_OP relational_expression
-	;
-
-and_expression
-	: equality_expression
-	| and_expression '&' equality_expression
-	;
-
-exclusive_or_expression
-	: and_expression
-	| exclusive_or_expression '^' and_expression
-	;
-
-inclusive_or_expression
-	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression
-	;
-
-logical_and_expression
-	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression
-	;
-
-logical_or_expression
-	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression
-	;
-
-conditional_expression
-	: logical_or_expression
-	| logical_or_expression '?' expression ':' conditional_expression
-	;
-
-assignment_expression
-	: conditional_expression
-	| unary_expression assignment_expression
-	;
-
-expression
-	: assignment_expression
-	| expression ',' assignment_expression
-	;
-
-constant_expression
-	: conditional_expression
-	;
-
-parameter_type_list
-	: parameter_list
-	| parameter_list ',' ELLIPSIS
-	;
-
-parameter_list
-	: parameter_declaration
-	| parameter_list ',' parameter_declaration
-	;
-
-parameter_declaration
-	: IDENTIFIER
-	| abstract_declarator
-	;
-
-identifier_list
-	: IDENTIFIER
-	| identifier_list ',' IDENTIFIER
-	;
-
-statement
-	: labeled_statement
-	| compound_statement
-	| expression_statement
-	| selection_statement
-	| iteration_statement
-	| jump_statement
-	;
-
-labeled_statement
-	: IDENTIFIER ':' statement
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
-	;
-
-compound_statement
-	: '{' '}'
-	| '{' statement_list '}'
-	| '{' declaration_list '}'
-	| '{' declaration_list statement_list '}'
-	;
-
-declaration_list
-	| declaration_list
-	;
-
-statement_list
-	: statement
-	| statement_list statement
-	;
-
-expression_statement
-	: ';'
-	| expression ';'
-	;
-
-selection_statement
-	: IF '(' expression ')' statement
-	| IF '(' expression ')' statement ELSE statement
-	| SWITCH '(' expression ')' statement
-	;
-
-iteration_statement
-	: WHILE '(' expression ')' statement
-	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	;
-
-identifier_list
-    : IDENTIFIER
-    | identifier_list IDENTIFIER
+file
+    : orderly_schema EOF
+        {return $1;}
     ;
 
-function_definition
-	: TO IDENTIFIER '(' identifier_list ')' compound_statement ENDTO
-	| TO IDENTIFIER compound_statement ENDTO
-	;
+orderly_schema
+    : unnamed_entry ';'
+    | unnamed_entry
+    ;
 
-function_call
-    : ASK IDENTIFIER 
+/*
+named_entries
+    : named_entry ';' named_entries
+        {$$ = $3; $$.unshift($1);}
+    | named_entry
+        {$$ = [$1];}
+    | 
+        {$$ = [];}
+    ;
+
+unnamed_entries
+    : unnamed_entry ';' unnamed_entries
+        {$$ = $3; $3.unshift($1);}
+    | unnamed_entry
+        {$$ = [$1];}
+    | 
+        {$$ = [];}
+    ;
+
+named_entry
+    : property_name definition_suffix
+        {$$ = [$2, $1]; yy.Type.addOptionals($1, $3);}
+    | string_prefix property_name string_suffix
+        {$$ = [$2, $1]; yy.Type.addOptionals($1, $3);}
+    ;
+*/
+
+unnamed_entry
+    : definition_suffix
+        {$$ = $1; yy.Type.addOptionals($$, $2);}
+    | string_prefix string_suffix
+        {$$ = $1; yy.Type.addOptionals($$, $2);}
+    ;
+
+string_prefix
+    : optional_range
+        {$$ = new yy.Type('string', $2);}
+    ;
+
+string_suffix
+    : optional_perl_regex definition_suffix
+        {$$ = $2; $$.pattern = $1;}
+    ;
+
+definition_suffix
+    : optional_enum_values optional_default_value optional_requires optional_optional_marker optional_extra_properties
+        {$$ = {'enums': $1, 'defaultv': $2, 'requires': $3, 'optional': $4, 'extras': $5};}
+    ;
+
+csv_property_names
+    : csv_property_names ',' property_name
+        {$$ = $1; $$.push($3);}
+    | property_name
+        {$$ = [$1];}
+    ;
+
+optional_extra_properties
+    : '`' JSONObject '`'
+        {$$ = $2;}
+    | 
+        {$$ = null;}
+    ;
+
+optional_requires
+    : '<' csv_property_names '>'
+        {$$ = $2;}
+    | 
+        {$$ = null;}
+    ;
+
+optional_enum_values
+    : JSONArray
+    | 
+        {$$ = null;}
+    ;
+
+optional_default_value
+    : '=' JSONValue
+        {$$ = $2;}
+    | 
+        {$$ = yy.NOVALUE;}
+    ;
+
+optional_range
+    : '{' JSONNumber ',' JSONNumber '}'
+        {$$ = [$2, $4];}
+    | '{' JSONNumber ',' '}'
+        {$$ = [$2, null];}
+    | '{' ',' JSONNumber '}'
+        {$$ = [null, $3];}
+    | '{' ',' '}'
+        {$$ = null;}
+    | 
+        {$$ = null;}
+    ;
+
+property_name
+    : JSONString
+    | PROPERTY
+        {$$ = yytext;}
+    ;
+
+optional_perl_regex
+    : REGEX
+        {$$ = yytext.substr(1, yytext.length-2);}
+    | 
+        {$$ = null;}
+    ;
+
+JSONString
+    : STRING_LIT
+        {$$ = yytext;}
+    ;
+
+JSONNumber
+    : NUMBER_LIT
+        {$$ = Number(yytext);}
+    ;
+
+
+JSONText
+    : JSONValue
+    ;
+
+JSONValue
+    : JSONNullLiteral
+    | JSONBooleanLiteral
+    | JSONString
+    | JSONNumber
+    | JSONObject
+    | JSONArray
+    ;
+
+JSONObject
+    : '{' '}'
+        {$$ = {};}
+    | '{' JSONMemberList '}'
+        {$$ = $2;}
+    ;
+
+JSONMember
+    : JSONString ':' JSONValue
+        {$$ = [$1, $3];}
+    ;
+
+JSONMemberList
+    : JSONMember
+        {$$ = {}; $$[$1[0]] = $1[1];}
+    | JSONMemberList ',' JSONMember
+        {$$ = $1; $1[$3[0]] = $3[1];}
+    ;
+
+JSONArray
+    : '[' ']'
+        {$$ = [];}
+    | '[' JSONElementList ']'
+        {$$ = $2;}
+    ;
+
+JSONElementList
+    : JSONValue
+        {$$ = [$1];}
+    | JSONElementList ',' JSONValue
+        {$$ = $1; $1.push($3);}
+    ;
+

@@ -3,23 +3,33 @@ var grammar = (function(){
 
 var parser = {trace: function trace() { },
 yy: {},
-symbols_: {"error":2,"file":3,"weblogo_schema":4,"EOF":5,"FORWARD":6,"NUMBER":7,"RIGHT":8,"$accept":0,"$end":1},
-terminals_: {2:"error",5:"EOF",6:"FORWARD",7:"NUMBER",8:"RIGHT"},
-productions_: [0,[3,2],[4,2],[4,2]],
+symbols_: {"error":2,"file":3,"weblogo_schema":4,"EOF":5,"commands":6,"command":7,"FORWARD":8,"value":9,"string":10,"IDENTIFIER":11,"number":12,"NUMBER":13,"$accept":0,"$end":1},
+terminals_: {2:"error",5:"EOF",8:"FORWARD",11:"IDENTIFIER",13:"NUMBER"},
+productions_: [0,[3,2],[4,1],[6,2],[6,1],[7,2],[10,1],[12,1],[9,1],[9,1]],
 performAction: function anonymous(yytext,yyleng,yylineno,yy,yystate,$$,_$) {
 
 var $0 = $$.length - 1;
 switch (yystate) {
-case 1:return $$[$0-1]
+case 1:return $$[$0-1];
 break;
-case 2:this.$ = [$$[$0-1], Number(yytext)];
+case 3:this.$ = $$[$0]; $$[$0].unshift($$[$0-1]);
 break;
-case 3:this.$ = [$$[$0-1], Number(yytext)];
+case 4:this.$ = [$$[$0]];
+break;
+case 5:this.$ = {}; this.$['command'] = $$[$0-1]; this.$['args'] = [$$[$0][1]];
+break;
+case 6:this.$ = yytext;
+break;
+case 7:this.$ = Number(yytext);
+break;
+case 8:this.$ = ['string', $$[$0]];
+break;
+case 9:this.$ = ['number', $$[$0]];
 break;
 }
 },
-table: [{3:1,4:2,6:[1,3],8:[1,4]},{1:[3]},{5:[1,5]},{7:[1,6]},{7:[1,7]},{1:[2,1]},{5:[2,2]},{5:[2,3]}],
-defaultActions: {5:[2,1],6:[2,2],7:[2,3]},
+table: [{3:1,4:2,6:3,7:4,8:[1,5]},{1:[3]},{5:[1,6]},{5:[2,2]},{5:[2,4],6:7,7:4,8:[1,5]},{9:8,10:9,11:[1,11],12:10,13:[1,12]},{1:[2,1]},{5:[2,3]},{5:[2,5],8:[2,5]},{5:[2,8],8:[2,8]},{5:[2,9],8:[2,9]},{5:[2,6],8:[2,6]},{5:[2,7],8:[2,7]}],
+defaultActions: {3:[2,2],6:[2,1],7:[2,3]},
 parseError: function parseError(str, hash) {
     throw new Error(str);
 },
@@ -326,46 +336,48 @@ var YYSTATE=YY_START
 switch($avoiding_name_collisions) {
 case 0:/* skip whitespace */
 break;
-case 1:return 7
+case 1:return '*'
 break;
-case 2:return '*'
+case 2:return '/'
 break;
-case 3:return '/'
+case 3:return '-'
 break;
-case 4:return '-'
+case 4:return '+'
 break;
-case 5:return '+'
+case 5:return '^'
 break;
-case 6:return '^'
+case 6:return '!'
 break;
-case 7:return '!'
+case 7:return '%'
 break;
-case 8:return '%'
+case 8:return '('
 break;
-case 9:return '('
+case 9:return ')'
 break;
-case 10:return ')'
+case 10:return 'PI'
 break;
-case 11:return 'PI'
+case 11:return 'TO'
 break;
-case 12:return 'TO'
+case 12:return 'ENDTO'
 break;
-case 13:return 'ENDTO'
+case 13:return 8
 break;
-case 14:return 6
+case 14:return 'RIGHT'
 break;
-case 15:return 8
+case 15:yy_.yytext = yy_.yytext.substr(1,yy_.yyleng-2); return 'STRING_LIT';
 break;
-case 16:return 'IDENTIFIER'
+case 16:return 13;
 break;
-case 17:return 5
+case 17:return 11
 break;
-case 18:return 'INVALID'
+case 18:return 5
+break;
+case 19:return 'INVALID'
 break;
 }
 };
-lexer.rules = [/^\s+/,/^[0-9]+(\.[0-9]+)?\b/,/^\*/,/^\//,/^-/,/^\+/,/^\^/,/^!/,/^%/,/^\(/,/^\)/,/^PI\b/,/^(TO|to)\b/,/^(ENDTO|endto)\b/,/^(FORWARD|forward)\b/,/^(RIGHT|right)\b/,/^[a-zA-Z]+([a-zA-Z_]*)?\b/,/^$/,/^./];
-lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18],"inclusive":true}};return lexer;})()
+lexer.rules = [/^\s+/,/^\*/,/^\//,/^-/,/^\+/,/^\^/,/^!/,/^%/,/^\(/,/^\)/,/^PI\b/,/^(TO|to)\b/,/^(ENDTO|endto)\b/,/^(FORWARD|forward)\b/,/^(RIGHT|right)\b/,/^"(?:\\["bfnrt/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,/^-?(?:[0-9]|[1-9][0-9]+)(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?\b/,/^[a-zA-Z]+([a-zA-Z_]*)?\b/,/^$/,/^./];
+lexer.conditions = {"INITIAL":{"rules":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19],"inclusive":true}};return lexer;})()
 parser.lexer = lexer;
 return parser;
 })();

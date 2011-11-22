@@ -127,6 +127,37 @@ function makeTestCommands() {
     return togo;
 };
 
+org.weblogo.executors.block = function(config, commands, tick) {
+    var executor = org.weblogo.executor(config);
+    function quickExec(commandString) {
+        var parsed = org.weblogo.blockParser(commandString);
+        var now = Date.now();
+        execution = executor.execute(parsed.command, now);
+        return execution;
+    }
+
+    var index = 0;
+    var execution;
+    function hopalong() {
+        while (!execution && index < commands.length) {
+            execution = quickExec(commands[index]);
+            ++index;
+        }
+    }
+    hopalong();
+    var that = {};
+    that.toTick = function(newTick) {
+        var finished = execution.toTick(newTick);
+        if (finished) {
+            execution = null;
+            hopalong();
+            return index === commands.length;
+        }
+    };
+    return that;
+};
+
+
 org.weblogo.executors.testCard = function(config, command, tick) {
     var executor = org.weblogo.executor(config);
     function quickExec(commandString) {
