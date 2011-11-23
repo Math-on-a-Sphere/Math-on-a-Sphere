@@ -52,33 +52,28 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
     };
       
     that.execute = function(commandString) {
-        var parsed = org.weblogo.blockParser(commandString);
-        //var parsed = org.weblogo.executors.block(commandString);
+        var parsed = org.weblogo.stubParser(commandString);
         if (parsed.type === "error") {
             events.onError.fire(parsed);
         }
         else {
-            var index = 0;
-            while(index < parsed.length) {
-                that.execution = executor.execute(parsed[index].command, Date.now());
-                if (that.execution && that.execution.type === "error") {
-                    events.onError.fire(that.execution);
-                    delete that.execution;
+            that.execution = executor.execute(parsed.command, Date.now());
+            if (that.execution && that.execution.type === "error") {
+                events.onError.fire(that.execution);
+                delete that.execution;
+            }
+            else {
+                if(that.execution && that.execution.type === "info") {
+                    events.onInfo.fire(that.execution);
+                }
+                client.commandStart(that.execution);
+                if (that.execution && that.execution.toTick) {
+                    that.intervalID = window.setInterval(that.tick, tickInterval);
                 }
                 else {
-                    if(that.execution && that.execution.type === "info") {
-                        events.onInfo.fire(that.execution);
-                    }
-                    client.commandStart(that.execution);
-                    if (that.execution && that.execution.toTick) {
-                        that.intervalID = window.setInterval(that.tick, tickInterval);
-                    }
-                    else {
-                        client.draw(that.execution);
-                        that.stop();
-                    }
+                    client.draw(that.execution);
+                    that.stop();
                 }
-                ++index;
             }
         }
         return that.execution;
@@ -125,30 +120,25 @@ org.weblogo.parseToType = function(value, type) {
 org.weblogo.blockParser = function(commandString) {
     var commandObject = grammar.parse(commandString);
     var index = 0;
-    var TOGO = new Array();
-    while(index < commandObject.length) {
-        var command = commandObject[index].command;
-        var cs = org.weblogo.turtle.commands;
-        var record = cs[command];
+    var command = commandObject.command;
+    var cs = org.weblogo.turtle.commands;
+    var record = cs[command](commandObject.commands);
 
-        if (!record) {
-            return {
-                type: "error",
-                message: "command " + command + " not recognized: you can use " + 
-                    fluid.keys(cs).sort().join(", ")
-            };
-        }
-
-        var args = commandObject[index].args;
-        var togo = {
-            type: "command",
-        }
-        
-        togo.command = record.apply(null, args);
-        TOGO[index] = togo;
-        ++index;
+    if (!record) {
+        return {
+            type: "error",
+            message: "command " + command + " not recognized: you can use " + 
+                fluid.keys(cs).sort().join(", ")
+        };
     }
-    return TOGO;
+
+    var args = [];
+    var togo = {
+        type: "command"
+    }
+    
+    togo.command = record;
+    return togo;
 };
 
 /** Parser for the "stub language" which operates simple commands in a flat list **/
@@ -189,3 +179,4 @@ org.weblogo.stubParser = function(commandString) {
 };
 
 }());
+ 

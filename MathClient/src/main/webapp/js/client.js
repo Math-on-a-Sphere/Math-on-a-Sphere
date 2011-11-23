@@ -23,7 +23,7 @@ org.weblogo.selectors = {
     connect: ".flc-math-connect",
     disconnect: ".flc-math-disconnect",
     serverUrl: ".flc-math-serverUrl",
-    //commands: ".code",
+    block: ".code",
     commands: ".flc-math-commands",
     errors: ".flc-math-errors"
 };
@@ -108,6 +108,65 @@ org.weblogo.executors.demo = function(config, command, tick) {
     return that;
 };
 
+
+function compiler(inputStream) {
+    var outputStream = [];
+    for (var i = 0; i < inputStream.length; ++i) {
+        if(inputStream[i].type === "keyword") {
+            var command = inputStream[i].command; 
+            for (var j = 0; j < inputStream[i].args.length; ++j) {
+                command += " " + inputStream[i].args[j];
+            }
+            outputStream.push(command);
+        }
+    }
+
+    return outputStream;
+}
+
+org.weblogo.turtle.commands["compile"] = function() {
+    return {type: "compile"
+           }
+}
+org.weblogo.turtle.commands["compile"].args = [];
+
+org.weblogo.executors.compile = function(config, command, tick) {
+    var executor = org.weblogo.executor(config);
+    function quickExec(commandString) {
+        var parsed = org.weblogo.stubParser(commandString);
+        var now = Date.now();
+        execution = executor.execute(parsed.command, now);
+        return execution;
+    }
+
+    var commands = this.code.value;
+    var parsetree = grammar.parse(commands);
+    var linear = compiler(parsetree);
+
+
+    var index = 0;
+    var execution;
+    function hopalong() {
+        while (!execution && index < linear.length) {
+            execution = quickExec(linear[index]);
+            ++index;
+        }
+    }
+    hopalong();
+    var that = {};
+    that.toTick = function(newTick) {
+        var finished = execution.toTick(newTick);
+        if (finished) {
+            execution = null;
+            hopalong();
+            return index === linear.length;
+        }
+    };
+    return that;
+};
+
+
+
 org.weblogo.turtle.commands["test-card"] = function() {
     return {type: "testCard"}
 }
@@ -126,37 +185,6 @@ function makeTestCommands() {
     }
     return togo;
 };
-
-org.weblogo.executors.block = function(config, commands, tick) {
-    var executor = org.weblogo.executor(config);
-    function quickExec(commandString) {
-        var parsed = org.weblogo.blockParser(commandString);
-        var now = Date.now();
-        execution = executor.execute(parsed.command, now);
-        return execution;
-    }
-
-    var index = 0;
-    var execution;
-    function hopalong() {
-        while (!execution && index < commands.length) {
-            execution = quickExec(commands[index]);
-            ++index;
-        }
-    }
-    hopalong();
-    var that = {};
-    that.toTick = function(newTick) {
-        var finished = execution.toTick(newTick);
-        if (finished) {
-            execution = null;
-            hopalong();
-            return index === commands.length;
-        }
-    };
-    return that;
-};
-
 
 org.weblogo.executors.testCard = function(config, command, tick) {
     var executor = org.weblogo.executor(config);

@@ -31,41 +31,44 @@ frac                        (?:\.[0-9]+)
 
 %%
 file
-    : weblogo_schema EOF
-        {return $1;}
-    ;
+: weblogo_schema EOF
+{return $1;}
+;
 
 weblogo_schema
-    : commands
-    ;
+: commands
+;
 
 commands
-    : command commands
-        {$$ = $2; $2.unshift($1);}
-    | command
-        {$$ = [$1];}
-    ;
+: command commands
+  {$$ = $2; $2.unshift($1);}
+| command
+  {$$ = [$1];}
+;
 
 command
-    : FORWARD value
-        {$$ = {}; $$['command'] = $1; $$['args'] = [$2[1]];}
-    ;
+: FORWARD value
+  {$$ = {}; 
+    $$['type'] = 'keyword'; 
+    $$['command'] = $1;
+    $$['args'] = [$2[1]];}
+;
 
 string
-    : IDENTIFIER
-        {$$ = yytext;}
-    ;
+: IDENTIFIER
+{$$ = yytext;}
+;
 
 number
-    : NUMBER
-        {$$ = Number(yytext);}
-    ;
+: NUMBER
+{$$ = Number(yytext);}
+;
 
 value
-    : string
-        {$$ = ['string', $1];}
-    | number
-        {$$ = ['number', $1];}
-    ;
+: string
+{$$ = ['string', $1];}
+| number
+{$$ = ['number', $1];}
+;
 
 
