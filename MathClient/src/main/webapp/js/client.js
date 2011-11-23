@@ -174,6 +174,7 @@ org.weblogo.turtle.commands["test-card"].args = [];
 
 function makeTestCommands() {
     var togo = [];
+/*
     for (var i = 0; i < 10; ++ i) {
         togo.push("set color " + (10*i + 5));
         togo.push("set pen-size " + (20 - 2*i));
@@ -183,6 +184,15 @@ function makeTestCommands() {
         togo.push("forward 360");
         togo.push("left 40");
     }
+*/
+    togo.push("right 45");
+    togo.push("set color green");
+    togo.push("forward 30");
+    togo.push("left 45");
+    togo.push("set color white");
+    togo.push("forward 30");
+    togo.push("forward 30");
+
     return togo;
 };
 
