@@ -36,7 +36,25 @@
             <tr>
               <td style="vertical-align:top">
                 <!-- command line interface -->
-                <form><textarea id="code" class="code" name="code" style="border: none;" rows="30" cols="50"></textarea></form>
+                <form><textarea id="code" class="code" name="code" style="border: none;" rows="30" cols="50">
+// Type multiple weblogo commands and then type compile
+// in the command prompt. 
+// Note** skips last animated command so add an extra
+// forward command for now.
+forward 30
+left 45
+set color green
+forward 30
+right 45
+set pen-size 5
+forward 30
+penup
+forward 30
+pendown
+forward 30
+forward 30
+                </textarea></form>
+
                 <button id="button">compile</button>
                 <div class="flc-math-commands unselectable"></div>
               </td>
@@ -80,7 +98,7 @@
         var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
         client.drawListener = preview.updateTexture;
 
-        var myCodeMirror = CodeMirror(document.getElementById("code"), {
+        var myCodeMirror = CodeMirror.fromTextArea(document.getElementById("code"), {
         lineNumbers: "true",
         mode: "javascript"
         });
