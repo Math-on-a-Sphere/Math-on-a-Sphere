@@ -11,3 +11,23 @@ canvas {
 }
   
 .flc-math-errors: { color: red; font-weight: bold; } 
+
+.code: {
+   border: none;
+   background: black;
+}
+
+.CodeMirror {
+   background: black;
+}
+   
+.CodeMirror-gutter {
+   background-color: #070707;
+}
+
+.CodeMirror-cursor {
+  z-index: 10;
+  position: absolute;
+  visibility: hidden;
+  border-left: 1px solid white !important;
+}

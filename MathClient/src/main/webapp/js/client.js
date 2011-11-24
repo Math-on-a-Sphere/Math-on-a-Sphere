@@ -2,8 +2,6 @@
 
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
-var counter = 0;
-var TOTAL_FRAMES = 100;
 
 org.weblogo.colshift = [
    [0,    -1/s2, 1/s3],
@@ -112,7 +110,7 @@ org.weblogo.executors.demo = function(config, command, tick) {
 function compiler(inputStream) {
     var outputStream = [];
     for (var i = 0; i < inputStream.length; ++i) {
-        if(inputStream[i].type === "keyword") {
+        if (inputStream[i].type === "keyword") {
             var command = inputStream[i].command; 
             for (var j = 0; j < inputStream[i].args.length; ++j) {
                 command += " " + inputStream[i].args[j];
@@ -124,48 +122,11 @@ function compiler(inputStream) {
     return outputStream;
 }
 
-org.weblogo.turtle.commands["compile"] = function() {
-    return {type: "compile"
-           }
-}
-org.weblogo.turtle.commands["compile"].args = [];
-
-org.weblogo.executors.compile = function(config, command, tick) {
-    var executor = org.weblogo.executor(config);
-    function quickExec(commandString) {
-        var parsed = org.weblogo.stubParser(commandString);
-        var now = Date.now();
-        execution = executor.execute(parsed.command, now);
-        return execution;
-    }
-
-    var commands = this.code.value;
-    var parsetree = grammar.parse(commands);
+org.weblogo.programToCommands = function(program) {
+    var parsetree = grammar.parse(program);
     var linear = compiler(parsetree);
-
-
-    var index = 0;
-    var execution;
-    function hopalong() {
-        while (!execution && index < linear.length) {
-            execution = quickExec(linear[index]);
-            ++index;
-        }
-    }
-    hopalong();
-    var that = {};
-    that.toTick = function(newTick) {
-        var finished = execution.toTick(newTick);
-        if (finished) {
-            execution = null;
-            hopalong();
-            return index === linear.length;
-        }
-    };
-    return that;
-};
-
-
+    return linear;
+} 
 
 org.weblogo.turtle.commands["test-card"] = function() {
     return {type: "testCard"}
@@ -174,7 +135,6 @@ org.weblogo.turtle.commands["test-card"].args = [];
 
 function makeTestCommands() {
     var togo = [];
-/*
     for (var i = 0; i < 10; ++ i) {
         togo.push("set color " + (10*i + 5));
         togo.push("set pen-size " + (20 - 2*i));
@@ -184,55 +144,18 @@ function makeTestCommands() {
         togo.push("forward 360");
         togo.push("left 40");
     }
-*/
-    togo.push("right 45");
-    togo.push("set color green");
-    togo.push("forward 30");
-    togo.push("left 45");
-    togo.push("set color white");
-    togo.push("forward 30");
-    togo.push("forward 30");
 
     return togo;
 };
 
-org.weblogo.executors.testCard = function(config, command, tick) {
-    var executor = org.weblogo.executor(config);
-    function quickExec(commandString) {
-        var parsed = org.weblogo.stubParser(commandString);
-        var now = Date.now();
-        execution = executor.execute(parsed.command, now);
-        return execution;
-    }
-
-    var commands = makeTestCommands();
-    var index = 0;
-    var execution;
-    function hopalong() {
-        while (!execution && index < commands.length) {
-            execution = quickExec(commands[index]);
-            ++index;
-        }
-    }
-    hopalong();
-    var that = {};
-    that.toTick = function(newTick) {
-        var finished = execution.toTick(newTick);
-        if (finished) {
-            execution = null;
-            hopalong();
-            return index === commands.length;
-        }
-    };
-    return that;
-};
+org.weblogo.executors.testCard = org.weblogo.blockExecutor(makeTestCommands());
 
 org.weblogo.turtle.commands["test-heading"] = function() {
     return {type: "testHeading"}
 }
 org.weblogo.turtle.commands["test-heading"].args = [];
 
-function makeHeadingTestCommands() {
+function makeTestHeadingCommands() {
     var togo = [];
     for (var i = 0; i < 20; ++ i) {
         togo.push("set color " + (10*i + 5));
@@ -242,36 +165,7 @@ function makeHeadingTestCommands() {
     return togo;
 };
 
-org.weblogo.executors.testHeading = function(config, command, tick) {
-    var executor = org.weblogo.executor(config);
-    function quickExec(commandString) {
-        var parsed = org.weblogo.stubParser(commandString);
-        var now = Date.now();
-        execution = executor.execute(parsed.command, now);
-        return execution;
-    }
-
-    var commands = makeHeadingTestCommands();
-    var index = 0;
-    var execution;
-    function hopalong() {
-        while (!execution && index < commands.length) {
-            execution = quickExec(commands[index]);
-            ++index;
-        }
-    }
-    hopalong();
-    var that = {};
-    that.toTick = function(newTick) {
-        var finished = execution.toTick(newTick);
-        if (finished) {
-            execution = null;
-            hopalong();
-            return index === commands.length;
-        }
-    };
-    return that;
-};
+org.weblogo.executors.testHeading = org.weblogo.blockExecutor(makeTestHeadingCommands()); 
 
 org.weblogo.client = function(container, options) {
     var that = {};
@@ -306,7 +200,10 @@ org.weblogo.client = function(container, options) {
     that.commandDone = function() {
         that.busy = false;
         // damnable thing behaves badly in synchronous case
-        window.setTimeout(that.terminal.enable, 1);
+        if (that.wasEnabled) {
+            window.setTimeout(that.terminal.enable, 1);
+        }
+        that.wasDisabled = false;
     };
     
     that.draw = function(execution) {
@@ -333,13 +230,20 @@ org.weblogo.client = function(container, options) {
     that.config = org.weblogo.makeConfig(that.element);
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
+    
+    that.execute = function(command) {
+        that.executor.execute(command);
+        that.wasEnabled = that.terminal.enabled();
+        if (that.wasEnabled) {
+            that.terminal.disable();
+        }
+    };
         
     that.config.context.font = "50px Arial";
     
     
     that.locate("commands").terminal(function(command, terminal) {
-        that.executor.execute(command);
-        that.terminal.disable();
+        that.execute(command);
     }, {
         greetings: "WebLogo Command Interpreter © Math on a Sphere, 2011-",
         enabled: false,
@@ -370,11 +274,37 @@ org.weblogo.client = function(container, options) {
     
     var hash = window.location.hash;
     if (hash) {
-        that.executor.execute(hash.substring(1));
-        that.terminal.disable();
+        that.execute(hash.substring(1));
     }
     
     return that;
 }
+
+org.weblogo.init = function() {
+    var client = org.weblogo.client("body");
+    var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
+    client.drawListener = preview.updateTexture;
+    var code = $("#code");
+
+    var myCodeMirror = CodeMirror.fromTextArea(code[0], {
+        lineNumbers: "true",
+        mode: "javascript"
+    });
+
+    $("#compile-button").click(function () {
+        var code = myCodeMirror.getValue();
+        var parsetree = grammar.parse(code);
+        var commands = compiler(parsetree);
+        var executor = org.weblogo.blockExecutor(commands);
+        client.execute(executor);
+        });
+        
+    var commands = client.locate("commands");
+    $(document).click(function (event) {
+        if (commands.has(event.target).length === 0 && event.target !== commands[0]) {
+            client.terminal.focus(false);
+        }
+    });
+};
 
 }());

@@ -18,7 +18,6 @@
     <script type="text/javascript" src="js/webgl-utils.js"></script>
     <script type="text/javascript" src="js/preview.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
-    <link rel="stylesheet" media="screen" href="css/client.css" />
 
     <script type="text/javascript" src="js/calculator.js"></script>
     <script type="text/javascript" src="jison/grammar.js"></script>
@@ -28,6 +27,8 @@
     <link rel="stylesheet" href="lib/css/codemirror.css">
     <link rel="stylesheet" media="screen" href="lib/css/default.css">
 
+    <link rel="stylesheet" media="screen" href="css/client.css" />
+
     </head>
 
       <body>  
@@ -36,11 +37,9 @@
             <tr>
               <td style="vertical-align:top">
                 <!-- command line interface -->
-                <form><textarea id="code" class="code" name="code" style="border: none;" rows="30" cols="50">
+                <form><textarea id="code" class="code" name="code" rows="30" cols="50">
 // Type multiple weblogo commands and then type compile
 // in the command prompt. 
-// Note** skips last animated command so add an extra
-// forward command for now.
 forward 30
 left 45
 set color green
@@ -55,7 +54,7 @@ forward 30
 forward 30
                 </textarea></form>
 
-                <button id="button">compile</button>
+                <button id="compile-button">compile</button>
                 <div class="flc-math-commands unselectable"></div>
               </td>
               <td style="vertical-align:top">
@@ -94,34 +93,7 @@ forward 30
         </table>
 
       <script>
-        var client = org.weblogo.client("body");
-        var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
-        client.drawListener = preview.updateTexture;
-
-        var myCodeMirror = CodeMirror.fromTextArea(document.getElementById("code"), {
-        lineNumbers: "true",
-        mode: "javascript"
-        });
-
-
-        window.onload = function () {
-        document.getElementById("button").onclick = function () {
-        var code = $("#code").val();
-        //var value = grammar.parse(code);
-        //var block = org.weblogo.executors.block(client.config, value, 33);
-        //$("#code").val(value);
-        
-        };
-
-        document.getElementById("code").onclick = function () {
-        client.terminal.focus(false);
-        };        
-
-        };
-
-        $(document).ready(function() {
-         });
-
+        org.weblogo.init();
       </script>
 
   </body>

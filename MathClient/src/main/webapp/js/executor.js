@@ -4,7 +4,7 @@ org.weblogo.executor = function(config) {
     var that = {};
     
     that.execute = function(command, tick) {
-        var executor = org.weblogo.executors[command.type];
+        var executor = typeof(command) === "function"? command: org.weblogo.executors[command.type];
         return executor(config, command, tick);
     };
     
@@ -31,6 +31,38 @@ org.weblogo.quickStringExecutor = function(executor) {
     };
 };
 
+org.weblogo.blockExecutor = function(commands) {
+    return function(config, command, tick) {
+        var executor = org.weblogo.executor(config);
+        function quickExec(commandString) {
+            var parsed = org.weblogo.stubParser(commandString);
+            var now = Date.now();
+            execution = executor.execute(parsed.command, now);
+            return execution;
+        }
+    
+        var index = 0;
+        var execution;
+        function hopalong() {
+            while (!execution && index < commands.length) {
+                execution = quickExec(commands[index]);
+                ++index;
+            }
+        }
+        hopalong();
+        var that = {};
+        that.toTick = function(newTick) {
+            var finished = execution.toTick(newTick);
+            if (finished) {
+                execution = null;
+                hopalong();
+                return index === commands.length && !execution;
+            }
+        };
+        return that;
+    };  
+};
+
 org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
     var events = client.events;
     var that = {};
@@ -51,19 +83,29 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
         }
     };
       
-    that.execute = function(commandString) {
-        var parsed = org.weblogo.stubParser(commandString);
-        if (parsed.type === "error") {
-            events.onError.fire(parsed);
+    that.execute = function(command) {
+        var executable;
+        if (typeof(command) === "string") {
+            var parsed = org.weblogo.stubParser(command);
+            if (parsed.type === "error") {
+                events.onError.fire(parsed);
+            }
+            else {
+                executable = parsed.command;
+            }
         }
-        else {
-            that.execution = executor.execute(parsed.command, Date.now());
+        else { // it is a raw executor
+            executable = command;
+        }
+           
+        if (executable) {
+            that.execution = executor.execute(executable, Date.now());
             if (that.execution && that.execution.type === "error") {
                 events.onError.fire(that.execution);
                 delete that.execution;
             }
             else {
-                if(that.execution && that.execution.type === "info") {
+                if (that.execution && that.execution.type === "info") {
                     events.onInfo.fire(that.execution);
                 }
                 client.commandStart(that.execution);
@@ -78,7 +120,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
         }
         return that.execution;
     };
-    that.stop = function() {        
+    that.stop = function() {
         client.commandDone(that.execution);
         delete that.execution;
         if (that.intervalID) {

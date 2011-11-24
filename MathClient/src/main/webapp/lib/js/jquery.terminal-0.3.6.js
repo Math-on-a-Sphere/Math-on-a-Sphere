@@ -1658,7 +1658,8 @@ function get_stack(caller) {
                 return self;
             },
             enabled: function() {
-                return pause;
+              // AMB: Bug fix - returned opposite value of flag
+                return !pause;
             },
             signature: function() {
                 var cols = self.cols();
