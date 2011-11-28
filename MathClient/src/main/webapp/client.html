@@ -38,20 +38,22 @@
               <td style="vertical-align:top">
                 <!-- command line interface -->
                 <form><textarea id="code" class="code" name="code" rows="30" cols="50">
-// Type multiple weblogo commands and then type compile
-// in the command prompt. 
-forward 30
-left 45
-set color green
-forward 30
-right 45
-set pen-size 5
-forward 30
-penup
-forward 30
-pendown
-forward 30
-forward 30
+// Type multiple weblogo commands and then press compile
+// 6th iteration will blow up - pole-glancing issue?
+repeat 5 {
+  set color green
+  repeat 8 {
+    forward 10
+    right 100
+  }
+  forward 30
+  set color red
+  repeat 8 {
+    forward 30
+    left 140
+  }
+  forward 80
+}
                 </textarea></form>
 
                 <button id="compile-button">compile</button>

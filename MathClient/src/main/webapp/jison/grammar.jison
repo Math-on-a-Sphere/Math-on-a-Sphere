@@ -19,6 +19,8 @@ frac                        (?:\.[0-9]+)
 "%"                                return '%'
 "("                                return '('
 ")"                                return ')'
+"{"                                return '{'
+"}"                                return '}'
 "PI"                               return 'PI'
 ("FORWARD"|"forward"|"fd")\b       return 'FORWARD'
 ("RIGHT"|"right"|"rt")\b           return 'RIGHT'
@@ -36,6 +38,7 @@ frac                        (?:\.[0-9]+)
 ("test-card")                      return 'TESTCARD'
 ("test-heading")                   return 'TESTHEADING'
 ("color"|"pen-size")               return 'ACCESSOR'
+("repeat"|"REPEAT")                return 'REPEAT'
 
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 {int}{frac}?{exp}?\b               return 'NUMBER';
@@ -66,22 +69,22 @@ command
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1]];}
+    $$['args'] = [$2];}
 | RIGHT value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1]];}
+    $$['args'] = [$2];}
 | LEFT value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1]];}
+    $$['args'] = [$2];}
 | BACK value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1]];}
+    $$['args'] = [$2];}
 | CLEARALL
   {$$ = {}; 
     $$['type'] = 'keyword'; 
@@ -112,21 +115,21 @@ command
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
     $$['args'] = [];}
-| SET ACCESSOR value
+| SET accessor value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2, $3[1]];}
+    $$['args'] = [$2, $3];}
 | SETHEADING value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1]];}
+    $$['args'] = [$2];}
 | SETPOS value value
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
-    $$['args'] = [$2[1], $3[1]];}
+    $$['args'] = [$2, $3];}
 | TESTCARD
   {$$ = {}; 
     $$['type'] = 'keyword'; 
@@ -137,23 +140,39 @@ command
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
     $$['args'] = [];}
+| REPEAT value '{' commands '}'
+  {$$ = {}; 
+    $$['type'] = 'keyword'; 
+    $$['command'] = $1;
+    $$['args'] = [$2, $4];}
+;
+
+accessor
+: ACCESSOR
+  {$$ = {};
+    $$['type'] = 'accessor';
+    $$['value'] = $1;}
 ;
 
 string
 : IDENTIFIER
-{$$ = yytext;}
+  {$$ = yytext;}
 ;
 
 number
 : NUMBER
-{$$ = Number(yytext);}
+  {$$ = Number(yytext);}
 ;
 
 value
 : string
-{$$ = ['string', $1];}
+  {$$ = {};
+    $$['type'] = 'string';
+    $$['value'] = $1;}
 | number
-{$$ = ['number', $1];}
+  {$$ = {};
+    $$['type'] = 'number';
+    $$['value'] = $1;}
 ;
 
 

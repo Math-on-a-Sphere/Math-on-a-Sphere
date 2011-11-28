@@ -109,13 +109,38 @@ org.weblogo.executors.demo = function(config, command, tick) {
 
 function compiler(inputStream) {
     var outputStream = [];
+
+    if(!inputStream.length) {
+        inputStream = [inputStream];
+    }
+
     for (var i = 0; i < inputStream.length; ++i) {
+        var commandString;
+        
         if (inputStream[i].type === "keyword") {
-            var command = inputStream[i].command; 
-            for (var j = 0; j < inputStream[i].args.length; ++j) {
-                command += " " + inputStream[i].args[j];
+            commandString = inputStream[i].command; 
+
+            if(commandString === "repeat") {
+                commandString = "";
+                var repeat = compiler(inputStream[i].args[0]);
+                for (var j = 0; j < repeat; ++j) {
+                    var repeatCommands = compiler(inputStream[i].args[1]);
+                    outputStream = outputStream.concat(repeatCommands);
+                }
             }
-            outputStream.push(command);
+            else {
+                for (var j = 0; j < inputStream[i].args.length; ++j) {
+                    var arg = inputStream[i].args[j];
+                    commandString += " " + compiler(arg);
+                }
+                outputStream.push(commandString);
+            }
+        }
+
+        else if (inputStream[i].type === "number" 
+                 | inputStream[i].type === "string"
+                 | inputStream[i].type === "accessor") {
+            return inputStream[i].value;
         }
     }
 
@@ -127,6 +152,28 @@ org.weblogo.programToCommands = function(program) {
     var linear = compiler(parsetree);
     return linear;
 } 
+
+org.weblogo.turtle.commands["repeat"] = function() {
+    return {type: "repeat"}
+}
+org.weblogo.turtle.commands["repeat"].args = ["number", "string"];
+
+org.weblogo.executors.repeat = function(config, command, tick) {
+    var repeat = command.args[0];
+    var commands = command.args[1];
+    for(var i = 0; i < repeat; ++i)
+    {
+        org.weblogo.blockExecutor(commands);
+    }
+}
+
+
+org.weblogo.turtle.commands["test-heading"] = function() {
+    return {type: "testHeading"}
+}
+org.weblogo.turtle.commands["test-heading"].args = [];
+
+
 
 org.weblogo.turtle.commands["test-card"] = function() {
     return {type: "testCard"}
