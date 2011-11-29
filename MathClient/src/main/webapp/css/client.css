@@ -19,6 +19,7 @@ canvas {
 
 .CodeMirror {
    background: black;
+   color: #ddd;
 }
    
 .CodeMirror-gutter {

@@ -45,7 +45,8 @@ org.weblogo.executors.line = function(config, command, tick) {
                   colour: turtle.colour, 
                   width: turtle.width});
             }
-            turtle.position = newpos;
+            // normalise final position to avoid overflow due to continuous chaining
+            turtle.position = org.weblogo.geom.norm_3(newpos);
             line.lastDistance = newDistance;
             return finished;
         });
