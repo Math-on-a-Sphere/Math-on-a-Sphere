@@ -108,43 +108,44 @@ org.weblogo.executors.demo = function(config, command, tick) {
 
 
 function compiler(inputStream) {
-    var outputStream = [];
+    var jsTranspile = "var outputStream = [];\nvar input = "+inputStream+";";
 
     if(!inputStream.length) {
         inputStream = [inputStream];
     }
+    
+    jsTranspile += '\n\
+    for (var i = 0; i < input.length; ++i) {\n\
+        var commandString;\n\
+        \n\
+        if (input[i].type === "keyword") {\n\
+            commandString = input[i].command;\n\
+\n\
+            if(commandString === "repeat") {\n\
+                commandString = "";\n\
+                var repeat = compiler(input[i].args[0]);\n\
+                for (var j = 0; j < repeat; ++j) {\n\
+                    var repeatCommands = compiler(input[i].args[1]);\n\
+                    outputStream = outputStream.concat(repeatCommands);\n\
+                }\n\
+            }\n\
+            else {\n\
+                for (var j = 0; j < input[i].args.length; ++j) {\n\
+                    var arg = input[i].args[j];\n\
+                    commandString += " " + compiler(arg);\n\
+                }\n\
+                outputStream.push(commandString);\n\
+            }\n\
+        }\n\
+\n\
+        else if (input[i].type === "number" \n\
+                 | input[i].type === "string"\n\
+                 | input[i].type === "accessor") {\n\
+            return input[i].value;\n\
+        }\n\
+    }';
 
-    for (var i = 0; i < inputStream.length; ++i) {
-        var commandString;
-        
-        if (inputStream[i].type === "keyword") {
-            commandString = inputStream[i].command; 
-
-            if(commandString === "repeat") {
-                commandString = "";
-                var repeat = compiler(inputStream[i].args[0]);
-                for (var j = 0; j < repeat; ++j) {
-                    var repeatCommands = compiler(inputStream[i].args[1]);
-                    outputStream = outputStream.concat(repeatCommands);
-                }
-            }
-            else {
-                for (var j = 0; j < inputStream[i].args.length; ++j) {
-                    var arg = inputStream[i].args[j];
-                    commandString += " " + compiler(arg);
-                }
-                outputStream.push(commandString);
-            }
-        }
-
-        else if (inputStream[i].type === "number" 
-                 | inputStream[i].type === "string"
-                 | inputStream[i].type === "accessor") {
-            return inputStream[i].value;
-        }
-    }
-
-    return outputStream;
+    return eval(jsTranspile);
 }
 
 org.weblogo.programToCommands = function(program) {
