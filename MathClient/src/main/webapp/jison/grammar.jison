@@ -67,77 +67,77 @@ commands
 command
 : FORWARD value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2];}
 | RIGHT value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2];}
 | LEFT value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2];}
 | BACK value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2];}
 | CLEARALL
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | CLEARDRAWING
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | DEMO
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | GETHEADING
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | PENUP
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | PENDOWN
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | SET accessor value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2, $3];}
 | SETHEADING value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2];}
 | SETPOS value value
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [$2, $3];}
 | TESTCARD
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | TESTHEADING
   {$$ = {}; 
-    $$['type'] = 'keyword'; 
+    $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
 | REPEAT value '{' commands '}'

@@ -106,46 +106,23 @@ org.weblogo.executors.demo = function(config, command, tick) {
     return that;
 };
 
+function compilerdriver(inputStream) {
+    org.weblogo.outputStream = [];
+    org.weblogo.compilerdepth = 0;
+    //if(!inputStream.length) {
+    //    inputStream = [inputStream];
+    //}
+    var program = compiler(inputStream, "");
+    eval(program);
+}
 
-function compiler(inputStream) {
-    var jsTranspile = "var outputStream = [];\nvar input = "+inputStream+";";
-
-    if(!inputStream.length) {
-        inputStream = [inputStream];
+function compiler(inputStream, program) {
+    for (var i = 0; i < inputStream.length; ++i) {
+        var node = inputStream[i];
+        var handler = org.weblogo.nodeHandlers[node.type];
+        program = handler(node, program, compiler);
     }
-    
-    jsTranspile += '\n\
-    for (var i = 0; i < input.length; ++i) {\n\
-        var commandString;\n\
-        \n\
-        if (input[i].type === "keyword") {\n\
-            commandString = input[i].command;\n\
-\n\
-            if(commandString === "repeat") {\n\
-                commandString = "";\n\
-                var repeat = compiler(input[i].args[0]);\n\
-                for (var j = 0; j < repeat; ++j) {\n\
-                    var repeatCommands = compiler(input[i].args[1]);\n\
-                    outputStream = outputStream.concat(repeatCommands);\n\
-                }\n\
-            }\n\
-            else {\n\
-                for (var j = 0; j < input[i].args.length; ++j) {\n\
-                    var arg = input[i].args[j];\n\
-                    commandString += " " + compiler(arg);\n\
-                }\n\
-                outputStream.push(commandString);\n\
-            }\n\
-        }\n\
-\n\
-        else if (input[i].type === "number" \n\
-                 | input[i].type === "string"\n\
-                 | input[i].type === "accessor") {\n\
-            return input[i].value;\n\
-        }\n\
-    }';
-
-    return eval(jsTranspile);
+    return program;
 }
 
 org.weblogo.programToCommands = function(program) {
@@ -342,8 +319,8 @@ org.weblogo.init = function() {
     $("#compile-button").click(function () {
         var code = myCodeMirror.getValue();
         var parsetree = grammar.parse(code);
-        var commands = compiler(parsetree);
-        var executor = org.weblogo.blockExecutor(commands);
+        compilerdriver(parsetree);
+        var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
         client.execute(executor);
         });
         
