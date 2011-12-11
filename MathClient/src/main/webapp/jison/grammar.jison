@@ -39,10 +39,10 @@ frac                        (?:\.[0-9]+)
 ("test-heading")                   return 'TESTHEADING'
 ("color"|"pen-size")               return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
-
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 {int}{frac}?{exp}?\b               return 'NUMBER';
 [a-zA-Z]+([a-zA-Z_]*)?\b           return 'IDENTIFIER'
+"="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
 /lex
@@ -54,14 +54,19 @@ file
 ;
 
 weblogo_schema
-: commands
+: statements
 ;
 
-commands
-: command commands
+statements
+: statement statements
   {$$ = $2; $2.unshift($1);}
-| command
+| statement
   {$$ = [$1];}
+;
+
+statement
+: variable_declaration
+| command
 ;
 
 command
@@ -140,11 +145,18 @@ command
     $$['type'] = 'command'; 
     $$['command'] = $1;
     $$['args'] = [];}
-| REPEAT value '{' commands '}'
+| REPEAT value '{' statements '}'
   {$$ = {}; 
     $$['type'] = 'keyword'; 
     $$['command'] = $1;
     $$['args'] = [$2, $4];}
+;
+
+variable_declaration
+: IDENTIFIER '=' value
+  {$$ = {};
+    $$['type'] = 'assign';
+    $$['args'] = [$1, $3];}
 ;
 
 accessor
@@ -154,8 +166,13 @@ accessor
     $$['value'] = $1;}
 ;
 
-string
+identifier
 : IDENTIFIER
+  {$$ = yytext;}
+;
+
+string
+: STRING_LIT
   {$$ = yytext;}
 ;
 
@@ -165,13 +182,17 @@ number
 ;
 
 value
-: string
+: identifier
   {$$ = {};
-    $$['type'] = 'string';
+    $$['type'] = 'identifier';
     $$['value'] = $1;}
 | number
   {$$ = {};
     $$['type'] = 'number';
+    $$['value'] = $1;}
+| string
+  {$$ = {};
+    $$['type'] = 'string';
     $$['value'] = $1;}
 ;
 

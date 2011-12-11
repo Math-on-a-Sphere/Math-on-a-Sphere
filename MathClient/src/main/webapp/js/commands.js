@@ -293,7 +293,7 @@ var accessors = org.weblogo.turtle.accessors;
 
 accessors["pen-size"] = {
     property: "width",
-    type: "number",
+    type: "number|identifier",
     rejector: function(value) {
         if (value > 90) {
             return "Cannot set pen size to greater than a quarter circle"  
@@ -311,7 +311,7 @@ accessors["color"] = {
     rejector: function(value) {
         var cnames = org.weblogo.netLogoColourNames;
         if (typeof(value) === "string" && !cnames[value]) {
-            return value + " is not a valid colour name: you can use " + cnames.join(", ")
+            return value + " is not a valid colour name: you can use " + Object.keys(cnames).join(', ');
         }
     }
 };

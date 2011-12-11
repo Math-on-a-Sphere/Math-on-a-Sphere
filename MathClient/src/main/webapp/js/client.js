@@ -109,11 +109,12 @@ org.weblogo.executors.demo = function(config, command, tick) {
 function compilerdriver(inputStream) {
     org.weblogo.outputStream = [];
     org.weblogo.compilerdepth = 0;
-    //if(!inputStream.length) {
-    //    inputStream = [inputStream];
-    //}
-    var program = compiler(inputStream, "");
-    eval(program);
+    org.weblogo.program = {};
+    org.weblogo.program.variables = {};
+    org.weblogo.program.program = {};
+
+    org.weblogo.program.program = compiler(inputStream, "");
+    eval(org.weblogo.program.program);
 }
 
 function compiler(inputStream, program) {
