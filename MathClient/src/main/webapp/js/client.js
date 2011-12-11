@@ -233,8 +233,9 @@ org.weblogo.client = function(container, options) {
     };
     
     that.draw = function(execution) {
-        var url = that.element.toDataURL("image/png");
+        var url = "1";
         if (that.serverUrl) {
+            url = that.element.toDataURL("image/png");
             org.weblogo.postImage("Frame Time: " + now - that.initTime, url, that.serverUrl, that);
         }
         

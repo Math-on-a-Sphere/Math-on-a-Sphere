@@ -20,6 +20,7 @@
 
     function canvasToTexture(gl, canvas) {
         var texture = gl.createTexture();
+        oldTexture = moonTexture;
         moonTexture = texture;
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -30,7 +31,7 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
         return texture;
     }
-    var moonTexture;
+    var moonTexture, oldTexture;
 
     var mouseDown = false;
     var lastMouseX = null;
@@ -94,6 +95,10 @@
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, moonTexture);
         gl.uniform1i(shaderProgram.sampler, 0);
+        if (oldTexture) {
+            gl.deleteTexture(oldTexture);
+            oldTexture = null;
+        }
         
         // inverse rotation matrix since we are rotating the viewport BACKWARDS to
         // recover the sphere in absolute space
