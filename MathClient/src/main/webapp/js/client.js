@@ -110,7 +110,7 @@ function compilerdriver(inputStream) {
     org.weblogo.outputStream = [];
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
-    org.weblogo.program.variables = {};
+    org.weblogo.program.declared = {};
     org.weblogo.program.program = {};
 
     org.weblogo.program.program = compiler(inputStream, "");
