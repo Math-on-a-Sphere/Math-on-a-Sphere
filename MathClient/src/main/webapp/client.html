@@ -42,14 +42,17 @@
 // Type multiple weblogo commands and then press compile
 x = 6
 y = "green"
+z = function () {
+  forward 30
+  set color "red"
+}
 repeat x {
   set color y
   repeat 8 {
     forward 10
     right 100
   }
-  forward 30
-  set color "red"
+  z()
   repeat 8 {
     forward 30
     left 140
