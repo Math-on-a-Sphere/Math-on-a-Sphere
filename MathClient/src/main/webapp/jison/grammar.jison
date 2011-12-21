@@ -71,10 +71,14 @@ func
   {$$ = {};
     $$['type'] = 'func';
     $$['args'] = [$1, $2];}
-| command
-  {$$ = {};
-    $$['type'] = 'specialCommand';
-    $$['value'] = $1;}
+| SET accessor value 
+  {$$ = {}; 
+    $$['type'] = 'set'; 
+    $$['args'] = [$2, $3];}
+| REPEAT value block
+  {$$ = {}; 
+    $$['type'] = 'repeat'; 
+    $$['args'] = [$2, $3];}
 ;
 
 exp
@@ -84,19 +88,6 @@ exp
     $$['type'] = 'list';}
 ;
 
-
-command
-: SET accessor value 
-  {$$ = {}; 
-    $$['type'] = 'command'; 
-    $$['command'] = $1;
-    $$['args'] = [$2, $3];}
-| REPEAT value block
-  {$$ = {}; 
-    $$['type'] = 'keyword'; 
-    $$['command'] = $1;
-    $$['args'] = [$2, $3];}
-;
 
 accessor
 : ACCESSOR

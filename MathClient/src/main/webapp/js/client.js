@@ -119,6 +119,9 @@ function compilerdriver(inputStream) {
 }
 
 function compiler(inputStream, program) {
+    if(!inputStream.length) {
+        inputStream = [inputStream];
+    }
     for (var i = 0; i < inputStream.length; ++i) {
         var node = inputStream[i];
         var handler = org.weblogo.nodeHandlers[node.type];
