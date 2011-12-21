@@ -240,7 +240,7 @@ commands.getpos = function () {
     }
 };
 commands.getpos.args = [];
-commands.gp = commands.getheading;
+commands.gp = commands.getpos;
 
 commands.set = function (variable, value) {
     return {
