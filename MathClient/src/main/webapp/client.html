@@ -42,23 +42,16 @@
 // Type multiple weblogo commands and then press compile
 x = 6
 y = "green"
-z = function () {
-  forward 30
-  set color "red"
+z = function ([a,b]) { 
+  set color a
+  forward b
 }
-repeat x {
-  set color y
-  repeat 8 {
-    forward 10
-    right 100
-  }
-  z()
-  repeat 8 {
-    forward 30
-    left 140
-  }
-  forward 80
+
+repeat 10 {
+  z(["red", 100])
+  right 30
 }
+
                 </textarea></form>
 
                 <button id="compile-button">compile</button>

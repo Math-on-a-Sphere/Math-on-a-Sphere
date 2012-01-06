@@ -21,7 +21,12 @@ frac                        (?:\.[0-9]+)
 ")"                                return ')'
 "{"                                return '{'
 "}"                                return '}'
+"["                                return '['
+"]"                                return ']'
+","                                return ','
 "PI"                               return 'PI'
+"true"                             return 'TRUE'
+"false"                            return 'FALSE'
 ("set")                            return 'SET'
 ("color"|"pen-size")               return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
@@ -70,7 +75,8 @@ func
 : exp exp
   {$$ = {};
     $$['type'] = 'func';
-    $$['args'] = [$1, $2];}
+    $$['id'] = $1;
+    $$['args'] = $2;}
 | SET accessor value 
   {$$ = {}; 
     $$['type'] = 'set'; 
@@ -83,9 +89,15 @@ func
 
 exp
 : value
+ {$$ = {};
+   $$['type'] = $1['type'];
+   $$['value'] = [$1['value']];}
 | '(' ')'
   {$$ = {};
-    $$['type'] = 'list';}
+    $$['type'] = 'list';
+    $$['value'] = [];}
+| '(' JSONArray ')'
+  {$$ = $2;}
 ;
 
 
@@ -107,8 +119,16 @@ assignment
   {$$ = {};
     $$['type'] = 'fun_assign';
     $$['id'] = $1;
-    $$['args'] = [];
-    $$['value'] = $6;}   
+    $$['args'] = {};
+    $$['args']['type'] = 'list';
+    $$['args']['value'] = [];
+    $$['block'] = $6;}   
+| identifier '=' FUNCTION '(' JSONArray ')' block
+  {$$ = {};
+    $$['type'] = 'fun_assign';
+    $$['id'] = $1;
+    $$['args'] = $5;
+    $$['block'] = $7;}   
 ;
 
 
@@ -142,4 +162,67 @@ value
     $$['value'] = $1;}
 ;
 
+
+JSONString
+: STRING_LIT
+  {$$ = yytext;}
+;
+
+JSONNumber
+: NUMBER
+  {$$ = Number(yytext);}
+;
+
+JSONBooleanLiteral
+: TRUE
+  {$$ = true;}
+| FALSE
+  {$$ = false;}
+;
+
+JSONValue
+: value
+;
+
+JSONObject
+: '{' '}'
+  {$$ = {};}
+| '{' JSONMemberList '}'
+  {$$ = {};
+    $$['type'] = 'JSONObject';
+    $$['value'] = $2;}
+;
+
+JSONMember
+: JSONString ':' JSONValue
+  {$$ = {};
+    $$['type'] = 'JSONMenber';
+    $$['value'] = [$1, $3];}
+;
+
+JSONMemberList
+: JSONMember
+  {$$ = {}; 
+    $$['type'] = 'JSONMember';
+    $$[$1[0]] = $1[1];}
+| JSONMemberList ',' JSONMember
+  {$$ = $1; $1[$3[0]] = $3[1];}
+;
+
+JSONArray
+: '[' ']'
+  {$$ = [];}
+| '[' JSONElementList ']'
+  {$$ = {};
+    $$['type'] = 'list';
+    $$['value'] = $2;}
+;
+
+JSONElementList
+: JSONValue
+  {$$ = [$1];}
+| JSONValue ',' JSONElementList
+  {$$ = $3; 
+    $3.unshift($1);}
+;
 
