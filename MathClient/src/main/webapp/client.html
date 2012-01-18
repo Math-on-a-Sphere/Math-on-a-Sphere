@@ -42,13 +42,13 @@
 // Type multiple weblogo commands and then press compile
 x = 6
 y = "green"
-z = function ([a,b]) { 
+z = function [a,b] { 
   set color a
   forward b
 }
 
 repeat 10 {
-  z(["red", 100])
+  z["red", 100]
   right 30
 }
 
@@ -65,6 +65,8 @@ repeat 10 {
                 </span>
                 <br/>
                 Spin the moon by dragging it with the mouse.
+                <button id="reset-position-button">reset position</button>
+                <button id="show2d-button">show 2d</button>
               </td>
             </tr>
             <tr>
