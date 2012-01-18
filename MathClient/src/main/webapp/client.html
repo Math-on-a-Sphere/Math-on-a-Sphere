@@ -66,13 +66,15 @@ repeat 10 {
                 <br/>
                 Spin the moon by dragging it with the mouse.
                 <button id="reset-position-button">reset position</button>
-                <button id="show2d-button">show 2d</button>
+                <button id="show2d-button">show/hide 2d canvas</button>
               </td>
             </tr>
             <tr>
               <td colspan="2">
                 <!-- preview image canvas -->
+                <div id="hiddenCanvas" style="display: none" >
                 <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas>
+                </div>
               </td>
             </tr>
             <tr>
