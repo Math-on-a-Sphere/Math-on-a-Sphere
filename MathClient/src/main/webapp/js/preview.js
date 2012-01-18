@@ -131,4 +131,15 @@
         return that;
     }
     
+    org.weblogo.preview.resetPosition = function () {
+        mouseDown = false;
+        lastMouseX = null;
+        lastMouseY = null;
+
+        moonRotationMatrix =  mat4.identity(mat4.create());
+    
+        mat4.rotate(moonRotationMatrix, Math.PI / 2, [0, 1, 0]);
+        mat4.identity(mat4.create());
+    }
+
 })();
