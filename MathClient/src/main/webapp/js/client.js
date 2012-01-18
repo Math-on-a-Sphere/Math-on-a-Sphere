@@ -318,7 +318,6 @@ org.weblogo.init = function() {
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
     client.drawListener = preview.updateTexture;
     var code = $("#code");
-
     var myCodeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
         mode: "javascript"
@@ -341,6 +340,19 @@ org.weblogo.init = function() {
 
     $("#reset-position-button").click(function () {
         org.weblogo.preview.resetPosition();
+    });
+    $("#show2d-button").click(function () {
+        var canvas = $("#hiddenCanvas")[0];
+       
+        if(canvas.style.display == 'none')
+        {
+            canvas.style.display='block';
+        }
+        else
+        {
+            canvas.style.display = 'none';
+        }
+
     });
 };
 
