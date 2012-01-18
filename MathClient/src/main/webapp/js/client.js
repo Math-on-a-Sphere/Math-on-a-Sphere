@@ -330,13 +330,17 @@ org.weblogo.init = function() {
         compilerdriver(parsetree);
         var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
         client.execute(executor);
-        });
+    });
         
     var commands = client.locate("commands");
     $(document).click(function (event) {
         if (commands.has(event.target).length === 0 && event.target !== commands[0]) {
             client.terminal.focus(false);
         }
+    });
+
+    $("#reset-position-button").click(function () {
+        org.weblogo.preview.resetPosition();
     });
 };
 
