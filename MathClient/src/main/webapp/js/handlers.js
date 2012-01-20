@@ -8,7 +8,18 @@ org.weblogo.nodeHandlers.keyword = function(node, program, compiler) {
     return org.weblogo.keywordHandlers[node.command](node, program, compiler);
 }
 
-
+org.weblogo.nodeHandlers.uminus = function(node, program, compiler) {
+    return program += compiler(node.value, "-");
+}
+org.weblogo.nodeHandlers.power = function(node, program, compiler) {
+    return program += compiler(node.args[1], compiler(node.args[0], "Math.pow(")+",")+")";
+}
+org.weblogo.nodeHandlers.group_op = function(node, program, compiler) {
+    return program += compiler(node.value, "(")+")";
+}
+org.weblogo.nodeHandlers.op = function(node, program, compiler) {
+    return program += compiler(node.args[1], compiler(node.args[0], "")+node.op);
+}
 org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     if (node.value.length == 0) { return program += "";}
     else {
@@ -61,7 +72,9 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
 }
 org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
     var previousParent = compiler.parent;
+    var previousScope = compiler.scope;
     compiler.parent = "function"
+    compiler.scope = [];
     compiler.scope.push(node.id);
     var params = "";
 
@@ -84,6 +97,7 @@ org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
         }
     }
     compiler.parent = previousParent;
+    compiler.scope = previousScope;
     program += "org.weblogo.program.declared."+node.id+" = function("+params+")";
     program += block;
     return program;
