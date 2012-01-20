@@ -15,8 +15,6 @@ frac                        (?:\.[0-9]+)
 "-"                                return '-'
 "+"                                return '+'
 "^"                                return '^'
-"!"                                return '!'
-"%"                                return '%'
 "("                                return '('
 ")"                                return ')'
 "{"                                return '{'
@@ -25,9 +23,10 @@ frac                        (?:\.[0-9]+)
 "]"                                return ']'
 ","                                return ','
 "PI"                               return 'PI'
+"E"                                return 'E'
 "true"                             return 'TRUE'
 "false"                            return 'FALSE'
-("set")                            return 'SET'
+("set ")                           return 'SET'
 ("color"|"pen-size")               return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
@@ -39,10 +38,24 @@ frac                        (?:\.[0-9]+)
 .                                  return 'INVALID'
 /lex
 
-%%
-file
+
+
+
+/* operator associations and precedence */
+%left '+' '-'
+%left '*' '/'
+%left '^'
+%left UMINUS
+%right '='
+%right e
+%start program
+
+
+%% /* language grammar */
+
+program
 : weblogo_schema EOF
-{return $1;}
+  {return $1;}
 ;
 
 weblogo_schema
@@ -72,33 +85,61 @@ node
 ;
 
 func
-: exp exp
+: re re
   {$$ = {};
     $$['type'] = 'func';
     $$['id'] = $1;
     $$['args'] = $2;}
-| SET accessor value 
+| SET accessor e
   {$$ = {}; 
     $$['type'] = 'set'; 
     $$['args'] = [$2, $3];}
-| REPEAT value block
+| REPEAT e block
   {$$ = {}; 
     $$['type'] = 'repeat'; 
     $$['args'] = [$2, $3];}
 ;
 
-exp
-: value
- {$$ = {};
-   $$['type'] = $1['type'];
-   $$['value'] = [$1['value']];}
-| '(' ')'
+e
+: re
+| '-' re %prec UMINUS
   {$$ = {};
-    $$['type'] = 'list';
-    $$['value'] = [];}
-| '(' JSONArray ')'
-  {$$ = $2;}
+   $$['type'] = 'uminus';
+   $$['value'] = $2;}
 ;
+
+re
+: re '+' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '-' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '*' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '/' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '^' re
+  {$$ = {};
+   $$['type'] = 'power';
+   $$['args'] = [$1,$3];}
+| '(' re ')'
+  {$$ = {};
+    $$['type'] = 'group_op';
+    $$['value'] = $2;}
+| value
+;
+
 
 
 accessor
@@ -110,7 +151,7 @@ accessor
 
 
 assignment
-: identifier '=' value
+: identifier '=' e
   {$$ = {};
     $$['type'] = 'var_assign';
     $$['id'] = $1;
@@ -129,8 +170,39 @@ assignment
     $$['id'] = $1;
     $$['args'] = $5;
     $$['block'] = $7;}   
+| identifier '=' FUNCTION JSONArray block
+  {$$ = {};
+    $$['type'] = 'fun_assign';
+    $$['id'] = $1;
+    $$['args'] = $4;
+    $$['block'] = $5;}   
 ;
 
+
+value
+: '(' ')'
+  {$$ = {};
+    $$['type'] = 'list';
+    $$['value'] = [];}
+| identifier
+  {$$ = {};
+    $$['type'] = 'identifier';
+    $$['value'] = $1;}
+| number
+  {$$ = {};
+    $$['type'] = 'number';
+    $$['value'] = $1;}
+| string
+  {$$ = {};
+    $$['type'] = 'string';
+    $$['value'] = $1;}
+| boolean
+  {$$ = {};
+    $$['type'] = 'boolean';
+    $$['value'] = $1;}
+| JSONObject
+| JSONArray
+;
 
 identifier
 : IDENTIFIER
@@ -145,43 +217,17 @@ string
 number
 : NUMBER
   {$$ = Number(yytext);}
+| E
+  {$$ = Math.E;}
+| PI
+  {$$ = Math.PI;}
 ;
 
-value
-: identifier
-  {$$ = {};
-    $$['type'] = 'identifier';
-    $$['value'] = $1;}
-| number
-  {$$ = {};
-    $$['type'] = 'number';
-    $$['value'] = $1;}
-| string
-  {$$ = {};
-    $$['type'] = 'string';
-    $$['value'] = $1;}
-;
-
-
-JSONString
-: STRING_LIT
-  {$$ = yytext;}
-;
-
-JSONNumber
-: NUMBER
-  {$$ = Number(yytext);}
-;
-
-JSONBooleanLiteral
+boolean
 : TRUE
   {$$ = true;}
 | FALSE
   {$$ = false;}
-;
-
-JSONValue
-: value
 ;
 
 JSONObject
@@ -194,7 +240,7 @@ JSONObject
 ;
 
 JSONMember
-: JSONString ':' JSONValue
+: JSONString ':' e
   {$$ = {};
     $$['type'] = 'JSONMenber';
     $$['value'] = [$1, $3];}
@@ -219,10 +265,12 @@ JSONArray
 ;
 
 JSONElementList
-: JSONValue
+: e
   {$$ = [$1];}
-| JSONValue ',' JSONElementList
+| e ',' JSONElementList
   {$$ = $3; 
     $3.unshift($1);}
 ;
+
+
 
