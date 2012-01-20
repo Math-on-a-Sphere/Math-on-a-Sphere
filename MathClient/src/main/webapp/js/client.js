@@ -107,7 +107,7 @@ org.weblogo.executors.demo = function(config, command, tick) {
 };
 
 function compilerdriver(inputStream) {
-    org.weblogo.outputStream = [];
+    org.weblogo.outputStream = ["ca"];
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
     org.weblogo.program.declared = {};
@@ -276,7 +276,11 @@ org.weblogo.client = function(container, options) {
     
     
     that.locate("commands").terminal(function(command, terminal) {
-        that.execute(command);
+        var parsetree = grammar.parse(command);
+        compilerdriver(parsetree);
+        var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
+        //that.executor.execute(executor);
+        that.execute(executor);
     }, {
         greetings: "WebLogo Command Interpreter © Math on a Sphere, 2011-",
         enabled: false,
