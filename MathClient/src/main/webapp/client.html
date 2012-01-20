@@ -40,16 +40,39 @@
                 <!-- command line interface -->
                 <form><textarea id="code" class="code" name="code" rows="30" cols="50">
 // Type multiple weblogo commands and then press compile
-x = 6
-y = "green"
-z = function [a,b] { 
+ca()
+c_one = "green"
+c_two = "blue"
+c_three = "yellow"
+
+right_turn = function [a,b,c] {
   set color a
   forward b
+  right c
+}
+
+left_turn = function [a,b,c] {
+  set color a
+  forward b
+  left c
 }
 
 repeat 10 {
-  z["red", 100]
-  right 30
+  b = 80
+  c = 100
+  right_turn [c_one, b, c]
+  right_turn [c_one, b-50, c+20]
+  right_turn [c_one, b-40, c+40]
+}
+
+setpos [0,0]
+setheading 180
+
+repeat 10 {
+  b = 100
+  left_turn [c_two, b, 90]
+  left_turn [c_two, b-40, 90]
+  left_turn [c_two, 30, 90]  
 }
 
                 </textarea></form>
