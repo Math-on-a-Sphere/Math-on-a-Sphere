@@ -40,40 +40,50 @@
                 <!-- command line interface -->
                 <form><textarea id="code" class="code" name="code" rows="30" cols="50">
 // Type multiple weblogo commands and then press compile
-ca()
-c_one = "green"
-c_two = "blue"
-c_three = "yellow"
+white = "white"
+red = "red"
+green = "green"
 
-right_turn = function [a,b,c] {
-  set color a
-  forward b
-  right c
-}
+set color white
+ repeat 5
+   {repeat 3
+     {fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+ fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+ rt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}  lt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+ rt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}  lt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+ lt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+lt 72 fd 63.5 rt 180
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+ lt 144 fd 63.5 rt 180
+      repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+rt 144 fd 63.5 rt 180
 
-left_turn = function [a,b,c] {
-  set color a
-  forward b
-  left c
-}
+     repeat 5
+   {repeat 3
+{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
 
-repeat 10 {
-  b = 80
-  c = 100
-  right_turn [c_one, b, c]
-  right_turn [c_one, b-50, c+20]
-  right_turn [c_one, b-40, c+40]
-}
-
-setpos [0,0]
-setheading 180
-
-repeat 10 {
-  b = 100
-  left_turn [c_two, b, 90]
-  left_turn [c_two, b-40, 90]
-  left_turn [c_two, 30, 90]  
-}
 
                 </textarea></form>
 
