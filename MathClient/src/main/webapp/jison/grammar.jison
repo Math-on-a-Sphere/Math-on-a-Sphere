@@ -240,7 +240,7 @@ JSONObject
 ;
 
 JSONMember
-: JSONString ':' e
+: string ':' e
   {$$ = {};
     $$['type'] = 'JSONMenber';
     $$['value'] = [$1, $3];}

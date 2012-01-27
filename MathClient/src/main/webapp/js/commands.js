@@ -256,7 +256,7 @@ commands.penup = function () {
     }  
 };
 commands.penup.args = [];
-commands["pen-up"] = commands.penup;
+commands.pu = commands.penup;
 
 commands.pendown = function () {
     return {
@@ -264,7 +264,7 @@ commands.pendown = function () {
     }  
 };
 commands.pendown.args = [];
-commands["pen-down"] = commands.pendown;
+commands.pd = commands.pendown;
 
 commands.cd = function() {
     return {
@@ -272,7 +272,7 @@ commands.cd = function() {
     }
 };
 commands.cd.args = [];
-commands["clear-drawing"] = commands.cd;
+commands["cleardrawing"] = commands.cd;
 
 commands.ca = function() {
     return {
@@ -280,7 +280,7 @@ commands.ca = function() {
     }
 };
 commands.ca.args = [];
-commands["clear-all"] = commands.ca;
+commands["clearall"] = commands.ca;
 
 // actual value type will be parsed by the accessor
 commands.set.args = ["string", "string"];
@@ -300,7 +300,7 @@ var scaleLens = function(scale) {
 org.weblogo.turtle.accessors = {};
 var accessors = org.weblogo.turtle.accessors;
 
-accessors["pen-size"] = {
+accessors["pensize"] = {
     property: "width",
     type: "number|identifier",
     rejector: function(value) {
@@ -313,6 +313,7 @@ accessors["pen-size"] = {
     },
     lens: scaleLens(180 / Math.PI)
 };
+accessors["ps"] = accessors["pensize"];
 
 accessors["color"] = {
     property: "colour",

@@ -71,34 +71,29 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
     }
 }
 org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
-    var previousParent = compiler.parent;
-    var previousScope = compiler.scope;
-    compiler.parent = "function"
-    compiler.scope = [];
+    var localcount = compiler.localscope.length+1;
+    compiler.scope.push(compiler.localscope);
     compiler.scope.push(node.id);
+    compiler.localscope = [];
+
     var params = "";
 
     params = compiler(node.args,"");
     for(var j = 0; j < node.args.value.length; j++) {
         if(node.args.value[j].type === "identifier") {
-            compiler.scope.push(node.args.value[j].value);
+            compiler.localscope.push(node.args.value[j].value);
         }
     }
     
 
-    compiler.parent = "function";
+    //compiler.parent = "function";
     var block = compiler(node.block, "");
 
-    if(node.args.value.length > 0){
-        for(var j = 0; j < node.args.value.length; j++) {
-            if(node.args.value[j].type === "identifier") {
-                compiler.scope.pop();
-            }
-        }
-    }
-    compiler.parent = previousParent;
-    compiler.scope = previousScope;
-    program += "org.weblogo.program.declared."+node.id+" = function("+params+")";
+    compiler.localscope = [];
+    compiler.localscope = compiler.scope.pop(localcount);
+
+
+    program += "var "+node.id+" = function("+params+")";
     program += block;
     return program;
 }
@@ -106,14 +101,11 @@ org.weblogo.nodeHandlers.var_assign = function (node, program, compiler) {
     var defaultVal = compiler(node.value, "");
     var varName = "";
 
-    if(compiler.scope[node.id] === undefined) {
-        if(compiler.parent === "function") {
+    if(compiler.localscope[node.id] === undefined) {
+        if(compiler.scope[node.id] === undefined) {
             varName = "var ";
+            compiler.localscope.push(node.id);
         }
-        else {
-            varName = "org.weblogo.program.declared.";
-        }
-        compiler.scope.push(node.id);
     }
     varName += node.id;
 
@@ -130,13 +122,13 @@ org.weblogo.nodeHandlers.accessor = function(node, program, compiler) {
     return program;
 }
 org.weblogo.nodeHandlers.identifier = function(node, program, compiler) {    
-    if(!org.weblogo.turtle.commands[node.value] &&
-       compiler.parent === "global") {
-            program += "org.weblogo.program.declared."+node.value;
-    }
-    else {
-        program += node.value;
-    }
+//    if(!org.weblogo.turtle.commands[node.value]) {
+//        program += node.value;
+//    }
+//    else {
+
+    program += node.value;
+//    }
     if(compiler.escapeQuote) {
         program = "\"+"+program+"+\"";
     }

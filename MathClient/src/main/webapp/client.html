@@ -9,7 +9,7 @@
     <script type="text/javascript" src="lib/js/jquery.terminal-0.3.6.js"></script>
     <script type="text/javascript" src="lib/js/gl-matrix.js"></script>
     <script type="text/javascript" src="lib/js/codemirror.js"></script>
-    <script type="text/javascript" src="lib/mode/javascript/javascript.js"></script>
+    <script type="text/javascript" src="lib/mode/weblogo/weblogo.js"></script>
         
     <script type="text/javascript" src="js/geometry.js"></script>
     <script type="text/javascript" src="js/turtle.js"></script>
@@ -20,7 +20,6 @@
     <script type="text/javascript" src="js/client.js"></script>
     <script type="text/javascript" src="js/handlers.js"></script>
 
-    <script type="text/javascript" src="js/calculator.js"></script>
     <script type="text/javascript" src="jison/grammar.js"></script>
     <script type="text/javascript" src="jison/grammar2.js"></script>
 
@@ -40,51 +39,19 @@
                 <!-- command line interface -->
                 <form><textarea id="code" class="code" name="code" rows="30" cols="50">
 // Type multiple weblogo commands and then press compile
-white = "white"
-red = "red"
-green = "green"
+ca()
+x = 63.5
+theta = 108
 
-set color white
- repeat 5
-   {repeat 3
-     {fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
- fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
- rt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}  lt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
- rt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}  lt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
- lt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
-lt 72 fd 63.5 rt 180
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
- lt 144 fd 63.5 rt 180
-      repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
-rt 144 fd 63.5 rt 180
+tri = function () { 
+  repeat 3 { forward x right theta }
+}
 
-     repeat 5
-   {repeat 3
-{fd 31.75 set color red rt 90 fd 30 set color green rt 90 fd 20 bk 40 fd 20 lt 90 set color red bk 60 set color green lt 90 fd 20 bk 40 fd 20 rt 90 set color red fd 30 lt 90 set color white fd 31.75 rt 108} rt 72}
+penta = function () {
+  repeat 5 { tri() right 72 }
+}
 
-
+penta()
                 </textarea></form>
 
                 <button id="compile-button">compile</button>
@@ -97,7 +64,7 @@ rt 144 fd 63.5 rt 180
                 <input type="checkbox" id="lighting" checked /><label for="lighting">Use lighting</label>
                 </span>
                 <br/>
-                Spin the moon by dragging it with the mouse.
+                Spin the sphere by dragging it with the mouse.
                 <button id="reset-position-button">reset position</button>
                 <button id="show2d-button">show/hide 2d canvas</button>
               </td>
