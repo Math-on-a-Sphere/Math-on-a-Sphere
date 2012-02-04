@@ -52,7 +52,7 @@ org.weblogo.blockExecutor = function(commands) {
         hopalong();
         var that = {};
         that.toTick = function(newTick) {
-            var finished = execution.toTick(newTick);
+            var finished = !execution || execution.toTick(newTick);
             if (finished) {
                 execution = null;
                 hopalong();
