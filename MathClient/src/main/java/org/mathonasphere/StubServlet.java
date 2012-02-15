@@ -17,6 +17,7 @@ import org.apache.commons.codec.binary.Base64;
 public class StubServlet extends HttpServlet {
   int counter = 0;
   int TOTAL_FRAMES = 100;
+  int BUFFER_SIZE = 50;
   SOSConnection sos;
   ArrayBlockingQueue<byte[]> dataQueue;
 
@@ -38,10 +39,14 @@ public class StubServlet extends HttpServlet {
                   {
                       try
                       {
-                          int fn = 0;
-			  //int fn = sos.sendCommand("get_frame_number");
-                          if(fn == lastFN)
+                          //int fn = 0;
+			  int fn = Integer.parseInt(sos.sendCommand("get_frame_number"));
+			  int diff = (counter - fn + TOTAL_FRAMES)%TOTAL_FRAMES;
+                          long time = System.currentTimeMillis();
+                          System.out.print("("+counter+":"+fn+") " + (time %10000) + " ");
+                          if(diff < BUFFER_SIZE)
                           {
+                              System.out.println("w");
 			      String str = String.format("%03d", counter);
                               FileOutputStream fos = null;
                               fos = new FileOutputStream(dir+"/"+str+".png");
@@ -55,9 +60,10 @@ public class StubServlet extends HttpServlet {
                                   }
                               }
                               fos.close();
-                              
+                              counter++;
+                              counter = counter % TOTAL_FRAMES;
                           }
-                          counter = (counter == TOTAL_FRAMES) ? 0 : counter+1;
+  
                           sleep(10);
                       }
                       catch(Exception e) 
