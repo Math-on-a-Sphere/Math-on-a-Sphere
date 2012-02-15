@@ -37,6 +37,7 @@ var test = {};
             for (var i = 0; i < width; ++ i) {
                 var xp = Math.PI * (i - width/2) / scale, yp = Math.PI * (j - height / 2) / scale;
                 var r = geom.polar_to_3(.5 * -yp, .5 * xp);
+                r = geom.point_by_angle(r, [0, -1, 0], 1);
                 
                 var within = geom.raster_point(polygon, r);
                 var bshade = (within.shade != 1 && within.shade != 0)? within.shade : 0;

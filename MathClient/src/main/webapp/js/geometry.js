@@ -125,10 +125,8 @@ org.weblogo.geom.quat_conj = function(q, v) {
  * into the 3-d unit vector p1 along unit sphere great circle */
 
 org.weblogo.geom.axis_from_heading = function(p0_3, p1_3) {
-    var p0 = geom.quat_from_3(p0_3), p1 = geom.quat_from_3(p1_3);
-    var q = geom.quat_mult(p1, geom.quat_inv(p0));
-    var sinW = Math.sqrt(1 - q[0] * q[0]);
-    return [q[1] / sinW, q[2] / sinW, q[3] / sinW]; 
+    var norm = geom.cross_3(p0_3, p1_3);
+    return geom.norm_3(norm);
 };
 
 /** Given an axis and angle, construct the versor quaternion value which will act as a rotation
