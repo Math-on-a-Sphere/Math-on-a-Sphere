@@ -2,33 +2,33 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-        <title>geometry.js Tests</title>
-        
-        <!--  This is the jqUnit test css file -->
-        <link rel="stylesheet" media="screen" href="../../testlib/css/qunit.css" />
+        <title>geometry2.js Tests</title>
         
         <!--  These are the required javascript modules  -->
         <script type="text/javascript" src="../../lib/js/jquery.js"></script>
         <script type="text/javascript" src="../../lib/js/fluidLite.js"></script>
+        <script type="text/javascript" src="../../lib/js/gl-matrix.js"></script>
         <script type="text/javascript" src="../../js/geometry.js"></script>
-        
-        <!--  These are tests that have been written using this page as data -->
-        <script type="text/javascript" src="../js/GeometryJSTests.js"></script>
+        <script type="text/javascript" src="../../js/geometry2.js"></script>
+       
+        <script type="text/javascript" src="../js/GeometryTests2.js"></script>
 
     </head>
     <body>
-    <h1 id="qunit-header">Geometry JS Test Suite</h1>
-    <h2 id="qunit-banner"></h2>
-    <div id="qunit-testrunner-toolbar"></div>
-    <h2 id="qunit-userAgent"></h2>
-    <ol id="qunit-tests"></ol>
+    <h1 id="qunit-header">Geometry2 JS Tests</h1>
 
     <!-- Test HTML -->
     <div id="main" style="display:none;" class="container">
     </div>
 
     <div id="notmain" class="container">
+        <canvas id="canvas" width="100" height="100"></canvas>
+        <button id="button">Render</button> 
     </div>
+   
+    <script>
+        test.init();
+    </script>
    
     </body>
 </html>
