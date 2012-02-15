@@ -42,6 +42,7 @@
 ca()
 x = 63.5
 theta = 108
+thetatwo = 72/2
 
 tri = function () { 
   repeat 3 { forward x right theta }
@@ -51,7 +52,21 @@ penta = function () {
   repeat 5 { tri() right 72 }
 }
 
-penta()
+repeat 3 {
+  penta()
+  forward x  
+  right thetatwo
+}
+
+left 72
+forward x
+right thetatwo
+
+repeat 3 {
+  penta()
+  forward x
+  left thetatwo
+}
                 </textarea></form>
 
                 <button id="compile-button">compile</button>
