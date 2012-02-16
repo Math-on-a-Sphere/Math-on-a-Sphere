@@ -50,7 +50,7 @@ frac                        (?:\.[0-9]+)
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 {int}{frac}?{exp}?\b               return 'NUMBER';
-[a-zA-Z]+([a-zA-Z0-9_-]*)?\b          return 'IDENTIFIER'
+[a-zA-Z]+([a-zA-Z0-9_]*)?\b        return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
