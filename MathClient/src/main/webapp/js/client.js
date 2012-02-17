@@ -73,10 +73,9 @@ org.weblogo.makeConfig = function(element, options) {
     return that;
 };
 
-
 org.weblogo.turtle.commands.demo = function() {
     return {type: "demo"}
-}
+};
 org.weblogo.turtle.commands.demo.args = [];
 
 org.weblogo.executors.demo = function(config, command, tick) {
@@ -276,6 +275,9 @@ org.weblogo.client = function(container, options) {
 org.weblogo.init = function() {
     var client = org.weblogo.client("body");
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
+    
+//    var spherical = org.weblogo.complex.webGLStart(".flc-aux-canvas", client);
+    
     client.drawListener = preview.updateTexture;
     var code = $("#code");
     var myCodeMirror = CodeMirror.fromTextArea(code[0], {

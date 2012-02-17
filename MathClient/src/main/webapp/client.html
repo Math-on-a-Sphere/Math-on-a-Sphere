@@ -17,6 +17,7 @@
     <script type="text/javascript" src="js/commands.js"></script>
     <script type="text/javascript" src="js/executor.js"></script>
     <script type="text/javascript" src="js/webgl-utils.js"></script>
+    <script type="text/javascript" src="js/complex.js"></script>
     <script type="text/javascript" src="js/preview.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
     <script type="text/javascript" src="js/handlers.js"></script>
@@ -105,12 +106,15 @@
               <td colspan="2">
                 <!-- preview image canvas -->
                 <div id="hiddenCanvas" style="display: none" >
-                <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas></div>
+                  <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas>
+                </div>
               </td>
             </tr>
             <tr>
               <td colspan="2">
                 <input type="button" value="Stop Command" class="flc-math-stop"/>
+                <!-- GL image canvas -->
+                <canvas width="1024" height="512" class="flc-aux-canvas unselectable"></canvas>
 
                 Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
                 Frame rate: <span class="flc-math-frameRate">&nbsp;&nbsp;&nbsp;</span> fps&nbsp;&nbsp;&nbsp;

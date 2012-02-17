@@ -32,6 +32,20 @@
 org.weblogo.webgl = {};
  
 (function() {
+  
+/** Convert a multidimensional array into a flat array suitable to be sent
+ * as a GLSL buffer */
+org.weblogo.webgl.flattenArray = function(array2, target) {
+    var dim = array2[0].length;
+    var togo = new Uint8Array(array2.length * dim);
+    var c = 0;
+    for (var i = 0; i < array2.length; ++ i) {
+        for (var j = 0; j < dim; ++ j) {
+            togo[c++] = array2[i][j];
+        }
+    }
+    return togo;
+};
 
 org.weblogo.webgl.textToShader = function(gl, text, type, events) {
     var shader;
@@ -48,11 +62,11 @@ org.weblogo.webgl.textToShader = function(gl, text, type, events) {
     gl.compileShader(shader);
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        events.error({message: "Error compiling " + type + " shader: " + 
+        events.onError.fire({message: "Error compiling " + type + " shader: " + 
             gl.getShaderInfoLog(shader)});
     }
     return shader;
-}  
+};
 
 org.weblogo.webgl.loadShaders = function(gl, shaderSpecs, events, callback) {
     var deferreds = [];
@@ -68,7 +82,7 @@ org.weblogo.webgl.loadShaders = function(gl, shaderSpecs, events, callback) {
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log("Ajax Error " + textStatus);
-                events.error({message: textStatus + " " + errorThrown});
+                events.onError.fire({message: textStatus + " " + errorThrown});
             },
             complete: function() {
                 console.log("Ajax complete for " + key);
@@ -107,7 +121,7 @@ org.weblogo.webgl.setupWebGL = function(canvas, opt_attribs, events) {
                  OTHER_PROBLEM :
                  GET_A_WEBGL_BROWSER;
         str += "\nError: " + msg;
-        events.error(str)
+        events.onError.fire(str)
     };
     
     if (canvas.addEventListener) {
@@ -162,17 +176,22 @@ org.weblogo.webgl.makeSquareVertexBuffer = function(that) {
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 };
 
-org.weblogo.webgl.makeDraw = function(that, userDraw) {
+org.weblogo.webgl.makeDraw = function(that) {
     return function() {
         var gl = that.gl;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        userDraw(that);
+        if (that.userDraw) {
+            that.userDraw(that);
+        }
           // http://stackoverflow.com/questions/3665671/is-vertexattribpointer-needed-after-each-bindbuffer
         gl.bindBuffer(gl.ARRAY_BUFFER, that.vertexBuffer);                                        
         gl.vertexAttribPointer(that.shaderProgram.vertexPosition, that.vertexSize, gl.FLOAT, false, 0, 0);
 
         gl.drawArrays(gl.TRIANGLES, 0, that.vertexCount);
+        if (that.userPostDraw) {
+            that.userPostDraw(that);
+        }
     };
 };
 
@@ -205,7 +224,7 @@ org.weblogo.webgl.initShaders = function(that, shaders) {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-        that.events.error({message: "Could not link shaders: " +
+        that.events.onError.fire({message: "Could not link shaders: " +
             gl.getProgramInfoLog(shaderProgram) + " code " + gl.getError()});
     //    throw("fail");
     }
@@ -263,7 +282,7 @@ org.weblogo.webgl.initWebGLComponent = function(container, options, userOptions,
         that.initBuffers(that);
         
         onCreate(that);
-        that.draw = org.weblogo.webgl.makeDraw(that, that.userDraw);
+        that.draw = org.weblogo.webgl.makeDraw(that);
         if (that.animate) {
             org.weblogo.webgl.animator(that.draw);
         }
