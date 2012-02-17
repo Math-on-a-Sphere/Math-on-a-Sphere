@@ -3,10 +3,6 @@
 
 var geom = org.weblogo.geom;
 
-var id = function() {
-    return mat4.identity(mat4.create());
-};
-
 org.weblogo.geom.intersect_planes = function(p1, p2, sign) {
     var g = vec3.dot(p1, p2);
     var d2 = 1 - g*g;
@@ -23,7 +19,7 @@ org.weblogo.geom.intersect_planes = function(p1, p2, sign) {
 
 org.weblogo.geom.intersect_hplanes = function(p1, p2) {
     return geom.norm_3(geom.cross_3(p1, p2));
-}
+};
 
 org.weblogo.geom.point_by_angle = function(point, axis, angle) {
     var c = Math.cos(angle), s = Math.sin(angle), c1 = 1 - c;
@@ -33,26 +29,15 @@ org.weblogo.geom.point_by_angle = function(point, axis, angle) {
     (c + ux*ux*c1)    * px + (ux*uy*c1 - uz*s) * py + (ux*uz*c1 + uy*s) * pz,
     (uy*ux*c1 + uz*s) * px + (c + uy*uy*c1)    * py + (uy*uz*c1 - ux*s) * pz,
     (uz*ux*c1 - uy*s) * px + (uz*uy*c1 + ux*s) * py + (c + uz*uz*c1)    * pz 
-    ]
-    //return mat4.multiplyVec3(mat4.rotate(id(), angle, axis), point, vec3.create());
+    ];
+};
+
+// JS atan2 in range -PI to PI
+org.weblogo.geom.get_parameter = function(conj, angle, point) {
+    var upped = geom.point_by_angle(point, conj, angle);
+    var param = Math.atan2(upped[0], -upped[1]);
+    return param;
 }
-
-var check_polygon = function(points, lines) {
-    var c = points.length;
-    for (var i = 0; i < c; ++ i) {
-        //console.log("d1 ", vec3.dot(lines[i], points[i]), " d2 ", vec3.dot(lines[i], points[(i + 1)%c]));
-        var axis = geom.axis_from_heading(points[i], points[(i + 1)%c]);
-        //console.log("Orient: ", vec3.dot(lines[i], axis)); 
-    }  
-};
-
-org.weblogo.geom.find_exterior = function(a1, point, a2) {
-    var angle = Math.acos(-vec3.dot(a1, a2));
-    // kick the point off by a small amount to avoid alignment problems
-    var rot = geom.point_by_angle(a1, point, angle/2 + 5e-4);
-    var adj = geom.point_by_angle(point, rot, Math.PI/90);
-    return geom.norm_3(adj);
-};
 
 var PI2 = Math.PI * 2;
 
@@ -77,6 +62,125 @@ org.weblogo.geom.line_to_conj = function(point1, line, point2, line2) {
     };
 };
 
+
+// These four taken from GLSL definitions
+org.weblogo.geom.clamp = function(x, minVal, maxVal) {
+    return Math.min(Math.max(x, minVal), maxVal);
+};
+
+org.weblogo.geom.smoothstep = function(edge0, edge1, x) {
+    var t = geom.clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    return t * t * (3.0 - 2.0 * t);
+};
+
+org.weblogo.geom.step = function(edge, x) {
+    return x < edge? 0 : 1;
+};
+
+org.weblogo.geom.sign = function(x) {
+    return x > 0? 1 : (x < 0 ? -1 : 0);  
+};
+
+org.weblogo.geom.is_within = function(start, param, end, startslop, endslop) {
+    start = (start - startslop) % PI2;
+    end = (end + endslop) % PI2;
+    var sign = geom.sign(end - start);
+    var ind = (param >= start) * (param <= end);
+    return (1 - sign)/2 + sign * ind;
+};
+
+// conj2 is polygon's conj
+org.weblogo.geom.is_intersect = function(conj1, conj2, point, ig1, startslop, endslop) {
+    var param1 = geom.get_parameter(conj1.conj, conj1.angle, point);
+    var is1 = ig1 || geom.is_within(conj1.start, param1, conj1.end, 0, 0);
+    if (!ig1) {
+        // console.log("within1 ", conj1, " start ", conj1.start, " end ", conj1.end, " param1 ", param1, " is1 ", is1);
+    }
+    var param2 = geom.get_parameter(conj2.conj, conj2.angle, point);
+    var is2 = geom.is_within(conj2.start, param2, conj2.end, startslop || 0, endslop || 0);
+    if (!ig1) {
+        // console.log("within2 ", conj2,  " start ", conj2.start, " end ", conj2.end, " param2 ", param2, " is2 ", is2);
+    }
+    return is1 * is2;
+};
+
+org.weblogo.geom.applyShade = function(shade, isInt, slope) {
+    slope = slope * isInt;
+    var tshade = slope + geom.step(-1e-9, -slope); // slope of 0 maps to 1
+//    console.log(" slope " + slope + " tshade " + tshade);
+    return Math.min(shade, tshade);
+};
+
+org.weblogo.geom.cotSlop = function(slope, slop, bend) {
+    if (bend < Math.PI / 2) {
+        return 0.3 * slop * (2 * slope - 0.8) / Math.tan(bend);
+    }
+    else return 1.8 * slop * Math.min(2 * slope - 1, 0) / Math.sin(2 * bend);
+};
+
+org.weblogo.geom.raster_point = function(poly, point) {
+    var c = poly.lines.length;
+    var slop = 0.01;
+    // line joining point to exterior point
+    var axis = geom.axis_from_heading(point, poly.exterior);
+    var conj = geom.line_to_conj(point, axis, poly.exterior);
+    var count = 0, shade = 1;
+    for (var i = 0; i < c; ++ i) {
+        var line = poly.lines[i];
+        var normal = geom.axis_from_heading(point, line);
+        var normconj = geom.line_to_conj(point, normal, line);
+        var bends = Math.PI - poly.conj[(i - 1 + c)%c].bend / 2;
+        var bende = Math.PI - poly.conj[i].bend/2;
+        //console.log("bends " + (bends / PI2) + " bende " + (bende / PI2));
+        var dot = -vec3.dot(line, point) - (line[3] || 0);
+        var slope = geom.clamp(dot + slop, 0, 2 * slop) / (2 * slop);
+        
+        var startslop = geom.cotSlop(slope, slop, bends);
+        var endslop = geom.cotSlop(slope, slop, bende);
+        
+        // console.log("slope ", slope, " startslop ", startslop, " endslop " , endslop);
+        
+        var intersectn1 = geom.intersect_planes(line, normal, 1);
+        var isIntn1 = geom.is_intersect(normconj, poly.conj[i], intersectn1, 1, startslop, endslop);
+        shade = geom.applyShade(shade, isIntn1, slope);
+        
+        var intersectn2 = geom.intersect_planes(line, normal, -1);
+        var isIntn2 = geom.is_intersect(normconj, poly.conj[i], intersectn2, 1, startslop, endslop);
+        shade = geom.applyShade(shade, isIntn2, slope);
+        
+        var intersect1 = geom.intersect_planes(line, axis, 1);
+        var isInt = geom.is_intersect(conj, poly.conj[i], intersect1);
+        //console.log("up count: ", isInt, " intersect point ", intersect1);
+        count += isInt;
+        var intersect2 = geom.intersect_planes(line, axis, -1);
+        var isInt2 = geom.is_intersect(conj, poly.conj[i], intersect2);
+        count += isInt2;
+        //console.log("up count: ", isInt2, " intersect point ", intersect2);
+    }
+    //console.log("WITHIN: ", count, " shade ", shade);
+    return {within: count %2, shade: shade};
+};
+
+
+//** ABOVE HERE goes into WebGL
+
+var check_polygon = function(points, lines) {
+    var c = points.length;
+    for (var i = 0; i < c; ++ i) {
+        //console.log("d1 ", vec3.dot(lines[i], points[i]), " d2 ", vec3.dot(lines[i], points[(i + 1)%c]));
+        var axis = geom.axis_from_heading(points[i], points[(i + 1)%c]);
+        //console.log("Orient: ", vec3.dot(lines[i], axis)); 
+    }  
+};
+
+org.weblogo.geom.find_exterior = function(a1, point, a2) {
+    var angle = Math.acos(-vec3.dot(a1, a2));
+    // kick the point off by a small amount to avoid alignment problems
+    var rot = geom.point_by_angle(a1, point, angle/2 + 5e-4);
+    var adj = geom.point_by_angle(point, rot, Math.PI/90);
+    return geom.norm_3(adj);
+};
+
 org.weblogo.geom.measure_polygon = function(polygon) {
     var c = polygon.points.length;
     polygon.exterior = geom.find_exterior(polygon.lines[c - 1], polygon.points[0], polygon.lines[0]);
@@ -88,12 +192,9 @@ org.weblogo.geom.measure_polygon = function(polygon) {
     }
 };
 
-// JS atan2 in range -PI to PI
-org.weblogo.geom.get_parameter = function(conj, angle, point) {
-    var upped = geom.point_by_angle(point, conj, angle);
-    var param = Math.atan2(upped[0], -upped[1]);
-    return param;
-}
+var id = function() {
+    return mat4.identity(mat4.create());
+};
 
 org.weblogo.geom.make_turtle = function(size, apex) {
     size = Math.PI/25.01;
@@ -135,116 +236,6 @@ org.weblogo.geom.make_turtle = function(size, apex) {
     };
     geom.measure_polygon(polygon);
     return polygon;
-};
-
-// These four taken from GLSL definitions
-org.weblogo.geom.clamp = function(x, minVal, maxVal) {
-    return Math.min(Math.max(x, minVal), maxVal);
-}
-
-org.weblogo.geom.smoothstep = function(edge0, edge1, x) {
-    var t = geom.clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
-    return t * t * (3.0 - 2.0 * t);
-};
-
-org.weblogo.geom.step = function(edge, x) {
-    return x < edge? 0 : 1;
-}
-
-org.weblogo.geom.sign = function(x) {
-    return x > 0? 1 : (x < 0 ? -1 : 0);  
-};
-
-org.weblogo.geom.is_within = function(start, param, end, startslop, endslop) {
-    start = (start - startslop) % PI2;
-    end = (end + endslop) % PI2;
-    var sign = geom.sign(end - start);
-    var ind = (param >= start) * (param <= end);
-    return (1 - sign)/2 + sign * ind;
-};
-
-org.weblogo.geom.angDiff = function(ang1, ang2) {
-    return 1 - Math.abs(((4 + ((ang1 - ang2) / Math.PI)) % 2) - 1);
-}
-
-org.weblogo.geom.endShade = function(start, param, end, slop) {
-    var ds = geom.angDiff(param, start);
-    var de = geom.angDiff(param, end);
-    return Math.max(0, slop - Math.min(ds, de));
-};
-
-
-// conj2 is polygon's conj
-org.weblogo.geom.is_intersect = function(conj1, conj2, point, ig1, startslop, endslop) {
-    var param1 = geom.get_parameter(conj1.conj, conj1.angle, point);
-    var is1 = ig1 || geom.is_within(conj1.start, param1, conj1.end, 0, 0);
-    if (!ig1) {
-        // console.log("within1 ", conj1, " start ", conj1.start, " end ", conj1.end, " param1 ", param1, " is1 ", is1);
-    }
-    var param2 = geom.get_parameter(conj2.conj, conj2.angle, point);
-    var is2 = geom.is_within(conj2.start, param2, conj2.end, startslop || 0, endslop || 0);
-    if (!ig1) {
-        // console.log("within2 ", conj2,  " start ", conj2.start, " end ", conj2.end, " param2 ", param2, " is2 ", is2);
-    }
-    return is1 * is2;
-};
-
-// TODO, add line offset
-org.weblogo.geom.applyShade = function(shade, isInt, slope) {
-    slope = slope * isInt;
-    var tshade = slope + geom.step(-1e-9, -slope); // slope of 0 maps to 1
-//    console.log(" slope " + slope + " tshade " + tshade);
-    return Math.min(shade, tshade);
-};
-
-org.weblogo.geom.cotSlop = function(slope, slop, bend) {
-    if (bend < Math.PI / 2) {
-        return 0.3 * slop * (2 * slope - 0.8) / Math.tan(bend);
-    }
-    else return 1.8 * slop * Math.min(2 * slope - 1, 0) / Math.sin(2 * bend);
-};
-
-org.weblogo.geom.raster_point = function(poly, point) {
-    var c = poly.lines.length;
-    var slop = 0.01;
-    // line joining point to exterior point
-    var axis = geom.axis_from_heading(point, poly.exterior);
-    var conj = geom.line_to_conj(point, axis, poly.exterior);
-    var count = 0, shade = 1;
-    for (var i = 0; i < c; ++ i) {
-        var line = poly.lines[i];
-        var normal = geom.axis_from_heading(point, line);
-        var normconj = geom.line_to_conj(point, normal, line);
-        var bends = Math.PI - poly.conj[(i - 1 + c)%c].bend / 2;
-        var bende = Math.PI - poly.conj[i].bend/2;
-        //console.log("bends " + (bends / PI2) + " bende " + (bende / PI2));
-        var dot = -vec3.dot(line, point);
-        var slope = geom.clamp(dot + slop, 0, 2 * slop) / (2 * slop);
-        
-        var startslop = geom.cotSlop(slope, slop, bends);
-        var endslop = geom.cotSlop(slope, slop, bende);
-        
-        // console.log("slope ", slope, " startslop ", startslop, " endslop " , endslop);
-        
-        var intersectn1 = geom.intersect_planes(line, normal, 1);
-        var isIntn1 = geom.is_intersect(normconj, poly.conj[i], intersectn1, 1, startslop, endslop);
-        shade = geom.applyShade(shade, isIntn1, slope);
-        
-        var intersectn2 = geom.intersect_planes(line, normal, -1);
-        var isIntn2 = geom.is_intersect(normconj, poly.conj[i], intersectn2, 1, startslop, endslop);
-        shade = geom.applyShade(shade, isIntn2, slope);
-        
-        var intersect1 = geom.intersect_planes(line, axis, 1);
-        var isInt = geom.is_intersect(conj, poly.conj[i], intersect1);
-        //console.log("up count: ", isInt, " intersect point ", intersect1);
-        count += isInt;
-        var intersect2 = geom.intersect_planes(line, axis, -1);
-        var isInt2 = geom.is_intersect(conj, poly.conj[i], intersect2);
-        count += isInt2;
-        //console.log("up count: ", isInt2, " intersect point ", intersect2);
-    }
-    //console.log("WITHIN: ", count, " shade ", shade);
-    return {within: count %2, shade: shade};
 };
 
 var polygon = org.weblogo.geom.make_turtle();
