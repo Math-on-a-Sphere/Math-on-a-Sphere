@@ -44,13 +44,21 @@ org.weblogo.blockExecutor = function(commands) {
         var index = 0;
         var execution;
         function hopalong() {
+            var messages = [];
             while (!execution && index < commands.length) {
                 execution = quickExec(commands[index]);
+                if (execution && execution.type === "info") {
+                    //events.onInfo.fire(execution);
+                    messages.push(execution);
+                    execution = null;
+                }
                 ++index;
             }
+            return messages;
         }
-        hopalong();
+        var messages = hopalong();
         var that = {};
+        that.messages = messages;
         that.toTick = function(newTick) {
             var finished = !execution || execution.toTick(newTick);
             if (finished) {
@@ -105,10 +113,10 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
                 delete that.execution;
             }
             else {
-                if (that.execution && that.execution.type === "info") {
-                    events.onInfo.fire(that.execution);
-                }
                 client.commandStart(that.execution);
+                if(that.execution && that.execution.messages.length > 0) {
+                    events.onInfo.fire(that.execution.messages[0]);
+                }
                 if (that.execution && that.execution.toTick) {
                     that.intervalID = window.setInterval(that.tick, tickInterval);
                 }
