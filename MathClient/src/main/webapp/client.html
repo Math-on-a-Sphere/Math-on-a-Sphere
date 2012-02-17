@@ -20,6 +20,7 @@
     <script type="text/javascript" src="js/preview.js"></script>
     <script type="text/javascript" src="js/client.js"></script>
     <script type="text/javascript" src="js/handlers.js"></script>
+    <script type="text/javascript" src="js/preload.js"></script>
 
     <script type="text/javascript" src="jison/grammar.js"></script>
     <script type="text/javascript" src="jison/grammar2.js"></script>
@@ -36,36 +37,66 @@
         <table>
           <tbody>
             <tr>
+              <td>
+                How to Get Started:
+                <ul>
+                  <li><a href="docs/command_list.pdf">Get a Full List of Commands</a></li>
+                  <li>Type single commands in the Command Line and hit return/enter.</li>
+                  <li>Type multiple lines of code to run all at once in the Editor Window. </li>
+                  <li>Clicking the "run commands" button will execute the commands in the Editor Window. </li>
+                  <li>Select command examples using the drop down menu.</li>
+                  <li>Spin the sphere by clicking and dragging it with the mouse.</li>
+                  <li>Reset the sphere to it's original position using the "reset position" button. </li>
+                  <li>To see the 2d version of what is displaying on the sphere, click the "show/hide 2d canvas" button. </li>
+                </ul>
+              </td>
+
+              <td>
+                Shortcuts:
+                <ul>
+                  <li>fd = forward</li>
+                  <li>bk = back</li>
+                  <li>rt = right turn</li>
+                  <li>lt = left turn</li>
+                  <li>pu = penup</li>
+                  <li>pd = pendown</li>
+                  <li>ca = clear all</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td>Editor Window:<form>
+                  Select pre-written commands for the Editor Window:      <select id="preload-commands">
+                    <option value="blank" selected="selected">blank</option>
+                    <option value="basic_drawing">basic drawing</option>
+                    <option value="change_color">change color or pensize</option>
+                    <option value="triple_right_triangle">repeat example</option>
+                    <option value="function_null_call">create a function 0</option>
+                    <option value="function_parameter_call">create a function 1</option>
+                    <option value="function_parameters_call">create a function 2</option>
+                    <option >icosahedron</option>
+                  </select>
+                </form></td>
+            </tr>
+            <tr>
               <td style="vertical-align:top">
-                <!-- command line interface -->
-                <form><textarea id="code" class="code" name="code" rows="30" cols="50">
-// Type multiple weblogo commands and then press compile
-ca()
-x = 63.5
-theta = 108
+                <form><textarea id="code" class="code" name="code" rows="50" cols="50">
 
-tri = function () { 
-  repeat 3 { forward x right theta }
-}
 
-penta = function () {
-  repeat 5 { tri() right 72 }
-}
 
-penta()
+
                 </textarea></form>
-
-                <button id="compile-button">compile</button>
+                <button id="compile-button">run commands</button>
+                <br/>
+                <br/>
+                Command Line Window:
                 <div class="flc-math-commands unselectable"></div>
               </td>
               <td style="vertical-align:top">
                 <!-- preview sphere canvas -->
                 <canvas id="webgl-canvas" class="unselectable" style="border: none;" width="420" height="420"></canvas>
-                <span>
-                <input type="checkbox" id="lighting" checked /><label for="lighting">Use lighting</label>
-                </span>
                 <br/>
-                Spin the sphere by dragging it with the mouse.
+                <input type="checkbox" id="lighting" checked /><label for="lighting">Use lighting</label>
                 <button id="reset-position-button">reset position</button>
                 <button id="show2d-button">show/hide 2d canvas</button>
               </td>
@@ -74,24 +105,23 @@ penta()
               <td colspan="2">
                 <!-- preview image canvas -->
                 <div id="hiddenCanvas" style="display: none" >
-                <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas>
-                </div>
+                <canvas width="1024" height="512" class="flc-canvas unselectable"></canvas></div>
               </td>
             </tr>
             <tr>
               <td colspan="2">
-              <input type="button" value="Stop Command" class="flc-math-stop"/>
+                <input type="button" value="Stop Command" class="flc-math-stop"/>
 
-              Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
-              Frame rate: <span class="flc-math-frameRate">&nbsp;&nbsp;&nbsp;</span> fps&nbsp;&nbsp;&nbsp;
-              Frame size: <span class="flc-math-frameSize">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
-              Data rate: <span class="flc-math-dataRate">&nbsp;&nbsp;&nbsp;</span>KB/s
-              <br/>
-              Server status: <span class="flc-math-serverStatus">&nbsp;&nbsp;&nbsp;</span>
-              <br/>
-              Connect to server at: <input class="flc-math-serverUrl" type="text" value="server/postreceive"/>
-              <input type="button" value="Connect" class="flc-math-connect" />
-              <input type="button" value="Disconnect" class="flc-math-disconnect" />
+                Frame number: <span class="flc-math-frameNumber">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+                Frame rate: <span class="flc-math-frameRate">&nbsp;&nbsp;&nbsp;</span> fps&nbsp;&nbsp;&nbsp;
+                Frame size: <span class="flc-math-frameSize">&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;
+                Data rate: <span class="flc-math-dataRate">&nbsp;&nbsp;&nbsp;</span>KB/s
+                <br/>
+                Server status: <span class="flc-math-serverStatus">&nbsp;&nbsp;&nbsp;</span>
+                <br/>
+                Connect to server at: <input class="flc-math-serverUrl" type="text" value="server/postreceive"/>
+                <input type="button" value="Connect" class="flc-math-connect" />
+                <input type="button" value="Disconnect" class="flc-math-disconnect" />
               </td>
             </tr>
           </tbody>
@@ -100,6 +130,6 @@ penta()
       <script>
         org.weblogo.init();
       </script>
-
+        
   </body>
 </html>  

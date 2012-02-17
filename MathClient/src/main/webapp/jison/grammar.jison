@@ -26,13 +26,31 @@ frac                        (?:\.[0-9]+)
 "E"                                return 'E'
 "true"                             return 'TRUE'
 "false"                            return 'FALSE'
+("clearall()"|"clearall")          return 'CLEARALL'
+("ca()"|"ca")                      return 'CLEARALL'
+("cleardrawing()"|"cleardrawing")  return 'CLEARDRAWING'
+("cd()"|"cd")                      return 'CLEARDRAWING'
+("penup()"|"penup")                return 'PENUP'
+("pu"()|"pu")                      return 'PENUP'
+("pendown()"|"pendown")            return 'PENDOWN'
+("pd()"|"pd")                      return 'PENDOWN'
+("getheading()"|"getheading")      return 'GETHEADING'
+("gethead()"|"gethead")            return 'GETHEADING'
+("gh()"|"gh")                      return 'GETHEADING'
+("getposition()"|"getposition")    return 'GETPOSITION'
+("getpos()"|"getpos")              return 'GETPOSITION'
+("gp()"|"gp")                      return 'GETPOSITION'
+("help()"|"help")                  return 'HELP'
+("demo()"|"demo")                  return 'DEMO'
+("testcard()"|"testcard")          return 'TESTCARD'
+("testheading()"|"testheading")    return 'TESTHEADING'
 ("set ")                           return 'SET'
-("color"|"pen-size")               return 'ACCESSOR'
+("color"|"pensize")                return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 {int}{frac}?{exp}?\b               return 'NUMBER';
-[a-zA-Z]+([a-zA-Z_]*)?\b           return 'IDENTIFIER'
+[a-zA-Z]+([a-zA-Z0-9_]*)?\b        return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
@@ -98,6 +116,56 @@ func
   {$$ = {}; 
     $$['type'] = 'repeat'; 
     $$['args'] = [$2, $3];}
+| CLEARALL 
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'clearall';
+    $$['args'] = [];}
+| CLEARDRAWING
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'cleardrawing';
+    $$['args'] = [];}
+| PENUP
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'penup';
+    $$['args'] = [];}
+| PENDOWN
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'pendown';
+    $$['args'] = [];}
+| GETHEADING
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'getheading';
+    $$['args'] = [];}
+| GETPOSITION
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'getposition';
+    $$['args'] = [];}
+| HELP
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'help';
+    $$['args'] = [];}
+| DEMO
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'demo';
+    $$['args'] = [];}
+| TESTCARD
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'testcard';
+    $$['args'] = [];}
+| TESTHEADING
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'testheading';
+    $$['args'] = [];}
 ;
 
 e
@@ -257,7 +325,9 @@ JSONMemberList
 
 JSONArray
 : '[' ']'
-  {$$ = [];}
+  {$$ = {};
+    $$['type'] = 'list';
+    $$['value'] = [];}
 | '[' JSONElementList ']'
   {$$ = {};
     $$['type'] = 'list';

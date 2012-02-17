@@ -18,7 +18,7 @@ org.weblogo.executors.line = function(config, command, tick) {
     fluid.each(config.turtles, function(turtle) {
         var line = that.lines[turtle.id] = {};
         line.distance = command.distance;
-        line.finalTick = tick + 1000 * Math.abs(command.distance) / turtle.speed;
+        line.finalTick = tick + org.weblogo.speed * Math.abs(command.distance) / turtle.speed;
         line.startPos = turtle.position;
         line.lastDistance = 0;
     });
@@ -213,7 +213,6 @@ commands.getheading = function () {
     }
 };
 commands.getheading.args = [];
-commands.gh = commands.getheading;
 
 commands.setheading = function (angle) {
     return {
@@ -233,14 +232,14 @@ commands.setpos = function (t, p) {
 };
 commands.setpos.args = ["number","number"];
 commands.sp = commands.setpos;
+commands.setposition = commands.setpos;
 
-commands.getpos = function () {
+commands.getposition = function () {
     return {
         type: "getPosition"
     }
 };
-commands.getpos.args = [];
-commands.gp = commands.getpos;
+commands.getposition.args = [];
 
 commands.set = function (variable, value) {
     return {
@@ -256,7 +255,6 @@ commands.penup = function () {
     }  
 };
 commands.penup.args = [];
-commands.pu = commands.penup;
 
 commands.pendown = function () {
     return {
@@ -264,23 +262,20 @@ commands.pendown = function () {
     }  
 };
 commands.pendown.args = [];
-commands.pd = commands.pendown;
 
-commands.cd = function() {
+commands.cleardrawing = function() {
     return {
         type: "clearDrawing"
     }
 };
-commands.cd.args = [];
-commands["cleardrawing"] = commands.cd;
+commands.cleardrawing.args = [];
 
-commands.ca = function() {
+commands.clearall = function() {
     return {
         type: "clearAll"
     }
 };
-commands.ca.args = [];
-commands["clearall"] = commands.ca;
+commands.clearall.args = [];
 
 // actual value type will be parsed by the accessor
 commands.set.args = ["string", "string"];

@@ -3,6 +3,8 @@
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
 
+org.weblogo.speed = 1000; // one tick per second
+
 org.weblogo.colshift = [
    [0,    -1/s2, 1/s3],
    [-1/s2, 1/2,  1/s3],
@@ -110,11 +112,9 @@ function compilerdriver(inputStream) {
     org.weblogo.outputStream = [];
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
-    //org.weblogo.program.declared = {};
     org.weblogo.program.program = {};
 
     compiler.depth = 0;
-    //compiler.parent = "global";
     compiler.scope = [];
     compiler.localscope = [];
     org.weblogo.program.program = compiler(inputStream, "");
@@ -154,51 +154,7 @@ org.weblogo.executors.repeat = function(config, command, tick) {
 }
 
 
-org.weblogo.turtle.commands["test-heading"] = function() {
-    return {type: "testHeading"}
-}
-org.weblogo.turtle.commands["test-heading"].args = [];
 
-
-
-org.weblogo.turtle.commands["test-card"] = function() {
-    return {type: "testCard"}
-}
-org.weblogo.turtle.commands["test-card"].args = [];
-
-function makeTestCommands() {
-    var togo = [];
-    for (var i = 0; i < 10; ++ i) {
-        togo.push("set color " + (10*i + 5));
-        togo.push("set pen-size " + (20 - 2*i));
-        togo.push("left 40");
-        togo.push("forward 360");
-        togo.push("right 80");
-        togo.push("forward 360");
-        togo.push("left 40");
-    }
-
-    return togo;
-};
-
-org.weblogo.executors.testCard = org.weblogo.blockExecutor(makeTestCommands());
-
-org.weblogo.turtle.commands["test-heading"] = function() {
-    return {type: "testHeading"}
-}
-org.weblogo.turtle.commands["test-heading"].args = [];
-
-function makeTestHeadingCommands() {
-    var togo = [];
-    for (var i = 0; i < 20; ++ i) {
-        togo.push("set color " + (10*i + 5));
-        togo.push("setheading 45");
-        togo.push("forward 370");
-    }
-    return togo;
-};
-
-org.weblogo.executors.testHeading = org.weblogo.blockExecutor(makeTestHeadingCommands()); 
 
 org.weblogo.client = function(container, options) {
     var that = {};
@@ -328,7 +284,7 @@ org.weblogo.init = function() {
     });
 
     $("#compile-button").click(function () {
-        var code = myCodeMirror.getValue();
+        var code = "ca\n" + myCodeMirror.getValue();
         var parsetree = grammar.parse(code);
         compilerdriver(parsetree);
         var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
@@ -358,6 +314,121 @@ org.weblogo.init = function() {
         }
 
     });
+
+    $("#preload-commands").change(function () {
+        var menu = $("#preload-commands")[0];
+        var index = menu.selectedIndex;
+        var selected = menu.options[index].value;
+        myCodeMirror.setValue(org.weblogo.preload[selected]);
+    });
 };
+
+
+
+// **************** Test Cases **************** //
+
+
+org.weblogo.turtle.commands.rununittests = function() {
+    return {type: "rununittests"}
+}
+org.weblogo.turtle.commands.rununittests.args = [];
+
+org.weblogo.turtle.commands["testheading"] = function() {
+    return {type: "testHeading"}
+}
+org.weblogo.turtle.commands["testheading"].args = [];
+
+org.weblogo.turtle.commands["testcard"] = function() {
+    return {type: "testCard"}
+}
+org.weblogo.turtle.commands["testcard"].args = [];
+
+
+
+function makeTestCardCommands() {
+    var togo = [];
+    for (var i = 0; i < 10; ++ i) {
+        togo.push("set color " + (10*i + 5));
+        togo.push("set pen-size " + (20 - 2*i));
+        togo.push("left 40");
+        togo.push("forward 360");
+        togo.push("right 80");
+        togo.push("forward 360");
+        togo.push("left 40");
+    }
+
+    return togo;
+};
+
+org.weblogo.executors.testCard = org.weblogo.blockExecutor(makeTestCardCommands());
+
+function makeTestHeadingCommands() {
+    var togo = [];
+    for (var i = 0; i < 20; ++ i) {
+        togo.push("set color " + (10*i + 5));
+        togo.push("setheading 45");
+        togo.push("forward 370");
+    }
+    return togo;
+};
+
+org.weblogo.executors.testHeading = org.weblogo.blockExecutor(makeTestHeadingCommands()); 
+
+org.weblogo.executors.rununittests = function() {
+    testCase1();
+    testCase2();
+}
+
+function testCase1() {
+    var testCase = '\
+ca() \
+x = 100 \
+y = x/2 \
+forward y';
+
+    compilerdriver(grammar.parse(testCase));
+   
+    var passCase = [];
+    passCase.push("ca ");
+    passCase.push("forward 50");
+    for(i=0;i<passCase.length-1;i++) {
+        if(org.weblogo.outputStream[i] != passCase[i]) {
+            throw new Error("Test1 Failed at element "+i);
+        }
+    }
+    if(passCase.length != org.weblogo.outputStream.length) {
+        throw new Error("Test1 Failed at length check.");
+    }        
+    console.info("passed.");
+}
+function testCase2() {
+    var testCase = '\
+ca() \
+x = 100 \
+fun = function() { \
+forward x \
+} \
+fun()';
+
+    compilerdriver(grammar.parse(testCase));
+   
+    var passCase = [];
+    passCase.push("ca ");
+    passCase.push("forward 100");
+
+    for(i=0;i<passCase.length-1;i++) {
+        if(org.weblogo.outputStream[i] != passCase[i]) {
+            throw new Error("Test2 Failed at element "+i);
+        }
+    }
+    if(passCase.length != org.weblogo.outputStream.length) {
+        throw new Error("Test2 Failed at length check.");
+    }        
+    console.info("passed.");
+}
+
+
+
+
 
 }());

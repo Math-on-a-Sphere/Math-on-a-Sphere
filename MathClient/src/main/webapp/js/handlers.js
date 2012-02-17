@@ -49,15 +49,17 @@ org.weblogo.nodeHandlers.set = function(node, program, compiler) {
     compiler.escapeQuote = true;
     var val = compiler(node.args[1], "");
     commandString += " "+compiler(node.args[0], "")+" "+val;
-    program += "org.weblogo.outputStream.push(\""+commandString+"\");\n"
+    program += "org.weblogo.outputStream.push(\""+commandString.replace(","," ")+"\");\n";
     compiler.escapeQuote = false;
     return program;
 }
+org.weblogo.nodeHandlers.builtin = function(node, program, compiler) {
+    return program += "org.weblogo.outputStream.push(\""+node.id+"\");\n";
+}
 org.weblogo.nodeHandlers.func = function(node, program, compiler) {
-
     var id = compiler(node.id, "");
 
-    if(!org.weblogo.turtle.commands[node.id.value]) {
+    if(!org.weblogo.turtle.commands[id]) {
         compiler.addQuote = true;
         program += id+"("+compiler(node.args, "")+");\n";
         compiler.addQuote = false;
@@ -67,13 +69,19 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
         compiler.escapeQuote = true;
         var arglist = compiler(node.args, "");
         compiler.escapeQuote = false;
-        return program += "org.weblogo.outputStream.push(\""+id+" "+arglist+"\");\n"        
+        if(arglist === "") {
+            program += "org.weblogo.program.arglist = \"\";\n";
+        }
+        else {
+            program += "org.weblogo.program.arglist = \""+arglist+"\";\n";
+        }
+        return program += "org.weblogo.outputStream.push(\""+id+"\"+\" \"+org.weblogo.program.arglist);\n";
     }
 }
 org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
     var localcount = compiler.localscope.length+1;
-    compiler.scope.push(compiler.localscope);
-    compiler.scope.push(node.id);
+    compiler.scope = compiler.scope.concat(compiler.localscope, node.id);
+    //compiler.scope.push(node.id);
     compiler.localscope = [];
 
     var params = "";
@@ -101,8 +109,8 @@ org.weblogo.nodeHandlers.var_assign = function (node, program, compiler) {
     var defaultVal = compiler(node.value, "");
     var varName = "";
 
-    if(compiler.localscope[node.id] === undefined) {
-        if(compiler.scope[node.id] === undefined) {
+    if(compiler.localscope.indexOf(node.id) == -1) {
+        if(compiler.scope.indexOf(node.id) == -1) {
             varName = "var ";
             compiler.localscope.push(node.id);
         }
@@ -142,6 +150,9 @@ org.weblogo.nodeHandlers.string = function(node, program, compiler) {
 }
 org.weblogo.nodeHandlers.number = function(node, program, compiler) {
     program += node.value;
+    if(compiler.escapeQuote) {
+        program = "\"+"+program+"+\"";
+    }
     return program;
 }
 
