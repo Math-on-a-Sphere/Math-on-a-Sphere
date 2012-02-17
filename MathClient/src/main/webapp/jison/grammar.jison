@@ -45,7 +45,7 @@ frac                        (?:\.[0-9]+)
 ("testcard()"|"testcard")          return 'TESTCARD'
 ("testheading()"|"testheading")    return 'TESTHEADING'
 ("set ")                           return 'SET'
-("color"|"pen-size")               return 'ACCESSOR'
+("color"|"pensize")                return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
@@ -325,7 +325,9 @@ JSONMemberList
 
 JSONArray
 : '[' ']'
-  {$$ = [];}
+  {$$ = {};
+    $$['type'] = 'list';
+    $$['value'] = [];}
 | '[' JSONElementList ']'
   {$$ = {};
     $$['type'] = 'list';

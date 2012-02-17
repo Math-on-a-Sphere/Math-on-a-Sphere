@@ -24,7 +24,7 @@ org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     if (node.value.length == 0) { return program += "";}
     else {
         for (var j = 0; j < node.value.length-1; ++j) {
-            program += compiler(node.value[j], "")+" ";
+            program += compiler(node.value[j], "")+", ";
         }
         return program += compiler(node.value[j], "");
     }
@@ -49,7 +49,7 @@ org.weblogo.nodeHandlers.set = function(node, program, compiler) {
     compiler.escapeQuote = true;
     var val = compiler(node.args[1], "");
     commandString += " "+compiler(node.args[0], "")+" "+val;
-    program += "org.weblogo.outputStream.push(\""+commandString+"\");\n";
+    program += "org.weblogo.outputStream.push(\""+commandString.replace(","," ")+"\");\n";
     compiler.escapeQuote = false;
     return program;
 }

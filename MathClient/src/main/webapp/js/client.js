@@ -112,11 +112,9 @@ function compilerdriver(inputStream) {
     org.weblogo.outputStream = [];
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
-    //org.weblogo.program.declared = {};
     org.weblogo.program.program = {};
 
     compiler.depth = 0;
-    //compiler.parent = "global";
     compiler.scope = [];
     compiler.localscope = [];
     org.weblogo.program.program = compiler(inputStream, "");
@@ -286,7 +284,7 @@ org.weblogo.init = function() {
     });
 
     $("#compile-button").click(function () {
-        var code = myCodeMirror.getValue();
+        var code = "ca\n" + myCodeMirror.getValue();
         var parsetree = grammar.parse(code);
         compilerdriver(parsetree);
         var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
@@ -315,6 +313,13 @@ org.weblogo.init = function() {
             canvas.style.display = 'none';
         }
 
+    });
+
+    $("#preload-commands").change(function () {
+        var menu = $("#preload-commands")[0];
+        var index = menu.selectedIndex;
+        var selected = menu.options[index].value;
+        myCodeMirror.setValue(org.weblogo.preload[selected]);
     });
 };
 
