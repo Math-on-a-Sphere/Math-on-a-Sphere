@@ -41,12 +41,16 @@ org.weblogo.geom.dot_3 = function(a, b) {
 
 org.weblogo.geom.scale_3 = function(a, l) {
     return [a[0] * l, a[1] * l, a[2] * l];
-}
+};
+
+org.weblogo.geom.scale_4 = function(a, l) {
+    return [a[0] * l, a[1] * l, a[2] * l, a[3] * l];  
+};
 
 org.weblogo.geom.norm_3 = function(a) {
     var norm = Math.sqrt(geom.dot_3(a, a));
     return geom.scale_3(a, 1/norm);
-}
+};
 
 org.weblogo.geom.dist_3 = function(a, b) {
     var diff = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];

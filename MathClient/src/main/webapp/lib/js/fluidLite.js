@@ -53,6 +53,10 @@ var fluid = fluid || fluid_1_4;
              }
         return zeropad(date.getHours()) + ":" + zeropad(date.getMinutes()) + ":" + zeropad(date.getSeconds()) + "." + zeropad(date.getMilliseconds(), 3);
     };
+    logging = true;
+    fluid.setLogging = function(newLogging) {
+        logging = newLogging;
+    };
     
     /** Log a message to a suitable environmental console. Logging must first
      * be enabled with a call to the fluid.setLogging(true) function.
@@ -386,7 +390,7 @@ var fluid = fluid || fluid_1_4;
         if (EL === "" || EL === null || EL === undefined) {
             return root;
         }
-        var segs = fluid.model.parseEL(EL);
+        var segs = fluid.parseEL(EL);
         for (var i = 0; i < segs.length; ++i) {
             if (!root) {
                 return root;
@@ -396,8 +400,12 @@ var fluid = fluid || fluid_1_4;
         return root;
     };
     
+    fluid.getGlobalValue = function(path, environment) {
+        return fluid.get(window, path, environment);
+    };
+    
     fluid.invokeGlobalFunction = function (functionPath, args, environment) {
-        var func = fluid.get(window, functionPath, environment);
+        var func = fluid.getGlobalValue(path, environment);
         if (!func) {
             fluid.fail("Error invoking global function: " + functionPath + " could not be located");
         } 

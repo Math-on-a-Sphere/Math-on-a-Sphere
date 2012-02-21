@@ -1,32 +1,7 @@
 /*
- * Copyright 2010, Google Inc.
+ * Copyright 2010, Google Inc. Licence: 3-clause new BSD
  * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Copyright 2012, U Colorado @ Boulder
  */
  
 org.weblogo.webgl = {};
@@ -45,6 +20,28 @@ org.weblogo.webgl.flattenArray = function(array2, target) {
         }
     }
     return togo;
+};
+
+// Small utility to set uniform values a little more briefly
+org.weblogo.webgl.uniformSetter = function(gl, shaderProgram) {
+    var that = {};
+    that.set = function(name, type, value) {
+        var setter = gl["uniform"+type];
+        var location = shaderProgram[name];
+      //  console.log("Set " + name + " to ", value);
+        try {
+            setter.call(gl, shaderProgram[name], value);
+        }
+        catch (e) {
+            console.log(e);
+            console.log("Unable to set " + name + " at " + location + " to ", value, " (" + typeof(value)+ ") using " + setter); 
+        }
+    };
+    that.setv = function(prefix, index, name, type, value) {
+        var fullName = prefix + "[" + index + "]." + name;
+        that.set(fullName, type, value);
+    };
+    return that;
 };
 
 org.weblogo.webgl.textToShader = function(gl, text, type, events) {
@@ -78,7 +75,7 @@ org.weblogo.webgl.loadShaders = function(gl, shaderSpecs, events, callback) {
             url: file,
             success: function(data) {
                 shaders[key] = org.weblogo.webgl.textToShader(gl, data, key, events)
-                console.log("Ajax success for " + key);    
+                console.log("Ajax success for " + key);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.log("Ajax Error " + textStatus);
@@ -178,6 +175,8 @@ org.weblogo.webgl.makeSquareVertexBuffer = function(that) {
 
 org.weblogo.webgl.makeDraw = function(that) {
     return function() {
+        var times = that.times || 1;
+        for (var i = 0; i < times; ++ i) {
         var gl = that.gl;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -191,6 +190,7 @@ org.weblogo.webgl.makeDraw = function(that) {
         gl.drawArrays(gl.TRIANGLES, 0, that.vertexCount);
         if (that.userPostDraw) {
             that.userPostDraw(that);
+        }
         }
     };
 };
@@ -211,6 +211,11 @@ org.weblogo.webgl.initGL = function(that) {
     that.gl = gl;
 };
 
+function getUniformLocation(gl, shaderProgram, variable) {
+    var location = gl.getUniformLocation(shaderProgram, variable);
+//    console.log("Got location ", location, " for uniform " + variable);
+    shaderProgram[variable] = location;  
+}
 
 org.weblogo.webgl.initShaders = function(that, shaders) {
     var gl = that.gl;
@@ -230,33 +235,39 @@ org.weblogo.webgl.initShaders = function(that, shaders) {
     }
 
     gl.useProgram(shaderProgram);
-    console.log("code " +  gl.getError());
     fluid.each(that.variables, function(info, variable) {
         function error(message) {
             that.events.onError.fire({message: message});
         }
         if (typeof(info) === "string") {
-            if (info === "uniform") {
-                shaderProgram[variable] = gl.getUniformLocation(shaderProgram, variable);
+            info = {storage: info};
+        }
+        if (info.storage === "uniform") {
+            if (info.struct) {
+                var struct = fluid.getGlobalValue(info.struct);
+                for (var i = 0; i < info.count; ++ i) {
+                    for (var key in struct) {
+                        var fullvar = variable + "[" + i + "]." + key;
+                        getUniformLocation(gl, shaderProgram, fullvar);
+                    }
+                } 
             }
             else {
-                error("Unrecognised variable storage type " + info);    
+                getUniformLocation(gl, shaderProgram, variable);
             }
         }
-        else {
-            if (info.storage === "attribute") {
-                var pos = gl.getAttribLocation(shaderProgram, variable);
-                if (info.type === "vertexAttribArray") {
-                    gl.enableVertexAttribArray(pos);
-                }
-                else {
-                    error("Unrecognised attribute type " + info.type);
-                }
-                shaderProgram[variable] = pos;
+        else if (info.storage === "attribute") {
+            var pos = gl.getAttribLocation(shaderProgram, variable);
+            if (info.type === "vertexAttribArray") {
+                gl.enableVertexAttribArray(pos);
             }
             else {
-                error("Unrecognised variable storage type " + info.storage);
+                error("Unrecognised attribute type " + info.type);
             }
+            shaderProgram[variable] = pos;
+        }
+        else {
+            error("Unrecognised variable storage type " + info.storage);
         }
     });
          

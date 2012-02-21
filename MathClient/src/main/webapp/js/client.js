@@ -146,8 +146,7 @@ org.weblogo.turtle.commands["repeat"].args = ["number", "string"];
 org.weblogo.executors.repeat = function(config, command, tick) {
     var repeat = command.args[0];
     var commands = command.args[1];
-    for(var i = 0; i < repeat; ++i)
-    {
+    for(var i = 0; i < repeat; ++i) {
         org.weblogo.blockExecutor(commands);
     }
 }
@@ -183,10 +182,15 @@ org.weblogo.client = function(container, options) {
         that.frameNo = 0;
         that.initTime = Date.now();
         that.lastFrame = that.initTime;
+        fluid.log("commandStart " + Date.now());
     };
     
     that.commandDone = function() {
         that.busy = false;
+        fluid.log("commandDone " + Date.now());
+        window.setTimeout(function() {
+            fluid.log("Idle at " + Date.now() + " lag " + (Date.now() - that.initTime) + "ms");
+        });
         // damnable thing behaves badly in synchronous case
         if (that.wasEnabled) {
             window.setTimeout(that.terminal.enable, 1);
@@ -276,7 +280,8 @@ org.weblogo.init = function() {
     var client = org.weblogo.client("body");
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
     
-//    var spherical = org.weblogo.complex.webGLStart(".flc-aux-canvas", client);
+   // org.weblogo.complex.webGLStart(".flc-aux-canvas", client);
+    org.weblogo.testTurtle.webGLStart(".flc-aux-canvas", client);
     
     client.drawListener = preview.updateTexture;
     var code = $("#code");

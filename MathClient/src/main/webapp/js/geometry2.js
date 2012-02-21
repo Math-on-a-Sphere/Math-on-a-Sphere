@@ -6,10 +6,10 @@ var geom = org.weblogo.geom;
 org.weblogo.geom.intersect_planes = function(p1, p2, sign) {
     var g = vec3.dot(p1, p2);
     var d2 = 1 - g*g;
-    var a1 = p1[3] || 0, a2 = p2[3] || 0;
-    var c1 = (a2 * g - a1) / d2;
-    var c2 = (a1 * g - a2) / d2;
-    var l2 = (d2 + 2*a1*a2*g - (a1*a1 + a2*a2)) / (d2 * d2);
+    var a1 = p1[3] || 0;
+    var c1 = - a1 / d2;
+    var c2 = a1 * g / d2;
+    var l2 = (d2 - a1*a1) / (d2 * d2);
     var t1 = vec3.scale(p1, c1, vec3.create());
     var t2 = vec3.scale(p2, c2, vec3.create());
     var t3 = vec3.scale(vec3.cross(p1, p2, vec3.create()), sign * Math.sqrt(l2));
@@ -45,7 +45,7 @@ var PI2 = Math.PI * 2;
 // line intervals
 org.weblogo.geom.line_to_conj = function(point1, line, point2, line2) {
     var conj = geom.axis_from_heading(line, [0, 0, 1]);
-    var angle = Math.acos(vec3.dot(line, [0, 0, 1]));
+    var angle = Math.acos(line[2]);
     var start = geom.get_parameter(conj, angle, point1);
     var end = geom.get_parameter(conj, angle, point2);
     if (line2) { // not used on the client
@@ -176,8 +176,8 @@ var check_polygon = function(points, lines) {
 org.weblogo.geom.find_exterior = function(a1, point, a2) {
     var angle = Math.acos(-vec3.dot(a1, a2));
     // kick the point off by a small amount to avoid alignment problems
-    var rot = geom.point_by_angle(a1, point, angle/2 + 5e-4);
-    var adj = geom.point_by_angle(point, rot, Math.PI/90);
+    var rot = geom.point_by_angle(a1, point, angle/2 + 5e-1);
+    var adj = geom.point_by_angle(point, rot, Math.PI/40);
     return geom.norm_3(adj);
 };
 
@@ -187,8 +187,13 @@ org.weblogo.geom.measure_polygon = function(polygon) {
     polygon.conj = [];
     for (var i = 0; i < c; ++ i) {
         var i1 = (i + 1) %c;
-        polygon.conj[i] = geom.line_to_conj(polygon.points[i], polygon.lines[i], polygon.points[i1], polygon.lines[i1]); 
+        polygon.lines[i][3] = polygon.lines[i][3] || 0;
+        polygon.conj[i] = geom.line_to_conj(polygon.points[i], polygon.lines[i], polygon.points[i1], polygon.lines[i1]);
         //console.log("Upped ", line, " to ", geom.point_by_angle(line, polygon.conj[i].conj, polygon.conj[i].angle));
+    }
+    for (var i = 0; i < c; ++ i) {
+        var i1 = (i + 1) % c;
+        polygon.conj[i1].bendstart = polygon.conj[i].bend; // client requires this
     }
 };
 
@@ -197,15 +202,17 @@ var id = function() {
 };
 
 org.weblogo.geom.make_turtle = function(size, apex) {
-    size = Math.PI/25.01;
+    size = Math.PI/17.01;
     apex = Math.PI/8;
     var rotl = mat4.rotate(id(), size, [-1, 0, 0]);
     mat4.rotate(rotl, -apex, [0, -1, 0]);
     var tl = mat4.multiplyVec3(rotl, [-1, 0, 0], vec3.create());
+    tl = geom.scale_3(tl, 1.0); // get it out of blasted FloatArray form
     var rotr = mat4.rotate(id(), size, [-1, 0, 0]); 
     
     mat4.rotate(rotr, apex, [0, -1, 0]);
     var tr = mat4.multiplyVec3(rotr, [1, 0, 0], vec3.create());
+    tr = geom.scale_3(tr, 1.0);
     var tp = geom.point_by_angle([0, -1, 0], [-1, 0, 0], size);
     //console.log("tl ", tl, " tr ", tr);
     //console.log("tp ", tp, " dot1 ", vec3.dot(tp, tl), " dot2 ", vec3.dot(tp, tr));
@@ -232,11 +239,124 @@ org.weblogo.geom.make_turtle = function(size, apex) {
     var polygon = {
         points: points,
         lines: lines,
-        color: 0xffff00
+        lineWidth: 0.01,
+        colfill: [0, 0xee, 0xee, 0xff],
+        colbord: [0, 0xff, 0xff, 0xff]
     };
     geom.measure_polygon(polygon);
     return polygon;
 };
+
+org.weblogo.testTurtle = {};
+
+// map of uniform members within polygon structure - values currently unused 
+org.weblogo.testTurtle.polyStruct = {
+    "conj.conj": "vec3",
+    "conj.angle": "float",
+    "conj.start": "float",
+    "conj.end": "float",
+    "conj.bendstart": "float",
+    "conj.bend": "float",
+    line4: "vec4"
+};
+
+org.weblogo.testTurtle.glConfig = {
+    shaders: {
+        vertex: "shaders/nullVertex.c",
+        fragment: "shaders/generalPolygon.c"
+    },
+    variables: {
+        vertexPosition: {storage: "attribute", type: "vertexAttribArray"},
+        lineCount: "uniform",
+        lineWidth: "uniform",
+        colfill: "uniform",
+        colbord: "uniform",
+        poly: {
+            storage: "uniform",
+            count: 16,
+            struct: "org.weblogo.testTurtle.polyStruct"
+        },
+        exterior: "uniform"
+    },
+    times: 1,
+    animate: false
+};
+
+if (org.weblogo.turtle) {
+
+org.weblogo.turtle.commands.testTurtle = function() {
+   return {type: "testTurtle"}
+};
+org.weblogo.turtle.commands.testTurtle.args = [];
+
+org.weblogo.executors.testTurtle = function(config, command, tick) {
+    var component = config.testTurtleComponent;
+    component.initTime = tick;
+    var that = {};
+    //var imageData = config.context.createImageData(config.width, config.height);
+    var gl = component.gl;
+    //component.userPostDraw = function(that) {
+    //    gl.readPixels(0, 0, config.width, config.height, gl.RGBA, gl.UNSIGNED_BYTE, imageData.data);
+    //    config.context.putImageData(imageData, 0, 0);
+    //};
+
+    that.toTick = function(now) {
+        fluid.log("Tickstart " + Date.now());
+        var now = Date.now();
+        component.draw();
+        fluid.log("Rendered in " + (Date.now() - now) + "ms " + Date.now());
+        return true;
+    };
+    return that;
+};
+
+}
+
+org.weblogo.testTurtle.componentInit = function(that) {
+    var gl = that.gl;
+    that.polygon = org.weblogo.geom.make_turtle();
+
+};
+
+org.weblogo.testTurtle.webGLStart = function(canvas, client) {
+    var component = org.weblogo.webgl.initWebGLComponent(canvas, 
+            org.weblogo.testTurtle.glConfig, {
+                userDraw: org.weblogo.testTurtle.userDraw,
+                initBuffers: org.weblogo.webgl.makeSquareVertexBuffer,
+                events: client.events
+            }, org.weblogo.testTurtle.componentInit);
+    client.config.testTurtleComponent = component;  
+};
+
+var simples = {conj: "3fv", angle: "1f", start: "1f", 
+    end: "1f", bend: "1f", bendstart: "1f"};
+
+org.weblogo.testTurtle.userDraw = function(that) {
+    var gl = that.gl;
+    gl.activeTexture(gl.TEXTURE0);
+    var poly = that.polygon;
+    var s = org.weblogo.webgl.uniformSetter(gl, that.shaderProgram);
+    var c = poly.lines.length;
+    
+    s.set("lineCount", "1i", c);
+    s.set("lineWidth", "1f", poly.lineWidth);
+    s.set("colfill", "4fv", geom.scale_4(poly.colfill, 1.0/255));
+    s.set("colbord", "4fv", geom.scale_4(poly.colbord, 1.0/255));
+    s.set("exterior", "3fv", poly.exterior);
+    
+    for (var i = 0; i < c; ++ i) {
+        var conj = poly.conj[i];
+        fluid.each(simples, function(value, key) {
+            s.setv("poly", i, "conj."+key, value, conj[key]);
+        });
+        s.setv("poly", i, "line4", "4fv", poly.lines[i]);
+    }
+    //gl.uniform1f(that.shaderProgram.time, Date.now() - that.initTime);
+
+    //gl.bindTexture(gl.TEXTURE_2D, that.paletteTexture);
+    //gl.uniform1i(that.shaderProgram.palette, 0);
+};
+
 
 var polygon = org.weblogo.geom.make_turtle();
 /*
