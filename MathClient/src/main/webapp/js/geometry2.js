@@ -189,6 +189,14 @@ org.weblogo.geom.measure_polygon = function(polygon) {
         var i1 = (i + 1) %c;
         polygon.lines[i][3] = polygon.lines[i][3] || 0;
         polygon.conj[i] = geom.line_to_conj(polygon.points[i], polygon.lines[i], polygon.points[i1], polygon.lines[i1]);
+        var mind = Number.MAX_VALUE, maxd = Number.MIN_VALUE;
+        for (var j = 0; j < c; ++ j) {
+            var dot = geom.dot_3(polygon.lines[i], polygon.points[j]);
+            mind = Math.min(dot, mind);
+            maxd = Math.max(dot, maxd);
+        }
+        polygon.conj[i].mind = mind;
+        polygon.conj[i].maxd = maxd;
         //console.log("Upped ", line, " to ", geom.point_by_angle(line, polygon.conj[i].conj, polygon.conj[i].angle));
     }
     for (var i = 0; i < c; ++ i) {
@@ -257,6 +265,8 @@ org.weblogo.testTurtle.polyStruct = {
     "conj.end": "float",
     "conj.bendstart": "float",
     "conj.bend": "float",
+    "conj.mind": "float",
+    "conj.maxd": "float",
     line4: "vec4"
 };
 
@@ -275,8 +285,7 @@ org.weblogo.testTurtle.glConfig = {
             storage: "uniform",
             count: 16,
             struct: "org.weblogo.testTurtle.polyStruct"
-        },
-        exterior: "uniform"
+        }
     },
     times: 1,
     animate: false
@@ -301,11 +310,9 @@ org.weblogo.executors.testTurtle = function(config, command, tick) {
     //};
 
     that.toTick = function(now) {
-        fluid.log("Tickstart " + Date.now());
-        var now = Date.now();
         component.draw();
-        fluid.log("Rendered in " + (Date.now() - now) + "ms " + Date.now());
-        return true;
+        //fluid.log("Rendered in " + (Date.now() - now) + "ms " + Date.now());
+        return false;
     };
     return that;
 };
@@ -315,7 +322,7 @@ org.weblogo.executors.testTurtle = function(config, command, tick) {
 org.weblogo.testTurtle.componentInit = function(that) {
     var gl = that.gl;
     that.polygon = org.weblogo.geom.make_turtle();
-
+    that.polylive = $.extend(true, {}, that.polygon);
 };
 
 org.weblogo.testTurtle.webGLStart = function(canvas, client) {
@@ -329,14 +336,32 @@ org.weblogo.testTurtle.webGLStart = function(canvas, client) {
 };
 
 var simples = {conj: "3fv", angle: "1f", start: "1f", 
-    end: "1f", bend: "1f", bendstart: "1f"};
+    end: "1f", bend: "1f", bendstart: "1f", mind: "1f", maxd: "1f"};
 
 org.weblogo.testTurtle.userDraw = function(that) {
+    var poly = that.polygon;
+    var c = poly.lines.length;  
+    
+    var now = Date.now();
+    var angle = (now - that.initTime) / 2000;
+    
+    var trans = function(point) {
+        point = geom.point_by_angle(point, [0, -1, 0], angle);
+        point = geom.point_by_angle(point, [-1, 0, 0], angle / 3.7);
+        point = geom.point_by_angle(point, [0, 0, 1], angle / 5.9);
+        return point;
+    };
+    
+    that.polylive.lines = fluid.transform(poly.lines, trans);
+    that.polylive.points = fluid.transform(poly.points, trans);
+    
+    poly = that.polylive;
+    geom.measure_polygon(poly);
+  
     var gl = that.gl;
     gl.activeTexture(gl.TEXTURE0);
-    var poly = that.polygon;
+
     var s = org.weblogo.webgl.uniformSetter(gl, that.shaderProgram);
-    var c = poly.lines.length;
     
     s.set("lineCount", "1i", c);
     s.set("lineWidth", "1f", poly.lineWidth);

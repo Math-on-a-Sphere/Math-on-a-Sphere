@@ -187,7 +187,6 @@ org.weblogo.client = function(container, options) {
     
     that.commandDone = function() {
         that.busy = false;
-        fluid.log("commandDone " + Date.now());
         window.setTimeout(function() {
             fluid.log("Idle at " + Date.now() + " lag " + (Date.now() - that.initTime) + "ms");
         });

@@ -28,7 +28,7 @@ org.weblogo.webgl.uniformSetter = function(gl, shaderProgram) {
     that.set = function(name, type, value) {
         var setter = gl["uniform"+type];
         var location = shaderProgram[name];
-      //  console.log("Set " + name + " to ", value);
+     //   console.log("Set " + name + " to ", value);
         try {
             setter.call(gl, shaderProgram[name], value);
         }
@@ -188,6 +188,7 @@ org.weblogo.webgl.makeDraw = function(that) {
         gl.vertexAttribPointer(that.shaderProgram.vertexPosition, that.vertexSize, gl.FLOAT, false, 0, 0);
 
         gl.drawArrays(gl.TRIANGLES, 0, that.vertexCount);
+        // gl.finish();
         if (that.userPostDraw) {
             that.userPostDraw(that);
         }
