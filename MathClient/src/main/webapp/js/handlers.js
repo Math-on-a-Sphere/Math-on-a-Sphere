@@ -20,6 +20,11 @@ org.weblogo.nodeHandlers.group_op = function(node, program, compiler) {
 org.weblogo.nodeHandlers.op = function(node, program, compiler) {
     return program += compiler(node.args[1], compiler(node.args[0], "")+node.op);
 }
+org.weblogo.nodeHandlers.math = function(node, program, compiler) {
+    var method = node.args[0];
+    var arglist = compiler(node.args[1], "");
+    return program += method + "(" + arglist + ")";
+}
 org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     if (node.value.length == 0) { return program += "";}
     else {
@@ -66,16 +71,9 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
         return program;
     }
     else {
-        compiler.escapeQuote = true;
         var arglist = compiler(node.args, "");
-        compiler.escapeQuote = false;
-        if(arglist === "") {
-            program += "org.weblogo.program.arglist = \"\";\n";
-        }
-        else {
-            program += "org.weblogo.program.arglist = \""+arglist+"\";\n";
-        }
-        return program += "org.weblogo.outputStream.push(\""+id+"\"+\" \"+org.weblogo.program.arglist);\n";
+
+        return program += "org.weblogo.outputStream.push(\""+id+" \"+ "+arglist+");\n";
     }
 }
 org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
@@ -135,12 +133,11 @@ org.weblogo.nodeHandlers.identifier = function(node, program, compiler) {
 //    }
 //    else {
 
-    program += node.value;
 //    }
     if(compiler.escapeQuote) {
-        program = "\"+"+program+"+\"";
+        return program += "\"+"+node.value+"+\"";
     }
-    return program;
+    return program += node.value;
 }
 org.weblogo.nodeHandlers.string = function(node, program, compiler) {
     if(compiler.addQuote) {
@@ -149,11 +146,10 @@ org.weblogo.nodeHandlers.string = function(node, program, compiler) {
     return program += node.value;
 }
 org.weblogo.nodeHandlers.number = function(node, program, compiler) {
-    program += node.value;
     if(compiler.escapeQuote) {
-        program = "\"+"+program+"+\"";
+        return program += "\"+"+node.value+"+\"";
     }
-    return program;
+    return program += node.value;
 }
 
 }());

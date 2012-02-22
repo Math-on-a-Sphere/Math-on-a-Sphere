@@ -278,7 +278,7 @@ org.weblogo.init = function() {
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
     client.drawListener = preview.updateTexture;
     var code = $("#code");
-    var myCodeMirror = CodeMirror.fromTextArea(code[0], {
+    org.weblogo.myCodeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
         mode: "javascript"
     });
@@ -315,11 +315,10 @@ org.weblogo.init = function() {
 
     });
 
-    $("#preload-commands").change(function () {
-        var menu = $("#preload-commands")[0];
-        var index = menu.selectedIndex;
-        var selected = menu.options[index].value;
-        myCodeMirror.setValue(org.weblogo.preload[selected]);
+     $("#preload-commands").change(function () {
+         var menu = $("#preload-commands")[0];
+         var selected = menu.options[menu.selectedIndex].value;
+         org.weblogo.preload.loadSelected(selected);
     });
 };
 

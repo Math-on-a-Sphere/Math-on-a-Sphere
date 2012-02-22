@@ -88,6 +88,24 @@ org.weblogo.executors.penDown = function(config, command) {
     });
 };
 
+org.weblogo.executors.setSpeed = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        var newSpeed = command.speed * Math.PI;
+        turtle.speed = newSpeed; 
+    });
+}
+
+org.weblogo.executors.getSpeed = function(config, command) {
+    var output;
+    fluid.each(config.turtles, function(turtle) {
+        output = {
+            type: "info",
+            message: turtle.speed
+        };
+    });
+    return output;
+};
+
 org.weblogo.executors.setHeading = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
         var pole = geom.polar_to_3(Math.PI/2, 0);
@@ -210,6 +228,22 @@ commands.right = function (angle) {
 };
 commands.right.args = ["number"];
 commands.rt = commands.right;
+
+commands.getspeed = function () {
+    return {
+        type: "getSpeed"
+    }
+};
+commands.getspeed.args = [];
+
+commands.setspeed = function (speed) {
+    return {
+        type: "setSpeed",
+        speed: speed
+    }
+};
+commands.setspeed.args = ["number"];
+
 
 commands.getheading = function () {
     return {

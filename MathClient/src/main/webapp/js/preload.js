@@ -4,131 +4,151 @@ org.weblogo.preload = {};
 
 var preload = org.weblogo.preload;
 
+org.weblogo.preload.loadSelected = function(selected) {
+    $.get(preload[selected], function(data) {
+        org.weblogo.myCodeMirror.setValue(data);
+    });
+};
 
 
+var preload = {
+    blank:  "\n\n\n\n\n\n",
+    basic_drawing: "lib/wbl/basic_drawing.wbl",
+    change_color: "lib/wbl/change_color.wbl"
+};
 
 //*************** BLANK *****************
-preload.blank =  (<r><![CDATA[
-
-
-
-
-]]></r>).toString();
 
 
 //***************** DRAWING *******************
-preload.basic_drawing = (<r><![CDATA[// This demonstrates how to use basic draw commands
+// preload.basic_drawing = (<r><![CDATA[// This demonstrates how to use basic draw commands
 
-forward 10
-right 45
-forward 10
-left 45
-forward 10
+// forward 10
+// right 45
+// forward 10
+// left 45
+// forward 10
 
-]]></r>).toString();
+// ]]></r>).toString();
 
-//***************** PROPERTIES *******************
-preload.change_color = (<r><![CDATA[// This demonstrates how to change color and pen size
+// //***************** PROPERTIES *******************
+// preload.change_color = (<r><![CDATA[// This demonstrates how to change color and pen size
 
-set color "blue"
-set pensize 20
-forward 360
+// set color "blue"
+// set pensize 20
+// forward 360
 
-]]></r>).toString();
-
-
+// ]]></r>).toString();
 
 
-//***************** REPEAT *******************
-preload.triple_right_triangle = (<r><![CDATA[// This demonstrates how to use the repeat funtion.
-// This causes the turtle to move forward 90 steps, 
-// turn right 90 degrees, repeated three times.
-
-repeat 3 {
-  forward 90
-  right 90
-}
-
-]]></r>).toString();
 
 
-//***************** FUNCTION *******************
-preload.function_null_call = (<r><![CDATA[// This demonstrates how to write and call a function
-// that has no parameters.
+// //***************** REPEAT *******************
+// preload.triple_right_triangle = (<r><![CDATA[// This demonstrates how to use the repeat funtion.
+// // This causes the turtle to move forward 90 steps, 
+// // turn right 90 degrees, repeated three times.
 
-tri = function [] {
-    repeat 3 {
-        forward 90
-        right 90
-    }
-} 
+// repeat 3 {
+//   forward 90
+//   right 90
+// }
 
-tri()
+// ]]></r>).toString();
 
-]]></r>).toString();
 
-//***************** FUNCTION *******************
-preload.function_parameter_call = (<r><![CDATA[// This demonstrates how to write and call a function
-// that has a single parameter.
+// //***************** FUNCTION *******************
+// preload.function_null_call = (<r><![CDATA[// This demonstrates how to write and call a function
+// // that has no parameters.
 
-tri = function [newcolor] {
-    set color newcolor
-    repeat 3 {
-        forward 90
-        right 90
-    }
-} 
+// tri = function [] {
+//     repeat 3 {
+//         forward 90
+//         right 90
+//     }
+// } 
 
-tri "green"
+// tri()
 
-]]></r>).toString();
+// ]]></r>).toString();
 
-//***************** FUNCTION *******************
-preload.function_parameters_call = (<r><![CDATA[// This demonstrates how to write and call a function
-// that has more than one parameter.
+// //***************** FUNCTION *******************
+// preload.function_parameter_call = (<r><![CDATA[// This demonstrates how to write and call a function
+// // that has a single parameter.
 
-tri = function [x,newcolor] {
-    set color newcolor
-    repeat 3 {
-        forward x
-        right x
-    }
-} 
+// tri = function [newcolor] {
+//     set color newcolor
+//     repeat 3 {
+//         forward 90
+//         right 90
+//     }
+// } 
 
-tri [90,"green"]
+// tri "green"
 
-]]></r>).toString();
+// ]]></r>).toString();
 
-//***************** ICOSAHEDRON *******************
-preload.icosahedron = (<r><![CDATA[// This program projects a 20-sided object onto a sphere 
-x = 63.5 
-theta = 108
-thetatwo = 72/2
+// //***************** FUNCTION *******************
+// preload.function_parameters_call = (<r><![CDATA[// This demonstrates how to write and call a function
+// // that has more than one parameter.
 
-tri = function () { 
-  repeat 3 { forward x right theta }
-}
+// tri = function [x,newcolor] {
+//     set color newcolor
+//     repeat 3 {
+//         forward x
+//         right x
+//     }
+// } 
 
-penta = function () {
-  repeat 5 { tri() right 72 }
-}
+// tri [90,"green"]
 
-repeat 3 {
-  penta()
-  forward x  
-  right thetatwo
-}
+// ]]></r>).toString();
 
-left 72
-forward x
-right thetatwo
 
-repeat 3 {
-  penta()
-  forward x
-  left thetatwo
-}
+// //***************** DRAW TRIANGLE *****************
+// preload.draw_triangle_size = (<r><![CDATA[
 
-]]></r>).toString();
+// tri = function [size] {
+//     repeat 3 {
+//         forward size
+//         right (180 - size)
+//     }
+// } 
+
+// tri 90
+
+// ]]></r>).toString();
+
+
+// //***************** ICOSAHEDRON *******************
+// preload.icosahedron = (<r><![CDATA[// This program projects a 20-sided object onto a sphere 
+// x = 63.5 
+// theta = 108
+// thetatwo = 72/2
+
+// tri = function () { 
+//   repeat 3 { forward x right theta }
+// }
+
+// penta = function () {
+//   repeat 5 { tri() right 72 }
+// }
+
+// repeat 3 {
+//   penta()
+//   forward x  
+//   right thetatwo
+// }
+
+// left 72
+// forward x
+// right thetatwo
+
+// repeat 3 {
+//   penta()
+//   forward x
+//   left thetatwo
+// }
+
+// ]]></r>).toString();
 
 }());

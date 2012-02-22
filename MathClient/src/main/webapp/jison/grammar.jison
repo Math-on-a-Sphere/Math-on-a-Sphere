@@ -22,6 +22,7 @@ frac                        (?:\.[0-9]+)
 "["                                return '['
 "]"                                return ']'
 ","                                return ','
+("Math.")[a-zA-Z]+([a-zA-Z0-9_]*)?\b return 'MATH'
 "PI"                               return 'PI'
 "E"                                return 'E'
 "true"                             return 'TRUE'
@@ -40,6 +41,7 @@ frac                        (?:\.[0-9]+)
 ("getposition()"|"getposition")    return 'GETPOSITION'
 ("getpos()"|"getpos")              return 'GETPOSITION'
 ("gp()"|"gp")                      return 'GETPOSITION'
+("getspeed()"|"getspeed")          return 'GETSPEED'
 ("help()"|"help")                  return 'HELP'
 ("demo()"|"demo")                  return 'DEMO'
 ("testcard()"|"testcard")          return 'TESTCARD'
@@ -49,7 +51,7 @@ frac                        (?:\.[0-9]+)
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
-{int}{frac}?{exp}?\b               return 'NUMBER';
+(({int}{frac}?)|({int}?{frac})){exp}?\b               return 'NUMBER';
 [a-zA-Z]+([a-zA-Z0-9_]*)?\b        return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
@@ -146,6 +148,11 @@ func
     $$['type'] = 'builtin';
     $$['id'] = 'getposition';
     $$['args'] = [];}
+| GETSPEED
+  {$$ = {};
+    $$['type'] = 'builtin';
+    $$['id'] = 'getspeed';
+    $$['args'] = [];}
 | HELP
   {$$ = {};
     $$['type'] = 'builtin';
@@ -205,6 +212,7 @@ re
   {$$ = {};
     $$['type'] = 'group_op';
     $$['value'] = $2;}
+| MATH
 | value
 ;
 
