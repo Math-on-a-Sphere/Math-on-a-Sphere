@@ -4,10 +4,10 @@ org.weblogo.preload = {};
 
 var preload = org.weblogo.preload;
 
-org.weblogo.preload.loadSelected = function(selected) {
+org.weblogo.preload.loadSelected = function(selected, myCodeMirror) {
     $.get(preload[selected], function(data) {
-        org.weblogo.myCodeMirror.setValue(data);
-    });
+        myCodeMirror.setValue(data);
+    }, "text");
 };
 
 

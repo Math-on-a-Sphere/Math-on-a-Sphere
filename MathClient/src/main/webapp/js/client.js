@@ -278,7 +278,7 @@ org.weblogo.init = function() {
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
     client.drawListener = preview.updateTexture;
     var code = $("#code");
-    org.weblogo.myCodeMirror = CodeMirror.fromTextArea(code[0], {
+    var myCodeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
         mode: "javascript"
     });
@@ -318,7 +318,7 @@ org.weblogo.init = function() {
      $("#preload-commands").change(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
-         org.weblogo.preload.loadSelected(selected);
+         org.weblogo.preload.loadSelected(selected, myCodeMirror);
     });
 };
 
