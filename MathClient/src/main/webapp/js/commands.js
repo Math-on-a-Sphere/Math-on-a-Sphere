@@ -88,6 +88,23 @@ org.weblogo.executors.penDown = function(config, command) {
     });
 };
 
+org.weblogo.executors.setSpeed = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        turtle.speed = command.speed;
+    });
+}
+
+org.weblogo.executors.getSpeed = function(config, command) {
+    var output;
+    fluid.each(config.turtles, function(turtle) {
+        output = {
+            type: "info",
+            message: turtle.speed
+        };
+    });
+    return output;
+};
+
 org.weblogo.executors.setHeading = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
         var pole = geom.polar_to_3(Math.PI/2, 0);
@@ -104,7 +121,7 @@ org.weblogo.executors.getHeading = function(config, command) {
         var pole = geom.polar_to_3(Math.PI/2, 0);
         var tan = geom.cross_3(turtle.heading, turtle.position);
         var ang = geom.rad2deg(Math.acos(geom.dot_3(tan, pole)));
-        var heading = ang;
+        var heading = ang.toFixed(6);
         output = {
             type: "info",
             message: heading
@@ -125,9 +142,13 @@ org.weblogo.executors.getPosition = function(config, command) {
     var output;
     fluid.each(config.turtles, function(turtle) {
         var pos = geom.polar_from_3(turtle.position);
+        var a = geom.rad2deg(pos[0]).toFixed(6);
+        var b = geom.rad2deg(pos[1]).toFixed(6);
+        //if (Math.abs(a) < .001) { a = 0; }
+        //if (Math.abs(b) < .001) { b = 0; }
         output = {
             type: "info",
-            message: [geom.rad2deg(pos[0]), geom.rad2deg(pos[1])]
+            message: [a, b]
         };
     });
     return output;
@@ -206,6 +227,22 @@ commands.right = function (angle) {
 };
 commands.right.args = ["number"];
 commands.rt = commands.right;
+
+commands.getspeed = function () {
+    return {
+        type: "getSpeed"
+    }
+};
+commands.getspeed.args = [];
+
+commands.setspeed = function (speed) {
+    return {
+        type: "setSpeed",
+        speed: speed
+    }
+};
+commands.setspeed.args = ["number"];
+
 
 commands.getheading = function () {
     return {

@@ -288,6 +288,10 @@ org.weblogo.init = function() {
         lineNumbers: "true",
         mode: "javascript"
     });
+    var menu = $("#preload-commands")[0];
+    var selected = menu.options[menu.selectedIndex].value;
+    if(selected === "noselection") { selected = "blank"; }
+    org.weblogo.preload.loadSelected(selected, myCodeMirror);    
 
     $("#compile-button").click(function () {
         var code = "ca\n" + myCodeMirror.getValue();
@@ -321,11 +325,11 @@ org.weblogo.init = function() {
 
     });
 
-    $("#preload-commands").change(function () {
-        var menu = $("#preload-commands")[0];
-        var index = menu.selectedIndex;
-        var selected = menu.options[index].value;
-        myCodeMirror.setValue(org.weblogo.preload[selected]);
+     $("#preload-commands").change(function () {
+         var menu = $("#preload-commands")[0];
+         var selected = menu.options[menu.selectedIndex].value;
+         if(selected === "noselection") { selected = "blank"; }
+         org.weblogo.preload.loadSelected(selected, myCodeMirror);
     });
 };
 

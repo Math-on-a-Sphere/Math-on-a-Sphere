@@ -1,0 +1,12 @@
+// This demonstrates how to write and call a function
+// that has a single parameter.
+
+tri = function [newcolor] {
+    set color newcolor
+    repeat 3 {
+        forward 90
+        right 90
+    }
+} 
+
+tri "green"
