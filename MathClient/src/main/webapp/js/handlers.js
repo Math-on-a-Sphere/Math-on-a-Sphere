@@ -29,7 +29,7 @@ org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     if (node.value.length == 0) { return program += "";}
     else {
         for (var j = 0; j < node.value.length-1; ++j) {
-            program += compiler(node.value[j], "")+", ";
+            program += compiler(node.value[j], "")+"+\" \"+";
         }
         return program += compiler(node.value[j], "");
     }
