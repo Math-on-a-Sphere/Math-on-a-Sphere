@@ -303,10 +303,7 @@ org.weblogo.testTurtle.drawAt = function(component, canvas2d, position, heading)
     var headingDiffVec = geom.cross_3(carriedHeading, heading);
     var dot = geom.dot_3(carriedHeading, heading);
     // should be parallel to position
-    var headingDiff = Math.asin(geom.dot_3(headingDiffVec, position));
-    if (dot < 0) {
-        headingDiff = Math.PI - headingDiff;
-    }
+    headingDiff = Math.atan2(geom.dot_3(headingDiffVec, position), dot);
     
     var transform = function(point) {
         var point2 = geom.point_by_angle(point, positionAxis, positionAngle);
