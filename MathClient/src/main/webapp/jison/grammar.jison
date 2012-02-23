@@ -67,7 +67,6 @@ frac                        (?:\.[0-9]+)
 %left '^'
 %left UMINUS
 %right '='
-%right e
 %start program
 
 
@@ -105,7 +104,7 @@ node
 ;
 
 func
-: re re
+: vre rre
   {$$ = {};
     $$['type'] = 'func';
     $$['id'] = $1;
@@ -183,6 +182,17 @@ e
    $$['value'] = $2;}
 ;
 
+vre
+: '(' func ')'
+| value
+;
+
+rre
+: '(' re ')'
+| value
+;
+
+
 re
 : re '+' re
   {$$ = {};
@@ -212,8 +222,8 @@ re
   {$$ = {};
     $$['type'] = 'group_op';
     $$['value'] = $2;}
-| MATH
 | value
+| '(' func ')'
 ;
 
 
