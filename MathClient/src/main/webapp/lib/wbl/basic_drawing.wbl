@@ -1,0 +1,6 @@
+// This demonstrates how to use basic draw commands
+forward 30
+right 45
+forward 30
+left 45
+forward 30

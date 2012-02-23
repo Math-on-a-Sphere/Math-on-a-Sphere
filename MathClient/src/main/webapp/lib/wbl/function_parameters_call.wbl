@@ -1,0 +1,12 @@
+// This demonstrates how to write and call a function
+// that has more than one parameter.
+
+tri = function [x,newcolor] {
+    set color newcolor
+    repeat 3 {
+        forward x
+        right x
+    }
+} 
+
+tri [90,"green"]

@@ -12,9 +12,15 @@ org.weblogo.preload.loadSelected = function(selected, myCodeMirror) {
 
 
 var preload = {
-    blank:  "\n\n\n\n\n\n",
+    blank:  "lib/wbl/blank.wbl",
     basic_drawing: "lib/wbl/basic_drawing.wbl",
-    change_color: "lib/wbl/change_color.wbl"
+    change_color: "lib/wbl/change_color.wbl",
+    triple_right_triangle: "lib/wbl/triple_right_triangle.wbl",
+    function_null_call: "lib/wbl/function_null_call.wbl",
+    function_parameter_call: "lib/wbl/function_parameter_call.wbl",
+    function_parameters_call: "lib/wbl/function_parameters_call.wbl",
+    icosahedron: "lib/wbl/icosahedron.wbl",
+    soccer_ball: "lib/wbl/soccer_ball.wbl"
 };
 
 //*************** BLANK *****************
