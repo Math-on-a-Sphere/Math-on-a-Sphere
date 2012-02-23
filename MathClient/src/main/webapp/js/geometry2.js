@@ -211,7 +211,7 @@ var id = function() {
 };
 
 org.weblogo.geom.make_turtle = function(size, apex) {
-    size = Math.PI/17.01;
+    size = Math.PI/25;
     apex = Math.PI/8;
     var rotl = mat4.rotate(id(), size, [-1, 0, 0]);
     mat4.rotate(rotl, -apex, [0, -1, 0]);
@@ -249,8 +249,10 @@ org.weblogo.geom.make_turtle = function(size, apex) {
         points: points,
         lines: lines,
         lineWidth: 0.01,
-        colfill: [0, 0xee, 0xee, 0xff],
-        colbord: [0, 0xff, 0xff, 0xff]
+        colfill: [0, 0xee, 0, 0xff],
+        colbord: [0, 0xff, 0, 0xff]
+//        colfill: [0, 0xee, 0xee, 0xff],
+//        colbord: [0, 0xff, 0xff, 0xff]
     };
     geom.measure_polygon(polygon);
     return polygon;
