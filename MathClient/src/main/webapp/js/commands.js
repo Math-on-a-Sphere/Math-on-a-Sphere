@@ -154,6 +154,20 @@ org.weblogo.executors.getPosition = function(config, command) {
     return output;
 };
 
+org.weblogo.executors.help = function(config, command) {
+    var commandlist = "commands: ";
+
+    $.each(org.weblogo.turtle.commands, function(el){
+        commandlist += el + ", ";
+    });
+
+    output = {
+        type: "info",
+        message: commandlist
+    };
+    return output;
+}
+
 org.weblogo.executors.set = function(config, command) {
     var as = org.weblogo.turtle.accessors;
     var accessor = as[command.variable];
@@ -277,6 +291,14 @@ commands.getposition = function () {
     }
 };
 commands.getposition.args = [];
+
+commands.help = function () {
+    return {
+        type: "help"
+    }
+};
+commands.help.args = [];
+
 
 commands.set = function (variable, value) {
     return {
