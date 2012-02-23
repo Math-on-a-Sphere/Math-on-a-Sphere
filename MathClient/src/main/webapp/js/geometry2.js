@@ -3,17 +3,18 @@
 
 var geom = org.weblogo.geom;
 
+// p1 is allowed to be inhomogeneous in this optimised version
 org.weblogo.geom.intersect_planes = function(p1, p2, sign) {
-    var g = vec3.dot(p1, p2);
+    var g = geom.dot_3(p1, p2);
     var d2 = 1 - g*g;
     var a1 = p1[3] || 0;
     var c1 = - a1 / d2;
     var c2 = a1 * g / d2;
     var l2 = (d2 - a1*a1) / (d2 * d2);
-    var t1 = vec3.scale(p1, c1, vec3.create());
-    var t2 = vec3.scale(p2, c2, vec3.create());
-    var t3 = vec3.scale(vec3.cross(p1, p2, vec3.create()), sign * Math.sqrt(l2));
-    var sum = vec3.add(t1, vec3.add(t2, t3));
+    var t1 = geom.scale_3(p1, c1);
+    var t2 = geom.scale_3(p2, c2);
+    var t3 = geom.scale_3(geom.cross_3(p1, p2), sign * Math.sqrt(l2));
+    var sum = geom.add_3(t1, geom.add_3(t2, t3));
     return sum;
 };
 
@@ -167,9 +168,9 @@ org.weblogo.geom.raster_point = function(poly, point) {
 var check_polygon = function(points, lines) {
     var c = points.length;
     for (var i = 0; i < c; ++ i) {
-        //console.log("d1 ", vec3.dot(lines[i], points[i]), " d2 ", vec3.dot(lines[i], points[(i + 1)%c]));
+        console.log("d1 ", vec3.dot(lines[i], points[i]), " d2 ", vec3.dot(lines[i], points[(i + 1)%c]));
         var axis = geom.axis_from_heading(points[i], points[(i + 1)%c]);
-        //console.log("Orient: ", vec3.dot(lines[i], axis)); 
+        console.log("Orient: ", vec3.dot(lines[i], axis)); 
     }  
 };
 
@@ -243,7 +244,7 @@ org.weblogo.geom.make_turtle = function(size, apex) {
     var points = [tp, brp2, bp, blp2];
     var lines = [tr, br, bl, tl];
     
-    check_polygon(points, lines);
+//    check_polygon(points, lines);
     var polygon = {
         points: points,
         lines: lines,
@@ -303,13 +304,13 @@ org.weblogo.executors.testTurtle = function(config, command, tick) {
     component.initTime = tick;
     var that = {};
     //var imageData = config.context.createImageData(config.width, config.height);
-    var gl = component.gl;
     //component.userPostDraw = function(that) {
     //    gl.readPixels(0, 0, config.width, config.height, gl.RGBA, gl.UNSIGNED_BYTE, imageData.data);
     //    config.context.putImageData(imageData, 0, 0);
     //};
 
     that.toTick = function(now) {
+        that.userDraw = org.weblogo.testTurtle.userDraw;
         component.draw();
         //fluid.log("Rendered in " + (Date.now() - now) + "ms " + Date.now());
         return false;
@@ -317,7 +318,41 @@ org.weblogo.executors.testTurtle = function(config, command, tick) {
     return that;
 };
 
+org.weblogo.turtle.commands.testPolygon = function() {
+    return {type: "testPolygon"}
+};
+org.weblogo.turtle.commands.testPolygon.args = [];
+
+org.weblogo.executors.testPolygon = function(config, command, tick) {
+    var component = config.testTurtleComponent;
+    component.userDraw = org.weblogo.testPolygon.userDraw;
+    component.initTime = tick;
+    var that = {};
+    that.toTick = function(now) {
+        component.draw();
+        return true;
+    };
+    return that;
+};
+
 }
+
+org.weblogo.testPolygon = {};
+
+org.weblogo.testPolygon.userDraw = function(that) {
+    var heading = geom.point_by_angle([-1, 0, 0], [0, -1, 0], Math.PI/8);
+    var end = geom.point_by_angle([0, -1, 0], heading, 2);
+  
+    that.polygon = org.weblogo.turtleLineToPolygon( {
+      start: [0, -1, 0],
+      end: end,
+      heading: heading,
+      distance: 2,
+      colour: [0xff, 0xff, 0, 0xff],
+      width: Math.PI/20
+    });
+    org.weblogo.polygonToShader(that.polygon, that);
+};
 
 org.weblogo.testTurtle.componentInit = function(that) {
     var gl = that.gl;
@@ -338,30 +373,46 @@ org.weblogo.testTurtle.webGLStart = function(canvas, client) {
 var simples = {conj: "3fv", angle: "1f", start: "1f", 
     end: "1f", bend: "1f", bendstart: "1f", mind: "1f", maxd: "1f"};
 
-org.weblogo.testTurtle.userDraw = function(that) {
-    var poly = that.polygon;
-    var c = poly.lines.length;  
-    
-    var now = Date.now();
-    var angle = (now - that.initTime) / 2000;
-    
-    var trans = function(point) {
-        point = geom.point_by_angle(point, [0, -1, 0], angle);
-        point = geom.point_by_angle(point, [-1, 0, 0], angle / 3.7);
-        point = geom.point_by_angle(point, [0, 0, 1], angle / 5.9);
-        return point;
+// nb - distance is always positive - check whether to invert heading or not
+// in caller
+org.weblogo.turtleLineToPolygon = function(options) {
+    var poly = {
+        colfill: options.colour,
+        colbord: [0,0,0,0],
+        lineWidth: 0.01 // anti-alias border width
     };
-    
-    that.polylive.lines = fluid.transform(poly.lines, trans);
-    that.polylive.points = fluid.transform(poly.points, trans);
-    
-    poly = that.polylive;
+    // "downward" diagram, assumed heading rotates antic from start to end
+    var perpStart = geom.point_by_angle(options.heading, options.start, Math.PI/2);
+    var perpEnd = geom.point_by_angle(options.heading, options.end, Math.PI/2);
+    var side0 = fluid.copy(options.heading);
+    side0[3] = options.width / 2;
+    var side2 = fluid.copy(options.heading);
+    side2[3] = - options.width / 2;
+    poly.points = [
+        geom.intersect_planes(side0, perpStart, 1),
+        geom.intersect_planes(side0, perpEnd, 1),
+        geom.intersect_planes(side2, perpEnd, 1),
+        geom.intersect_planes(side2, perpStart, 1)
+    ];
+    poly.lines = [side0, perpEnd, side2, perpStart];
+    var points = poly.points;
+    console.log(geom.dot_3(points[0], options.start));
+    console.log(geom.dot_3(points[1], options.end));
+    console.log(geom.dot_3(points[2], options.end));
+    console.log(geom.dot_3(points[3], options.start));
+    console.log(geom.dot_3(points[0], poly.lines[0]) + poly.lines[0][3]);
+    console.log(geom.dot_3(points[3], poly.lines[2]) + poly.lines[2][3]);
+    return poly;
+};
+
+org.weblogo.polygonToShader = function(poly, that) {
     geom.measure_polygon(poly);
   
     var gl = that.gl;
     gl.activeTexture(gl.TEXTURE0);
 
     var s = org.weblogo.webgl.uniformSetter(gl, that.shaderProgram);
+    var c = poly.lines.length;  
     
     s.set("lineCount", "1i", c);
     s.set("lineWidth", "1f", poly.lineWidth);
@@ -376,14 +427,31 @@ org.weblogo.testTurtle.userDraw = function(that) {
         });
         s.setv("poly", i, "line4", "4fv", poly.lines[i]);
     }
-    //gl.uniform1f(that.shaderProgram.time, Date.now() - that.initTime);
+};
 
-    //gl.bindTexture(gl.TEXTURE_2D, that.paletteTexture);
-    //gl.uniform1i(that.shaderProgram.palette, 0);
+org.weblogo.testTurtle.userDraw = function(that) {
+    var poly = that.polygon;
+    
+    var now = Date.now();
+    var angle = (now - that.initTime) / 2000;
+    
+    var trans = function(point) {
+        point = geom.point_by_angle(point, [0, -1, 0], angle);
+        point = geom.point_by_angle(point, [-1, 0, 0], angle / 3.7);
+        point = geom.point_by_angle(point, [0, 0, 1], angle / 5.9);
+        return point;
+    };
+    
+    that.polylive.lines = fluid.transform(poly.lines, trans);
+    that.polylive.points = fluid.transform(poly.points, trans);
+    
+    org.weblogo.polygonToShader(that.polylive, that);
 };
 
 
-var polygon = org.weblogo.geom.make_turtle();
+    
+
+//var polygon = org.weblogo.geom.make_turtle();
 /*
 var count = geom.raster_point(polygon, [0.000001, -1, 0]);
 var up = geom.point_by_angle([0.0001, -1, 0], [-1, 0, 0], Math.PI/4);
@@ -392,14 +460,14 @@ var count = geom.raster_point(polygon, up);
 var down = geom.point_by_angle([0.0001, -1, 0], [-1, 0, 0], -Math.PI/4);
 var count = geom.raster_point(polygon, down);
 */
-var midbot = geom.point_by_angle(polygon.points[2], polygon.lines[2], Math.PI/60);
-console.log(geom.dot_3(midbot, polygon.lines[2]));
-var count = geom.raster_point(polygon, midbot);
+//var midbot = geom.point_by_angle(polygon.points[2], polygon.lines[2], Math.PI/60);
+//console.log(geom.dot_3(midbot, polygon.lines[2]));
+//var count = geom.raster_point(polygon, midbot);
 
-var midbotup = geom.point_by_angle(midbot, [-1, 0, 0], -.001);
-var count = geom.raster_point(polygon, midbotup);
+//var midbotup = geom.point_by_angle(midbot, [-1, 0, 0], -.001);
+//var count = geom.raster_point(polygon, midbotup);
 
-console.log("midbot ", midbot, " midbotup ", midbotup);
+//console.log("midbot ", midbot, " midbotup ", midbotup);
 /*
 var midbot3 = geom.point_by_angle(polygon.points[2], polygon.lines[1], -.02);
 console.log(geom.dot_3(midbot3, polygon.lines[1]));

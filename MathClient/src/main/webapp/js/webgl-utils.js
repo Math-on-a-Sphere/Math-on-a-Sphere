@@ -173,13 +173,22 @@ org.weblogo.webgl.makeSquareVertexBuffer = function(that) {
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 };
 
+org.weblogo.webgl.makeClear = function(that) {
+    return function() {
+        var gl = that.gl;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
+}
+
 org.weblogo.webgl.makeDraw = function(that) {
     return function() {
         var times = that.times || 1;
         for (var i = 0; i < times; ++ i) {
         var gl = that.gl;
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        if (that.autoClear) {
+            that.clear();  
+        }
+
         if (that.userDraw) {
             that.userDraw(that);
         }
@@ -204,6 +213,7 @@ org.weblogo.webgl.initGL = function(that) {
         
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     } catch (e) {
     }
     if (!gl) {
@@ -294,6 +304,7 @@ org.weblogo.webgl.initWebGLComponent = function(container, options, userOptions,
         that.initBuffers(that);
         
         onCreate(that);
+        that.clear = org.weblogo.webgl.makeClear(that);
         that.draw = org.weblogo.webgl.makeDraw(that);
         if (that.animate) {
             org.weblogo.webgl.animator(that.draw);

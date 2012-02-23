@@ -1464,6 +1464,7 @@ function get_stack(caller) {
                 //display filename and line which throw exeption
                 self.error('&#91;' + label + '&#93;: ' + e.fileName + ': ' +
                            e.message);
+                console.log(e.stack);
                 self.pause();
                 $.get(e.fileName, function(file) {
                     self.resume();

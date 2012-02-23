@@ -15,7 +15,8 @@
             lightingDirection: "uniform",
             directionalColor: "uniform"
         },
-        animate: true
+        animate: true,
+        autoClear: true
     };
 
     function canvasToTexture(gl, canvas) {
@@ -38,7 +39,7 @@
     var lastMouseX = null;
     var lastMouseY = null;
 
-    var moonRotationMatrix =  mat4.identity(mat4.create());
+    var moonRotationMatrix = mat4.identity(mat4.create());
     
     mat4.rotate(moonRotationMatrix, Math.PI / 2, [0, 1, 0]);
 
@@ -137,7 +138,7 @@
         lastMouseX = null;
         lastMouseY = null;
 
-        moonRotationMatrix =  mat4.identity(mat4.create());
+        moonRotationMatrix = mat4.identity(mat4.create());
     
         mat4.rotate(moonRotationMatrix, Math.PI / 2, [0, 1, 0]);
         mat4.identity(mat4.create());

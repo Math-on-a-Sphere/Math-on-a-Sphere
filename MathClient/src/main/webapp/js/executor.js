@@ -76,7 +76,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
         }
         catch (e) {
             finished = true;
-            events.onError.fire({message: "Error during rendering: " + e});
+            events.onError.fire({message: "Error during rendering: " + e + " stack: " + e.stack});
         }
         if (finished) {
             that.stop();
