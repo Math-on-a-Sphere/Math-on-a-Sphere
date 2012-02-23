@@ -130,6 +130,8 @@ case 33:this.$ = {};
     this.$['type'] = 'group_op';
     this.$['value'] = $$[$0-1];
 break;
+case 35:this.$ = $$[$0-1];
+break;
 case 36:this.$ = {};
     this.$['type'] = 'accessor';
     this.$['value'] = $$[$0];
