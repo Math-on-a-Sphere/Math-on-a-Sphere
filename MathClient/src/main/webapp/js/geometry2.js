@@ -289,7 +289,44 @@ org.weblogo.testTurtle.glConfig = {
         }
     },
     times: 1,
+    autoClear: false,
+    clearColor: [0, 0, 0, 0],
     animate: false
+};
+
+org.weblogo.testTurtle.drawAt = function(component, canvas2d, position, heading) {
+    var turtleStart = [0, -1, 0];
+    var positionAxis = geom.axis_from_heading(turtleStart, position);
+    var positionAngle = Math.acos(geom.dot_3(turtleStart, position));
+    
+    var carriedHeading = geom.point_by_angle([-1, 0, 0], positionAxis, positionAngle);
+    var headingDiffVec = geom.cross_3(carriedHeading, heading);
+    var dot = geom.dot_3(carriedHeading, heading);
+    // should be parallel to position
+    var headingDiff = Math.asin(geom.dot_3(headingDiffVec, position));
+    if (dot < 0) {
+        headingDiff = Math.PI - headingDiff;
+    }
+    
+    var transform = function(point) {
+        var point2 = geom.point_by_angle(point, positionAxis, positionAngle);
+        var point3 = geom.point_by_angle(point2, position, headingDiff);
+        return point3;
+    };
+    
+    var poly = component.turtle;
+    
+    component.turtlelive.lines = fluid.transform(poly.lines, transform);
+    component.turtlelive.points = fluid.transform(poly.points, transform);
+    
+    org.weblogo.polygonToShader(component.turtlelive, component);
+    component.userDraw = null;
+    component.clear();
+    component.draw();
+    
+    var gl = component.gl;
+    
+    canvas2d.drawImage(component.canvas, 0, 0);
 };
 
 if (org.weblogo.turtle) {
@@ -302,6 +339,7 @@ org.weblogo.turtle.commands.testTurtle.args = [];
 org.weblogo.executors.testTurtle = function(config, command, tick) {
     var component = config.testTurtleComponent;
     component.initTime = tick;
+    component.userDraw = org.weblogo.testTurtle.userDraw;
     var that = {};
     //var imageData = config.context.createImageData(config.width, config.height);
     //component.userPostDraw = function(that) {
@@ -310,10 +348,9 @@ org.weblogo.executors.testTurtle = function(config, command, tick) {
     //};
 
     that.toTick = function(now) {
-        that.userDraw = org.weblogo.testTurtle.userDraw;
         component.draw();
         //fluid.log("Rendered in " + (Date.now() - now) + "ms " + Date.now());
-        return false;
+        return true;
     };
     return that;
 };
@@ -356,16 +393,18 @@ org.weblogo.testPolygon.userDraw = function(that) {
 
 org.weblogo.testTurtle.componentInit = function(that) {
     var gl = that.gl;
-    that.polygon = org.weblogo.geom.make_turtle();
-    that.polylive = $.extend(true, {}, that.polygon);
+    that.turtle = org.weblogo.geom.make_turtle();
+    that.turtlelive = $.extend(true, {}, that.turtle);
+    that.startListener();
 };
 
-org.weblogo.testTurtle.webGLStart = function(canvas, client) {
+org.weblogo.testTurtle.webGLStart = function(canvas, client, callback) {
     var component = org.weblogo.webgl.initWebGLComponent(canvas, 
             org.weblogo.testTurtle.glConfig, {
                 userDraw: org.weblogo.testTurtle.userDraw,
                 initBuffers: org.weblogo.webgl.makeSquareVertexBuffer,
-                events: client.events
+                events: client.events, 
+                startListener: callback // TODO: get rid of this rubbish
             }, org.weblogo.testTurtle.componentInit);
     client.config.testTurtleComponent = component;  
 };
@@ -430,7 +469,7 @@ org.weblogo.polygonToShader = function(poly, that) {
 };
 
 org.weblogo.testTurtle.userDraw = function(that) {
-    var poly = that.polygon;
+    var poly = that.turtle;
     
     var now = Date.now();
     var angle = (now - that.initTime) / 2000;
@@ -442,10 +481,10 @@ org.weblogo.testTurtle.userDraw = function(that) {
         return point;
     };
     
-    that.polylive.lines = fluid.transform(poly.lines, trans);
-    that.polylive.points = fluid.transform(poly.points, trans);
+    that.turtlelive.lines = fluid.transform(poly.lines, trans);
+    that.turtlelive.points = fluid.transform(poly.points, trans);
     
-    org.weblogo.polygonToShader(that.polylive, that);
+    org.weblogo.polygonToShader(that.turtlelive, that);
 };
 
 

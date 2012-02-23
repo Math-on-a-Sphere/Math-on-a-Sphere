@@ -2,6 +2,25 @@
 
 var geom = org.weblogo.geom;
 
+org.weblogo.storeFrame = function(config) {
+    config.frame = config.context.getImageData(0, 0, config.width, config.height);
+};
+
+org.weblogo.restoreFrame = function(config) {
+    config.context.putImageData(config.frame, 0, 0);
+};
+
+org.weblogo.updateTurtle = function(config, turtle) {
+    org.weblogo.testTurtle.drawAt(config.testTurtleComponent, config.context, turtle.position, turtle.heading)
+};
+
+var updateTurtle = org.weblogo.updateTurtle;
+
+var updateTurtleF = function(config, turtle) {
+    org.weblogo.restoreFrame(config);
+    updateTurtle(config, turtle);
+};
+
 // An "executor" constructs an "execution object" which will persist whilst the
 // execution is in process
 org.weblogo.executors = {};
@@ -10,14 +29,13 @@ org.weblogo.executors = {};
 // turtles in lockstep (so speed setting is assumed to be shared)
 org.weblogo.executors.line = function(config, command, tick) {
     var that = {};
-    
-    that.command = command;
-    that.lastTick = that.firstTick = tick;
+    that.firstTick = tick;
     that.lines = {};
     
     fluid.each(config.turtles, function(turtle) {
         var line = that.lines[turtle.id] = {};
         line.distance = command.distance;
+        // TODO: put this global variable in config!
         line.finalTick = tick + org.weblogo.speed * Math.abs(command.distance) / turtle.speed;
         line.startPos = turtle.position;
         line.lastDistance = 0;
@@ -25,17 +43,18 @@ org.weblogo.executors.line = function(config, command, tick) {
     
     that.toTick = function(newTick) {
         var finished = fluid.transform(config.turtles, function(turtle) {
+            org.weblogo.restoreFrame(config);
             var line = that.lines[turtle.id];
             var finished = false;
-            var newDistance = line.distance * (newTick - that.lastTick) / (line.finalTick - that.lastTick);
-            var sign = line.distance > 0? 1 : -1;
-            if (sign * newDistance >= sign * line.distance) {
+            var newDistance = line.distance * (newTick - that.firstTick) / (line.finalTick - that.firstTick);
+            if (newTick >= line.finalTick) {
                 newDistance = line.distance;
                 finished = true;
             }
             var versor = geom.versor_from_parts(turtle.heading, newDistance);
             var newpos = geom.quat_conj(versor, line.startPos);
             if (turtle.drawing) {
+                var sign = line.distance > 0? 1 : -1;
                 org.weblogo.raster.stroke_line({
                   config: config, 
                   start: sign === 1? turtle.position : newpos, 
@@ -44,10 +63,44 @@ org.weblogo.executors.line = function(config, command, tick) {
                   heading: turtle.heading, 
                   colour: turtle.colour, 
                   width: turtle.width});
+                  org.weblogo.storeFrame(config);
             }
             // normalise final position to avoid overflow due to continuous chaining
             turtle.position = org.weblogo.geom.norm_3(newpos);
+            updateTurtle(config, turtle);
+                      
             line.lastDistance = newDistance;
+            return finished;
+        });
+        
+        return finished[0];
+    };
+    return that;
+};
+
+org.weblogo.executors.turn = function(config, command, tick) {
+    var that = {};
+    that.firstTick = tick;
+    that.turns = {};
+    fluid.each(config.turtles, function(turtle) {
+        var turn = that.turns[turtle.id] = {};
+        turn.angle = command.angle;
+        turn.finalTick = tick + org.weblogo.speed * Math.abs(command.angle) / turtle.turnSpeed;
+        turn.startPos = turtle.heading;
+        turn.lastAngle = 0;
+    });
+  
+    that.toTick = function(newTick) {
+        var finished = fluid.transform(config.turtles, function(turtle) {
+            var turn = that.turns[turtle.id];
+            var finished = false;
+            var newAngle = turn.angle * (newTick - that.firstTick) / (turn.finalTick - that.firstTick);
+            if (newTick > turn.finalTick) {
+                newAngle = turn.angle;
+                finished = true;
+            }
+            turtle.heading = geom.point_by_angle(turn.startPos, turtle.position, newAngle);
+            updateTurtleF(config, turtle);
             return finished;
         });
         return finished[0];
@@ -55,25 +108,18 @@ org.weblogo.executors.line = function(config, command, tick) {
     return that;
 };
 
-// turn executors are synchronous and so have no "toTick" method
-org.weblogo.executors.turn = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
-        var versor = geom.versor_from_parts(turtle.position, command.angle);
-        var newHeading = geom.quat_conj(versor, turtle.heading);
-        turtle.heading = newHeading; 
-    });
-};
-
 org.weblogo.executors.clearDrawing = function(config, command) {
     var colour = org.weblogo.colour.cssFromColour(config.backgroundColour);
     config.context.fillStyle = colour;
     config.context.fillRect(0, 0, config.width, config.height);
+    org.weblogo.storeFrame(config);
 };
 
 org.weblogo.executors.clearAll = function(config, command) {
     org.weblogo.executors.clearDrawing(config, command);
     // TODO: different modes for initial state
-    config.turtles = [org.weblogo.turtle()]
+    config.turtles = [org.weblogo.turtle()];
+    org.weblogo.updateTurtle(config, config.turtles[0]);
 };
 
 org.weblogo.executors.penUp = function(config, command) {
@@ -112,6 +158,7 @@ org.weblogo.executors.setHeading = function(config, command) {
         var versor = geom.versor_from_parts(turtle.position, command.angle);
         var newHeading = geom.quat_conj(versor, turtle.heading);
         turtle.heading = newHeading; 
+        updateTurtleF(config, turtle);
     });
 }
 
@@ -134,7 +181,8 @@ org.weblogo.executors.setPosition = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
         var oldv = turtle.position;
         turtle.position = geom.polar_to_3(command.theta,command.phi); 
-        turtle.heading = geom.axis_from_heading(oldv, turtle.position); 
+        turtle.heading = geom.axis_from_heading(oldv, turtle.position);
+        updateTurtleF(config, turtle);
     });
 };
 

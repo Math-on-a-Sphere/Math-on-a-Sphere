@@ -224,10 +224,14 @@ void main(void) {
     raster_point(r, within, shade);
     
     float bshade = (shade == 1.0 || shade == 0.0)? 0.0 : shade;
+    if (bshade == 0.0 && within == 0.0) {
+        discard;
+        }
     float bmap = 2.0 * (0.25 - (bshade - 0.5) * (bshade - 0.5)); 
     float fshade = (bshade > 0.0? bshade : within) / 2.0;
     
     vec4 pcol = vec4(1,0,0,1)*pr + vec4(0,1,0,1)*pg + vec4(0,0,1,1)*pb;
     
     gl_FragColor = colfill*fshade + colbord*bmap + pcol;
+    gl_FragColor[3] = 1.0;
     }

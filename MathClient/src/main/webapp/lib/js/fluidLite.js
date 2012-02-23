@@ -58,6 +58,15 @@ var fluid = fluid || fluid_1_4;
         logging = newLogging;
     };
     
+    fluid.applyHostFunction = function (obj, func, args) {
+        if (func.apply) {
+            func.apply(obj, args);
+        } else {
+            var applier = Function.prototype.bind.call(func, obj);
+            applier.apply(obj, args);
+        }
+    };
+    
     /** Log a message to a suitable environmental console. Logging must first
      * be enabled with a call to the fluid.setLogging(true) function.
      */
@@ -66,7 +75,7 @@ var fluid = fluid || fluid_1_4;
             var arg0 = fluid.renderTimestamp(new Date()) + ":  "; 
             var args = [arg0].concat(fluid.makeArray(arguments));
             var str = args.join("");
-            console.log.apply(null, args);
+            fluid.applyHostFunction(console, console.log, args);
         }
     };
     

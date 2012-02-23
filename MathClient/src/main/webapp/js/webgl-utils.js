@@ -209,11 +209,15 @@ org.weblogo.webgl.makeDraw = function(that) {
 org.weblogo.webgl.initGL = function(that) {
     try {
         var canvas = that.container[0];
+        that.canvas = canvas;
         var gl = org.weblogo.webgl.setupWebGL(canvas, that.events);
         
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        if (that.clearColor) {
+            that.gl.clearColor.apply(gl, that.clearColor);  
+        }
     } catch (e) {
     }
     if (!gl) {
@@ -303,12 +307,12 @@ org.weblogo.webgl.initWebGLComponent = function(container, options, userOptions,
         org.weblogo.webgl.initShaders(that, shaders);
         that.initBuffers(that);
         
-        onCreate(that);
         that.clear = org.weblogo.webgl.makeClear(that);
         that.draw = org.weblogo.webgl.makeDraw(that);
         if (that.animate) {
             org.weblogo.webgl.animator(that.draw);
         }
+        onCreate(that);
     });
     return that;
 };

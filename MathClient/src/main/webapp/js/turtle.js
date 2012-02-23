@@ -12,7 +12,8 @@ org.weblogo.turtleDefaults = {
     colour: "white",
     width: Math.PI/80,
     drawing: true,
-    speed: Math.PI - .001 // travel halfway round sphere in 1 second
+    speed: Math.PI - .001, // travel halfway round sphere in 1 second
+    turnSpeed: 4*Math.PI
 };
  
 org.weblogo.turtle = function(userOptions) {

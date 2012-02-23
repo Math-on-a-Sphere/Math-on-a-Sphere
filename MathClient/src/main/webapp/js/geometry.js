@@ -49,7 +49,7 @@ org.weblogo.geom.scale_4 = function(a, l) {
 
 org.weblogo.geom.norm_3 = function(a) {
     var norm = Math.sqrt(geom.dot_3(a, a));
-    return geom.scale_3(a, 1/norm);
+    return norm === 0? [0, 0, 1] : geom.scale_3(a, 1/norm);
 };
 
 org.weblogo.geom.dist_3 = function(a, b) {

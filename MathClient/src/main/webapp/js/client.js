@@ -265,22 +265,24 @@ org.weblogo.client = function(container, options) {
         connect.prop("disabled", false);
         disconnect.prop("disabled", true);
     }).prop("disabled", true);
-    org.weblogo.executors.clearAll(that.config);
-    
-    var hash = window.location.hash;
-    if (hash) {
-        that.execute(hash.substring(1));
-    }
     
     return that;
 }
 
 org.weblogo.init = function() {
     var client = org.weblogo.client("body");
+    org.weblogo.testTurtle.webGLStart(".flc-aux-canvas", client, function() {
+    org.weblogo.executors.clearAll(client.config);
+    
+        var hash = window.location.hash;
+        if (hash) {
+            client.execute(hash.substring(1));
+        }
+    });
     var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
+    client.canvas2d = preview.canvas2d;
     
    // org.weblogo.complex.webGLStart(".flc-aux-canvas", client);
-    org.weblogo.testTurtle.webGLStart(".flc-aux-canvas", client);
     
     client.drawListener = preview.updateTexture;
     var code = $("#code");

@@ -79,7 +79,6 @@
     org.weblogo.preview.userDraw = function(that) {
         var shaderProgram = that.shaderProgram;
         var gl = that.gl;
-        that.gl.clearColor(0.0, 0.0, 0.5, 1.0);
 
         var lighting = document.getElementById("lighting").checked;
         gl.uniform1i(shaderProgram.useLighting, lighting);
