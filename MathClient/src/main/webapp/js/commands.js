@@ -90,8 +90,7 @@ org.weblogo.executors.penDown = function(config, command) {
 
 org.weblogo.executors.setSpeed = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
-        var newSpeed = command.speed * Math.PI;
-        turtle.speed = newSpeed; 
+        turtle.speed = command.speed;
     });
 }
 
