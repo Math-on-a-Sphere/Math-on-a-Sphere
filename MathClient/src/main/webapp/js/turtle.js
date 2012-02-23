@@ -122,6 +122,14 @@ org.weblogo.colour.cssFromColour = function(colour) {
     return org.weblogo.colour.cssFromRGB(colour);
 }
 
+org.weblogo.importColours = function() {
+    var output = "";
+    $.each(org.weblogo.netLogoColourNames, function(pair){
+        output += pair + " = \"" + pair + "\"\n";
+    });
+    return output;
+}
+
 org.weblogo.netLogoColourNames = {
     black: 0, 
     gray: 5,
