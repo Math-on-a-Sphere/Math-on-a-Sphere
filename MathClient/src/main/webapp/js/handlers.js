@@ -8,6 +8,9 @@ org.weblogo.nodeHandlers.keyword = function(node, program, compiler) {
     return org.weblogo.keywordHandlers[node.command](node, program, compiler);
 }
 
+org.weblogo.nodeHandlers.node = function(node, program, compiler) {
+    return program += compiler(node.value, "") + ";\n";
+}
 org.weblogo.nodeHandlers.uminus = function(node, program, compiler) {
     return program += compiler(node.value, "-");
 }
@@ -19,11 +22,6 @@ org.weblogo.nodeHandlers.group_op = function(node, program, compiler) {
 }
 org.weblogo.nodeHandlers.op = function(node, program, compiler) {
     return program += compiler(node.args[1], compiler(node.args[0], "")+node.op);
-}
-org.weblogo.nodeHandlers.math = function(node, program, compiler) {
-    var method = node.args[0];
-    var arglist = compiler(node.args[1], "");
-    return program += method + "(" + arglist + ")";
 }
 org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     if (node.value.length == 0) { return program += "";}
@@ -66,7 +64,7 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
 
     if(!org.weblogo.turtle.commands[id]) {
         compiler.addQuote = true;
-        program += id+"("+compiler(node.args, "")+");\n";
+        program += id+"("+compiler(node.args, "")+")";
         compiler.addQuote = false;
         return program;
     }
@@ -120,10 +118,10 @@ org.weblogo.nodeHandlers.var_assign = function (node, program, compiler) {
 
     // handle quotation for a string literal assignment
     if(node.value.type === "string") {
-        return program += varName+" = \""+defaultVal+"\";\n";
+        return program += varName+" = \""+defaultVal+"\"";
     }
     else {
-        return program += varName+" = "+defaultVal+";\n";
+        return program += varName+" = "+defaultVal+"";
     }
 }
 org.weblogo.nodeHandlers.accessor = function(node, program, compiler) {
