@@ -26,8 +26,8 @@ frac                        (?:\.[0-9]+)
 "E"                                return 'E'
 "true"                             return 'TRUE'
 "false"                            return 'FALSE'
-("clearall()"|"clearall")          return 'CLEARALL'
-("ca()"|"ca")                      return 'CLEARALL'
+"clearall"(\(\))?[\b\s]            return 'CLEARALL'
+"ca"(\(\))?[\b\s]                  return 'CLEARALL'
 ("cleardrawing()"|"cleardrawing")  return 'CLEARDRAWING'
 ("cd()"|"cd")                      return 'CLEARDRAWING'
 ("penup()"|"penup")                return 'PENUP'
@@ -50,8 +50,8 @@ frac                        (?:\.[0-9]+)
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
-(({int}{frac}?)|({int}?{frac})){exp}?\b               return 'NUMBER';
-[a-zA-Z]+([a-zA-Z0-9._]*)?\b        return 'IDENTIFIER'
+(({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
+[a-zA-Z]+([a-zA-Z0-9_.]*)?\b                   return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
@@ -99,7 +99,13 @@ nodes
 
 node
 : assignment
+  {$$ = {};
+    $$['type'] = 'node';
+    $$['value'] = $1;}
 | func
+  {$$ = {};
+    $$['type'] = 'node';
+    $$['value'] = $1;}
 ;
 
 func

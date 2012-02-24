@@ -20,6 +20,7 @@ var preload = {
     function_parameter_call: "lib/wbl/function_parameter_call.wbl",
     function_parameters_call: "lib/wbl/function_parameters_call.wbl",
     icosahedron: "lib/wbl/icosahedron.wbl",
+    triangle_size: "lib/wbl/triangle_size.wbl",
     soccer_ball: "lib/wbl/soccer_ball.wbl"
 };
 
