@@ -70,6 +70,7 @@ org.weblogo.nodeHandlers.func = function(node, program, compiler) {
     }
     else {
         var arglist = compiler(node.args, "");
+        arglist = arglist.replace(",","");
         if (arglist === "") {
             arglist = "\"\"";
         }

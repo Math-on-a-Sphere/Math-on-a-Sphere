@@ -26,7 +26,7 @@ frac                        (?:\.[0-9]+)
 "E"                                return 'E'
 "true"                             return 'TRUE'
 "false"                            return 'FALSE'
-"clearall"(\(\))?[\b\s]            return 'CLEARALL'
+"clearall"(\(\))?[\b]              return 'CLEARALL'
 "ca"(\(\))?[\b\s]                  return 'CLEARALL'
 ("cleardrawing()"|"cleardrawing")  return 'CLEARDRAWING'
 ("cd()"|"cd")                      return 'CLEARDRAWING'
@@ -46,12 +46,11 @@ frac                        (?:\.[0-9]+)
 ("testcard()"|"testcard")          return 'TESTCARD'
 ("testheading()"|"testheading")    return 'TESTHEADING'
 ("set ")                           return 'SET'
-("color"|"pensize")                return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 (({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
-[a-zA-Z]+([a-zA-Z0-9_.]*)?\b                   return 'IDENTIFIER'
+[a-zA-Z]+([\w.]*)\b        return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
@@ -119,7 +118,7 @@ func
     $$['type'] = 'func';
     $$['id'] = $1;
     $$['args'] = $2;}
-| SET accessor e
+| SET value e
   {$$ = {}; 
     $$['type'] = 'set'; 
     $$['args'] = [$2, $3];}
@@ -235,14 +234,6 @@ re
   {$$ = $2;}
 ;
 
-
-
-accessor
-: ACCESSOR
-  {$$ = {};
-    $$['type'] = 'accessor';
-    $$['value'] = $1;}
-;
 
 
 assignment

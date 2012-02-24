@@ -115,7 +115,7 @@ function compilerdriver(inputStream) {
     compiler.depth = 0;
     compiler.scope = [];
     compiler.localscope = [];
-    var imported = org.weblogo.importColours();
+    var imported = org.weblogo.importReserve();
     org.weblogo.program.program = compiler(inputStream, imported);
     eval(org.weblogo.program.program);
 }
