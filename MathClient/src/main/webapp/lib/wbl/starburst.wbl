@@ -1,0 +1,33 @@
+// This demonstrates how to write and call a function
+// that has no parameters.
+setspeed (6*PI)
+starburst = function [] {
+    repeat 30 {
+    	set color yellow
+        forward 88
+        right 170
+        forward 30
+        right 80
+        set color red
+        forward 40
+    } 
+} 
+
+starburst2 = function [] {
+    repeat 30 {
+    	set color blue
+        forward 88
+        right 170
+        forward 30
+        right 80
+        set color green
+        forward 40
+    } 
+} 
+
+
+starburst()
+penup
+setposition [180,0]
+pendown
+starburst2()
