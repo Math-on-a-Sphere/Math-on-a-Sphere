@@ -153,6 +153,21 @@ org.weblogo.executors.repeat = function(config, command, tick) {
 
 
 
+org.weblogo.loadAutoSave = function() {
+    try {
+        return sessionStorage.getItem("org.weblogo.autoSave") || "";
+    }
+    catch (e) {
+        return "";
+    }
+};
+
+org.weblogo.saveAutoSave = function(text) {
+    try {
+        sessionStorage.setItem("org.weblogo.autoSave", text);
+    }
+    catch (e) {}
+};
 
 org.weblogo.client = function(container, options) {
     var that = {};
@@ -299,10 +314,20 @@ org.weblogo.init = function() {
     
     client.drawListener = preview.updateTexture;
     var code = $("#code");
-    var myCodeMirror = CodeMirror.fromTextArea(code[0], {
+    var myCodeMirror = client.codeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
         mode: "javascript"
-    }); 
+    });
+    
+    var saved = org.weblogo.loadAutoSave(); 
+    myCodeMirror.setValue(saved);
+    
+    setInterval(function() {
+        var history = myCodeMirror.historySize();
+        if (history.undo + history.redo > 0) {
+            org.weblogo.saveAutoSave(myCodeMirror.getValue());
+        };
+    }, 2000);
 
     $("#compile-button").click(function () {
         try {
@@ -344,8 +369,15 @@ org.weblogo.init = function() {
      $("#preload-commands option").click(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
-         if(selected === "noselection") { selected = "blank"; }
-         org.weblogo.preload.loadSelected(selected, myCodeMirror);
+         if (selected === "noselection") { selected = "blank"; }
+         if (selected === "my_design") {
+             var saved = org.weblogo.loadAutoSave();
+             myCodeMirror.setValue(saved);
+             myCoreMirror.clearHistory();
+         }
+         else {
+             org.weblogo.preload.loadSelected(selected, myCodeMirror);
+         }
     });
 };
 

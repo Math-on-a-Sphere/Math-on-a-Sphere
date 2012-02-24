@@ -7,12 +7,14 @@ var preload = org.weblogo.preload;
 org.weblogo.preload.loadSelected = function(selected, myCodeMirror) {
     $.get(preload[selected], function(data) {
         myCodeMirror.setValue(data);
+        myCodeMirror.clearHistory();
     }, "text");
 };
 
 
 var preload = {
     blank:  "lib/wbl/blank.wbl",
+    my_design: null,
     basic_drawing: "lib/wbl/basic_drawing.wbl",
     change_color: "lib/wbl/change_color.wbl",
     triple_right_triangle: "lib/wbl/triple_right_triangle.wbl",
@@ -20,7 +22,8 @@ var preload = {
     function_parameter_call: "lib/wbl/function_parameter_call.wbl",
     function_parameters_call: "lib/wbl/function_parameters_call.wbl",
     icosahedron: "lib/wbl/icosahedron.wbl",
-    soccer_ball: "lib/wbl/soccer_ball.wbl"
+    soccer_ball: "lib/wbl/soccer_ball.wbl",
+    fast_icosido: "lib/wbl/fast_icosido.wbl",
 };
 
 }());

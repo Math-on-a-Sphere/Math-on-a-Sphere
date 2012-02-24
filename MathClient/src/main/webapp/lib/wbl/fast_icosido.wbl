@@ -1,0 +1,16 @@
+setspeed 10
+
+x = 23.282
+a6 = 55.697
+a5 = 68.604
+
+pac = function [sides] {
+    repeat sides {
+        repeat 6 {forward x right a6}
+        forward x left a5
+    }
+    right (180 - a6) forward x right a6
+}
+
+pac (5) pac (4) pac (3) pac (3) pac (3) 
+pac (2) pac (3) pac (2) pac (2) pac (2)
