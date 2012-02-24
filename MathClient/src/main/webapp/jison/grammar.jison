@@ -22,13 +22,12 @@ frac                        (?:\.[0-9]+)
 "["                                return '['
 "]"                                return ']'
 ","                                return ','
-("Math.")[a-zA-Z]+([a-zA-Z0-9_]*)?\b return 'MATH'
 "PI"                               return 'PI'
 "E"                                return 'E'
 "true"                             return 'TRUE'
 "false"                            return 'FALSE'
-("clearall()"|"clearall")          return 'CLEARALL'
-("ca()"|"ca")                      return 'CLEARALL'
+"clearall"(\(\))?[\b]              return 'CLEARALL'
+"ca"(\(\))?[\b\s]                  return 'CLEARALL'
 ("cleardrawing()"|"cleardrawing")  return 'CLEARDRAWING'
 ("cd()"|"cd")                      return 'CLEARDRAWING'
 ("penup()"|"penup")                return 'PENUP'
@@ -47,12 +46,11 @@ frac                        (?:\.[0-9]+)
 ("testcard()"|"testcard")          return 'TESTCARD'
 ("testheading()"|"testheading")    return 'TESTHEADING'
 ("set ")                           return 'SET'
-("color"|"pensize")                return 'ACCESSOR'
 ("repeat"|"REPEAT")                return 'REPEAT'
 ("function")                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
-(({int}{frac}?)|({int}?{frac})){exp}?\b               return 'NUMBER';
-[a-zA-Z]+([a-zA-Z0-9_]*)?\b        return 'IDENTIFIER'
+(({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
+[a-zA-Z]+([\w.]*)\b        return 'IDENTIFIER'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
@@ -67,7 +65,6 @@ frac                        (?:\.[0-9]+)
 %left '^'
 %left UMINUS
 %right '='
-%right e
 %start program
 
 
@@ -101,16 +98,27 @@ nodes
 
 node
 : assignment
+  {$$ = {};
+    $$['type'] = 'node';
+    $$['value'] = $1;}
 | func
+  {$$ = {};
+    $$['type'] = 'node';
+    $$['value'] = $1;}
 ;
 
 func
-: re re
+: value rre
   {$$ = {};
     $$['type'] = 'func';
     $$['id'] = $1;
     $$['args'] = $2;}
-| SET accessor e
+| '(' func ')' rre
+  {$$ = {};
+    $$['type'] = 'func';
+    $$['id'] = $1;
+    $$['args'] = $2;}
+| SET value e
   {$$ = {}; 
     $$['type'] = 'set'; 
     $$['args'] = [$2, $3];}
@@ -183,6 +191,15 @@ e
    $$['value'] = $2;}
 ;
 
+rre
+: '(' re ')'
+  {$$ = {};
+    $$['type'] = 'group_op';
+    $$['value'] = $2;}
+| value
+;
+
+
 re
 : re '+' re
   {$$ = {};
@@ -212,18 +229,11 @@ re
   {$$ = {};
     $$['type'] = 'group_op';
     $$['value'] = $2;}
-| MATH
 | value
+| '(' func ')'
+  {$$ = $2;}
 ;
 
-
-
-accessor
-: ACCESSOR
-  {$$ = {};
-    $$['type'] = 'accessor';
-    $$['value'] = $1;}
-;
 
 
 assignment

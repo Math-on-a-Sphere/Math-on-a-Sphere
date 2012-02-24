@@ -123,11 +123,14 @@ org.weblogo.colour.cssFromColour = function(colour) {
     return org.weblogo.colour.cssFromRGB(colour);
 }
 
-org.weblogo.importColours = function() {
+org.weblogo.importReserve = function() {
     var output = "";
     $.each(org.weblogo.netLogoColourNames, function(pair){
-        output += pair + " = \"" + pair + "\"\n";
+        output += pair + " = \"" + pair + "\";\n";
     });
+    
+    output += "color = \"color\";\n";
+    output += "pensize = \"pensize\";\n";
     return output;
 }
 

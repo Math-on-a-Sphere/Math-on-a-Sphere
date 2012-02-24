@@ -1,3 +1,119 @@
-penta = function (size) {
+setspeed (6*PI)
 
+x = 23.12
+
+
+hex = function () { 
+  repeat 5 { forward x right 55.54 }
+  forward x
 }
+
+
+penta = function () {
+  repeat 4 { forward x right 68.46}
+  forward x
+}
+
+
+honeycomb = function () {
+  repeat 5 {  
+	penup
+  	right 180
+  	forward 35
+  	right 87.8
+	forward 25
+	right 124.4
+        pendown
+	
+	hex()
+	
+        penup
+	right 112
+	forward 25
+	left 88
+	forward 35
+        right 72
+  	
+  } 
+}
+
+flower = function() {
+	pendown
+	penta()
+	penup
+	right 68.8 forward 11.56
+	right 90 forward 17
+
+	honeycomb()
+}
+ 
+ 
+penup
+left 72 forward 16.34
+left 90 forward 11.56 
+right 180
+
+
+flower ()    
+
+setposition[0,0]
+setheading 254 forward 79.26
+left 90 forward 11.56
+right 180
+
+
+flower ()
+
+setposition[0,0]
+setheading 324 forward 79.26
+left 90 forward 11.56
+right 180
+
+
+flower ()  
+
+setposition[0,0]
+setheading 36 forward 79.26
+left 90 forward 11.56
+right 180
+
+
+flower ()  
+
+setposition[0,0]
+setheading 108 forward 79.26
+left 90 forward 11.56
+right 180
+
+
+flower ()  
+
+setposition[0,0]
+setheading 180 forward 79.26
+left 90 forward 11.56
+right 180
+
+
+pendown
+penta()
+penup
+right 68.8 forward 11.56
+right 90 forward 17
+
+honeycomb()
+
+setposition[0,0]
+penup
+forward 182 
+
+forward 16.34
+right 87 forward 11.56 
+right 72
+
+pendown
+penta()
+penup
+right 68.8 forward 11.56
+right 90 forward 17
+
+honeycomb()

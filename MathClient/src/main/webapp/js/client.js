@@ -115,7 +115,7 @@ function compilerdriver(inputStream) {
     compiler.depth = 0;
     compiler.scope = [];
     compiler.localscope = [];
-    var imported = org.weblogo.importColours();
+    var imported = org.weblogo.importReserve();
     org.weblogo.program.program = compiler(inputStream, imported);
     eval(org.weblogo.program.program);
 }
@@ -366,7 +366,7 @@ org.weblogo.init = function() {
 
     });
 
-     $("#preload-commands option").click(function () {
+     $("#preload-commands").change(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
          if (selected === "noselection") { selected = "blank"; }

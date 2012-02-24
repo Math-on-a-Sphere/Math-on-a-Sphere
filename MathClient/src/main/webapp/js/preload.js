@@ -24,6 +24,8 @@ var preload = {
     icosahedron: "lib/wbl/icosahedron.wbl",
     soccer_ball: "lib/wbl/soccer_ball.wbl",
     fast_icosido: "lib/wbl/fast_icosido.wbl",
+    triangle_size: "lib/wbl/triangle_size.wbl",
+    starburst: "lib/wbl/starburst.wbl"
 };
 
 }());
