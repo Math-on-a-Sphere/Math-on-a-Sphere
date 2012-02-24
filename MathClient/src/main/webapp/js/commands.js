@@ -11,7 +11,7 @@ org.weblogo.restoreFrame = function(config) {
 };
 
 org.weblogo.updateTurtle = function(config, turtle) {
-    org.weblogo.testTurtle.drawAt(config.testTurtleComponent, config.context, turtle.position, turtle.heading)
+    org.weblogo.testTurtle.drawAt(config, turtle.position, turtle.heading)
 };
 
 var updateTurtle = org.weblogo.updateTurtle;
@@ -35,8 +35,7 @@ org.weblogo.executors.line = function(config, command, tick) {
     fluid.each(config.turtles, function(turtle) {
         var line = that.lines[turtle.id] = {};
         line.distance = command.distance;
-        // TODO: put this global variable in config!
-        line.finalTick = tick + org.weblogo.speed * Math.abs(command.distance) / turtle.speed;
+        line.finalTick = tick + 1000 * Math.abs(command.distance) / (turtle.speed * config.masterSpeed);
         line.startPos = turtle.position;
         line.lastDistance = 0;
     });
@@ -85,7 +84,7 @@ org.weblogo.executors.turn = function(config, command, tick) {
     fluid.each(config.turtles, function(turtle) {
         var turn = that.turns[turtle.id] = {};
         turn.angle = command.angle;
-        turn.finalTick = tick + org.weblogo.speed * Math.abs(command.angle) / turtle.turnSpeed;
+        turn.finalTick = tick + 1000 * Math.abs(command.angle) / (turtle.turnSpeed * config.masterSpeed);
         turn.startPos = turtle.heading;
         turn.lastAngle = 0;
     });
@@ -135,20 +134,25 @@ org.weblogo.executors.penDown = function(config, command) {
 };
 
 org.weblogo.executors.setSpeed = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
-        turtle.speed = command.speed;
-    });
+    config.masterSpeed = command.speed;
+//    fluid.each(config.turtles, function(turtle) {
+//        turtle.speed = command.speed;
+//    });
 }
 
 org.weblogo.executors.getSpeed = function(config, command) {
-    var output;
-    fluid.each(config.turtles, function(turtle) {
-        output = {
-            type: "info",
-            message: turtle.speed
-        };
-    });
-    return output;
+  return {
+     type: "info",
+     message: config.masterSpeed
+  };
+//    var output;
+//    fluid.each(config.turtles, function(turtle) {
+//        output = {
+//            type: "info",
+//            message: turtle.speed
+//        };
+//    });
+//    return output;
 };
 
 org.weblogo.executors.setHeading = function(config, command) {

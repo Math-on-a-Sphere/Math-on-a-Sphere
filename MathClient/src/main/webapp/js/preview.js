@@ -108,6 +108,7 @@
  
     org.weblogo.preview.componentInit = function(that) {
        that.updateTexture = function() {
+           console.log("updateTexture");
            canvasToTexture(that.gl, that.canvas2d);
        };
        that.updateTexture();
@@ -120,14 +121,15 @@
        $(document).mousemove(handleMouseMove);
     };
 
-    org.weblogo.preview.webGLStart = function(canvas3d, canvas2d, client) {
+    org.weblogo.preview.webGLStart = function(canvas3d, canvas2d, client, callback) {
       
         var that = org.weblogo.webgl.initWebGLComponent(canvas3d, 
             org.weblogo.preview.glConfig, {
                 userDraw: org.weblogo.preview.userDraw,
                 initBuffers: org.weblogo.webgl.makeSquareVertexBuffer,
                 canvas2d: $(canvas2d)[0],
-                events: client.events
+                events: client.events,
+                startListener: callback // TODO: get rid of this rubbish
             }, org.weblogo.preview.componentInit);
         return that;
     }

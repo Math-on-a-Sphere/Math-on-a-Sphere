@@ -190,19 +190,22 @@ org.weblogo.geom.measure_polygon = function(polygon) {
         var i1 = (i + 1) %c;
         polygon.lines[i][3] = polygon.lines[i][3] || 0;
         polygon.conj[i] = geom.line_to_conj(polygon.points[i], polygon.lines[i], polygon.points[i1], polygon.lines[i1]);
-        var mind = Number.MAX_VALUE, maxd = Number.MIN_VALUE;
-        for (var j = 0; j < c; ++ j) {
-            var dot = geom.dot_3(polygon.lines[i], polygon.points[j]);
-            mind = Math.min(dot, mind);
-            maxd = Math.max(dot, maxd);
-        }
-        polygon.conj[i].mind = mind;
-        polygon.conj[i].maxd = maxd;
-        //console.log("Upped ", line, " to ", geom.point_by_angle(line, polygon.conj[i].conj, polygon.conj[i].angle));
     }
     for (var i = 0; i < c; ++ i) {
         var i1 = (i + 1) % c;
-        polygon.conj[i1].bendstart = polygon.conj[i].bend; // client requires this
+        polygon.conj[i1].bendstart = polygon.conj[i].bend;
+    }
+    for (var i = 0; i < c; ++ i) {
+        var mind = Number.MAX_VALUE, maxd = Number.MIN_VALUE;
+        for (var j = 0; j < c; ++ j) {
+            var dot = geom.dot_3(polygon.lines[i], polygon.points[j]);
+            var bendstart = polygon.conj[j].bendstart;
+            var slop = 2.5 * polygon.lineWidth / Math.sin(bendstart / 2);
+            mind = Math.min(dot - slop, mind);
+            maxd = Math.max(dot + slop, maxd);
+        }
+        polygon.conj[i].mind = mind;
+        polygon.conj[i].maxd = maxd;
     }
 };
 
@@ -296,7 +299,9 @@ org.weblogo.testTurtle.glConfig = {
     animate: false
 };
 
-org.weblogo.testTurtle.drawAt = function(component, canvas2d, position, heading) {
+org.weblogo.testTurtle.drawAt = function(config, position, heading) {
+    var component = config.testTurtleComponent;
+    var canvas2d = config.context; 
     var turtleStart = [0, -1, 0];
     var positionAxis = geom.axis_from_heading(turtleStart, position);
     var positionAngle = Math.acos(geom.dot_3(turtleStart, position));
@@ -394,7 +399,6 @@ org.weblogo.testTurtle.componentInit = function(that) {
     var gl = that.gl;
     that.turtle = org.weblogo.geom.make_turtle();
     that.turtlelive = $.extend(true, {}, that.turtle);
-    that.startListener();
 };
 
 org.weblogo.testTurtle.webGLStart = function(canvas, client, callback) {

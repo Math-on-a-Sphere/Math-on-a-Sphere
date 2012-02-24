@@ -122,7 +122,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
                     that.intervalID = window.setInterval(that.tick, tickInterval);
                 }
                 else {
-                    client.draw(that.execution);
+                    client.draw();
                     that.stop();
                 }
             }

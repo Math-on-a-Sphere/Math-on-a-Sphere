@@ -3,8 +3,6 @@
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
 
-org.weblogo.speed = 1000; // one tick per second
-
 org.weblogo.colshift = [
    [0,    -1/s2, 1/s3],
    [-1/s2, 1/2,  1/s3],
@@ -67,6 +65,7 @@ org.weblogo.makeConfig = function(element, options) {
         width: element.width,
         height: element.height,
         backgroundColour: "black",
+        masterSpeed: 1.0,
         turtles: []
     };
     $.extend(true, that, org.weblogo.defaultConfigOptions, options);
@@ -137,11 +136,11 @@ org.weblogo.programToCommands = function(program) {
     var parsetree = grammar.parse(program);
     var linear = compiler(parsetree);
     return linear;
-} 
+};
 
 org.weblogo.turtle.commands["repeat"] = function() {
     return {type: "repeat"}
-}
+};
 org.weblogo.turtle.commands["repeat"].args = ["number", "string"];
 
 org.weblogo.executors.repeat = function(config, command, tick) {
@@ -150,7 +149,7 @@ org.weblogo.executors.repeat = function(config, command, tick) {
     for(var i = 0; i < repeat; ++i) {
         org.weblogo.blockExecutor(commands);
     }
-}
+};
 
 
 
@@ -272,15 +271,23 @@ org.weblogo.client = function(container, options) {
 
 org.weblogo.init = function() {
     var client = org.weblogo.client("body");
-    org.weblogo.testTurtle.webGLStart(".flc-aux-canvas", client, function() {
-    org.weblogo.executors.clearAll(client.config);
-    
+    var countbacks = 0;
+    var startfunc = function() {
+        org.weblogo.executors.clearAll(client.config);
+        client.draw();
         var hash = window.location.hash;
         if (hash) {
             client.execute(hash.substring(1));
         }
-    });
-    var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client);
+    };
+    var backfunc = function() {
+        ++countbacks;
+        if (countbacks == 2) {
+            startfunc();
+        }
+    }
+    org.weblogo.testTurtle.webGLStart(".flc-aux-canvas", client, backfunc);
+    var preview = org.weblogo.preview.webGLStart("#webgl-canvas", ".flc-canvas", client, backfunc);
     client.canvas2d = preview.canvas2d;
     
    // org.weblogo.complex.webGLStart(".flc-aux-canvas", client);
@@ -297,11 +304,16 @@ org.weblogo.init = function() {
     org.weblogo.preload.loadSelected(selected, myCodeMirror);    
 
     $("#compile-button").click(function () {
-        var code = "ca\n" + myCodeMirror.getValue();
-        var parsetree = grammar.parse(code);
-        compilerdriver(parsetree);
-        var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
-        client.execute(executor);
+        try {
+            var code = "ca\n" + myCodeMirror.getValue();
+            var parsetree = grammar.parse(code);
+            compilerdriver(parsetree);
+            var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
+            client.execute(executor);
+        }
+        catch (e) {
+            client.events.onError.fire({message: e});
+        }
     });
         
     var commands = client.locate("commands");

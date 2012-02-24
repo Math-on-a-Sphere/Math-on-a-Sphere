@@ -216,7 +216,7 @@ org.weblogo.webgl.initGL = function(that) {
         gl.viewportHeight = canvas.height;
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         if (that.clearColor) {
-            that.gl.clearColor.apply(gl, that.clearColor);  
+            gl.clearColor.apply(gl, that.clearColor);  
         }
     } catch (e) {
     }
@@ -313,6 +313,9 @@ org.weblogo.webgl.initWebGLComponent = function(container, options, userOptions,
             org.weblogo.webgl.animator(that.draw);
         }
         onCreate(that);
+        if (that.startListener) {
+            that.startListener();
+        }
     });
     return that;
 };
