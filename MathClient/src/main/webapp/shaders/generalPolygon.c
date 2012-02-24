@@ -149,6 +149,7 @@ void raster_point (vec3 point, out float within, out float shade) {
     float slop = 0.02;//lineWidth;
     shade = 1.0;
     float minPos = 1e9, maxNeg = -1e9;
+    float dead = 1.0;
     for (int i = 0; i < MAX_LINES; ++ i) {
         // we can't write a loop with a non-constant
         // index - http://www.khronos.org/webgl/public-mailing-list/archives/1012/msg00091.html
@@ -165,16 +166,13 @@ void raster_point (vec3 point, out float within, out float shade) {
         float bende = PI - polyconj.bend/2.0;
         
         float ndot = dot(line3, point) + line4[3];
+        dead *= step(polyconj.mind, ndot);
+        dead *= step(ndot, polyconj.maxd);
+        if (dead == 0.0) {
+            break;
+        }
         
-        float clamped = clamp(ndot, polyconj.mind - slop, polyconj.maxd + slop);
-        // early bounding box test, as well as necessary for coherence
-        if (clamped != ndot) {
-            within = 0.0;
-            shade = 1.0;
-            return;
-            }
-        
-        float slope = clamp(-ndot + slop, 0.0, 2.0 * slop) / (2.0 * slop);
+        float slope = clamp((-ndot + slop)/(2.0 * slop), 0.0, 1.0);
         
         float startslop = cotSlop(slope, slop, bends);
         float endslop = cotSlop(slope, slop, bende);
@@ -194,7 +192,8 @@ void raster_point (vec3 point, out float within, out float shade) {
             }
     }
     float fStr = -(1.0/minPos + 1.0/maxNeg);
-    within = 1.0 - step(fStr, 0.0);
+    within = dead * (1.0 - step(fStr, 0.0));
+    shade = shade * dead;
 }
 
 void simple_raster_point (vec3 point, out float within, out float shade) {
@@ -227,11 +226,13 @@ void main(void) {
     if (bshade == 0.0 && within == 0.0) {
         discard;
         }
-    float bmap = 2.0 * (0.25 - (bshade - 0.5) * (bshade - 0.5)); 
-    float fshade = (bshade > 0.0? bshade : within) / 2.0;
+    else {
+        float bmap = 2.0 * (0.25 - (bshade - 0.5) * (bshade - 0.5)); 
+        float fshade = (bshade > 0.0? bshade : within) / 2.0;
     
-    vec4 pcol = vec4(1,0,0,1)*pr + vec4(0,1,0,1)*pg + vec4(0,0,1,1)*pb;
+        vec4 pcol = vec4(1,0,0,1)*pr + vec4(0,1,0,1)*pg + vec4(0,0,1,1)*pb;
     
-    gl_FragColor = colfill*fshade + colbord*bmap + pcol;
-    gl_FragColor[3] = 1.0;
+        gl_FragColor = colfill*fshade + colbord*bmap + pcol;
+        gl_FragColor[3] = fshade * 4.0;
+        }
     }
