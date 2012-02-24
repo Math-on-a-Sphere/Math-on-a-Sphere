@@ -172,13 +172,6 @@ void raster_point (vec3 point, out float within, out float shade) {
             break;
         }
         
- //       if (ndot > polyconj.maxd + slop) {
- //           maxNeg = -1e-5;
- //           within = 0.0;
- //           shade = 1.0;
- //           return;
- //       }
-        
         float slope = clamp((-ndot + slop)/(2.0 * slop), 0.0, 1.0);
         
         float startslop = cotSlop(slope, slop, bends);
@@ -198,7 +191,6 @@ void raster_point (vec3 point, out float within, out float shade) {
             update_bounds(ndot, minPos, maxNeg);
             }
     }
-    //pr = 1.0 - dead;
     float fStr = -(1.0/minPos + 1.0/maxNeg);
     within = dead * (1.0 - step(fStr, 0.0));
     shade = shade * dead;

@@ -108,7 +108,6 @@
  
     org.weblogo.preview.componentInit = function(that) {
        that.updateTexture = function() {
-           console.log("updateTexture");
            canvasToTexture(that.gl, that.canvas2d);
        };
        that.updateTexture();

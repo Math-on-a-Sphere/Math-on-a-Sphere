@@ -5,6 +5,11 @@
     user-select: none;
 }
 
+.sphere-canvas {
+    cursor: hand; cursor: pointer;
+    border: none;
+}
+
 canvas { 
     border: 1px solid black; 
     background: black;

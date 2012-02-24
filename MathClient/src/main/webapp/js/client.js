@@ -160,6 +160,11 @@ org.weblogo.client = function(container, options) {
     that.receiveBlob = function(blob) {
         that.locate("frameSize").text(blob.size);
     };
+    that.initFrame = function() {
+        that.frameNo = 0;
+        that.initTime = Date.now();
+        that.lastFrame = that.initTime;
+    };
     that.events = {
         onInfo: fluid.makeEventFirer(),
         onError: fluid.makeEventFirer(),
@@ -179,14 +184,13 @@ org.weblogo.client = function(container, options) {
     
     that.commandStart = function() {
         that.busy = true;
-        that.frameNo = 0;
-        that.initTime = Date.now();
-        that.lastFrame = that.initTime;
-        fluid.log("commandStart " + Date.now());
+        that.initFrame();
+        that.locate("stop").prop("disabled", false);
     };
     
     that.commandDone = function() {
         that.busy = false;
+        that.locate("stop").prop("disabled", true);
         window.setTimeout(function() {
             fluid.log("Idle at " + Date.now() + " lag " + (Date.now() - that.initTime) + "ms");
         });
@@ -249,10 +253,11 @@ org.weblogo.client = function(container, options) {
             that.terminal = terminal;
         }
     });
-      
+    
+    that.initFrame();
 
     that.locate("start").click(that.start);
-    that.locate("stop").click(that.executor.stop);
+    that.locate("stop").click(that.executor.stop).prop("disabled", true);
     var connect = that.locate("connect");
     var disconnect = that.locate("disconnect");
     connect.click(function() {
@@ -297,11 +302,7 @@ org.weblogo.init = function() {
     var myCodeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
         mode: "javascript"
-    });
-    var menu = $("#preload-commands")[0];
-    var selected = menu.options[menu.selectedIndex].value;
-    if(selected === "noselection") { selected = "blank"; }
-    org.weblogo.preload.loadSelected(selected, myCodeMirror);    
+    }); 
 
     $("#compile-button").click(function () {
         try {
@@ -340,7 +341,7 @@ org.weblogo.init = function() {
 
     });
 
-     $("#preload-commands").change(function () {
+     $("#preload-commands option").click(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
          if(selected === "noselection") { selected = "blank"; }
