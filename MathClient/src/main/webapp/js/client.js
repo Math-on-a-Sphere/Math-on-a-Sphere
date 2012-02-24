@@ -341,7 +341,7 @@ org.weblogo.init = function() {
 
     });
 
-     $("#preload-commands option").click(function () {
+     $("#preload-commands").change(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
          if(selected === "noselection") { selected = "blank"; }
