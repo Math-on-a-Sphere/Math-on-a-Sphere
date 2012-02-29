@@ -155,7 +155,7 @@ org.weblogo.executors.repeat = function(config, command, tick) {
 
 org.weblogo.loadAutoSave = function() {
     try {
-        return sessionStorage.getItem("org.weblogo.autoSave") || "";
+        return localStorage.getItem("org.weblogo.autoSave") || "";
     }
     catch (e) {
         return "";
@@ -164,7 +164,7 @@ org.weblogo.loadAutoSave = function() {
 
 org.weblogo.saveAutoSave = function(text) {
     try {
-        sessionStorage.setItem("org.weblogo.autoSave", text);
+        localStorage.setItem("org.weblogo.autoSave", text);
     }
     catch (e) {}
 };
