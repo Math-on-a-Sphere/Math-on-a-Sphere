@@ -132,11 +132,11 @@ function compiler(inputStream, program) {
     return program;
 }
 
-org.weblogo.programToCommands = function(program) {
-    var parsetree = grammar.parse(program);
-    var linear = compiler(parsetree);
-    return linear;
-};
+//org.weblogo.programToCommands = function(program) {
+//    var parsetree = grammar.parse(program);
+//    var linear = compiler(parsetree);
+//    return linear;
+//};
 
 org.weblogo.turtle.commands["repeat"] = function() {
     return {type: "repeat"}
@@ -254,6 +254,7 @@ org.weblogo.client = function(container, options) {
     
     
     that.locate("commands").terminal(function(command, terminal) {
+        command += "\n";
         var parsetree = grammar.parse(command);
         compilerdriver(parsetree);
         var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);

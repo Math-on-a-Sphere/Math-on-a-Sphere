@@ -39,6 +39,10 @@ org.weblogo.nodeHandlers.repeat = function(node, program, compiler) {
     program += compiler(node.args[1], "");
     return program;
 }
+org.weblogo.nodeHandlers.ifstatement = function(node, program, compiler) {
+    program += "if ("+compiler(node.condition, "")+") "+compiler(node.block, "");
+    return program;
+}
 org.weblogo.nodeHandlers.block = function(node, program, compiler) {
     program += "{\n";
     for(var j = 0; j < node.value.length; ++j){
@@ -148,6 +152,12 @@ org.weblogo.nodeHandlers.string = function(node, program, compiler) {
     return program += node.value;
 }
 org.weblogo.nodeHandlers.number = function(node, program, compiler) {
+    if(compiler.escapeQuote) {
+        return program += "\"+"+node.value+"+\"";
+    }
+    return program += node.value;
+}
+org.weblogo.nodeHandlers.boolean = function(node, program, compiler) {
     if(compiler.escapeQuote) {
         return program += "\"+"+node.value+"+\"";
     }

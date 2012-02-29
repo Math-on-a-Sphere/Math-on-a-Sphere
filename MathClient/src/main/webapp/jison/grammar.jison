@@ -9,48 +9,50 @@ frac                        (?:\.[0-9]+)
 %%
 \s+                                /* skip whitespace */
 \/\/[^\n]*                         /* skip comment */
-\#[^\n]*                           /* skip comment */
-"*"                                return '*'
-"/"                                return '/'
-"-"                                return '-'
-"+"                                return '+'
-"^"                                return '^'
-"("                                return '('
-")"                                return ')'
-"{"                                return '{'
-"}"                                return '}'
-"["                                return '['
-"]"                                return ']'
-","                                return ','
-"PI"                               return 'PI'
-"E"                                return 'E'
-"true"                             return 'TRUE'
-"false"                            return 'FALSE'
-"clearall"(\(\))?[\b]              return 'CLEARALL'
-"ca"(\(\))?[\b\s]                  return 'CLEARALL'
-("cleardrawing()"|"cleardrawing")  return 'CLEARDRAWING'
-("cd()"|"cd")                      return 'CLEARDRAWING'
-("penup()"|"penup")                return 'PENUP'
-("pu"()|"pu")                      return 'PENUP'
-("pendown()"|"pendown")            return 'PENDOWN'
-("pd()"|"pd")                      return 'PENDOWN'
-("getheading()"|"getheading")      return 'GETHEADING'
-("gethead()"|"gethead")            return 'GETHEADING'
-("gh()"|"gh")                      return 'GETHEADING'
-("getposition()"|"getposition")    return 'GETPOSITION'
-("getpos()"|"getpos")              return 'GETPOSITION'
-("gp()"|"gp")                      return 'GETPOSITION'
-("getspeed()"|"getspeed")          return 'GETSPEED'
-("help()"|"help")                  return 'HELP'
-("demo()"|"demo")                  return 'DEMO'
-("testcard()"|"testcard")          return 'TESTCARD'
-("testheading()"|"testheading")    return 'TESTHEADING'
-("set ")                           return 'SET'
-("repeat"|"REPEAT")                return 'REPEAT'
-("function")                       return 'FUNCTION'
+\#[^\n]*                              /* skip comment */
+"*"                                       return '*'
+"/"                                       return '/'
+"-"                                       return '-'
+"+"                                       return '+'
+"^"                                       return '^'
+"("                                       return '('
+")"                                       return ')'
+"{"                                       return '{'
+"}"                                       return '}'
+"["                                       return '['
+"]"                                       return ']'
+","                                       return ','
+"PI"                                      return 'PI'
+"E"                                       return 'E'
+"true"                                    return 'TRUE'
+"false"                                   return 'FALSE'
+("clearall"|"clearAll"|"ca")(\(\))?\b     return 'CLEARALL'
+("cleardrawing"|"clearDrawing"|"cd")(\(\))?\b  return 'CLEARDRAWING'
+("penup()"|"penup")\b                return 'PENUP'
+("pu"()|"pu")\b                      return 'PENUP'
+("pendown()"|"pendown")\b            return 'PENDOWN'
+("pd()"|"pd")\b                      return 'PENDOWN'
+("getheading()"|"getheading")\b      return 'GETHEADING'
+("gethead()"|"gethead")\b            return 'GETHEADING'
+("gh()"|"gh")\b                      return 'GETHEADING'
+("getposition()"|"getposition")\b    return 'GETPOSITION'
+("getpos()"|"getpos")\b              return 'GETPOSITION'
+("gp()"|"gp")\b                      return 'GETPOSITION'
+("getspeed()"|"getspeed")\b          return 'GETSPEED'
+("help()"|"help")\b                  return 'HELP'
+("demo()"|"demo")\b                  return 'DEMO'
+("testcard()"|"testcard")\b          return 'TESTCARD'
+("testheading()"|"testheading")\b    return 'TESTHEADING'
+("set ")\b                           return 'SET'
+("if"|"IF")                          return 'IF'
+("repeat"|"REPEAT")\b                return 'REPEAT'
+("function")\b                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
 (({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
 [a-zA-Z]+([\w.]*)\b        return 'IDENTIFIER'
+"=="                               return '=='
+"<"                                return '<'
+">"                                return '>'
 "="                                return '='
 <<EOF>>                            return 'EOF'
 .                                  return 'INVALID'
@@ -65,6 +67,8 @@ frac                        (?:\.[0-9]+)
 %left '^'
 %left UMINUS
 %right '='
+%right '=='
+%right '<' '>'
 %start program
 
 
@@ -122,6 +126,11 @@ func
   {$$ = {}; 
     $$['type'] = 'set'; 
     $$['args'] = [$2, $3];}
+| IF e block
+  {$$ = {};
+    $$['type'] = 'ifstatement';
+    $$['condition'] = $2;
+    $$['block'] = $3;}
 | REPEAT e block
   {$$ = {}; 
     $$['type'] = 'repeat'; 
@@ -221,9 +230,20 @@ re
    $$['type'] = 'op';
    $$['op'] = $2;
    $$['args'] = [$1,$3];}
-| re '^' re
+| re '==' re
   {$$ = {};
-   $$['type'] = 'power';
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '<' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
+   $$['args'] = [$1,$3];}
+| re '>' re
+  {$$ = {};
+   $$['type'] = 'op';
+   $$['op'] = $2;
    $$['args'] = [$1,$3];}
 | '(' re ')'
   {$$ = {};
