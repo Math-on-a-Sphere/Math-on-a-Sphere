@@ -98,11 +98,10 @@ org.weblogo.nodeHandlers.fun_assign = function(node, program, compiler) {
     }
     
 
-    //compiler.parent = "function";
     var block = compiler(node.block, "");
 
     compiler.localscope = [];
-    compiler.localscope = compiler.scope.pop(localcount);
+    compiler.localscope = [compiler.scope.pop(localcount)];
 
 
     program += "var "+node.id+" = function("+params+")";
@@ -134,12 +133,6 @@ org.weblogo.nodeHandlers.accessor = function(node, program, compiler) {
     return program;
 }
 org.weblogo.nodeHandlers.identifier = function(node, program, compiler) {    
-//    if(!org.weblogo.turtle.commands[node.value]) {
-//        program += node.value;
-//    }
-//    else {
-
-//    }
     if(compiler.escapeQuote) {
         return program += "\"+"+node.value+"+\"";
     }

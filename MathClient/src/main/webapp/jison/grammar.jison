@@ -47,7 +47,7 @@ frac                        (?:\.[0-9]+)
 ("if"|"IF")                          return 'IF'
 ("repeat"|"REPEAT")\b                return 'REPEAT'
 ("function")\b                       return 'FUNCTION'
-\"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING_LIT';
+\"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
 (({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
 [a-zA-Z]+([\w.]*)\b        return 'IDENTIFIER'
 "=="                               return '=='
@@ -316,7 +316,7 @@ identifier
 ;
 
 string
-: STRING_LIT
+: STRING
   {$$ = yytext;}
 ;
 

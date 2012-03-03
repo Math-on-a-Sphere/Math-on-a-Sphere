@@ -26,7 +26,8 @@ var preload = {
     fast_icosido: "lib/wbl/fast_icosido.wbl",
     triangle_size: "lib/wbl/triangle_size.wbl",
     starburst: "lib/wbl/starburst.wbl",
-    dragon_curve: "lib/wbl/dragon_curve.wbl"
+    dragon_curve: "lib/wbl/dragon_curve.wbl",
+    michelles: "lib/wbl/michelles_triangles.wbl"
 };
 
 }());
