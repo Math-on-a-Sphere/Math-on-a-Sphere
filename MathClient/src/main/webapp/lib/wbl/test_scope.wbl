@@ -1,0 +1,7 @@
+func1 = function () {
+ forward x
+}
+
+x = 10
+
+func1()

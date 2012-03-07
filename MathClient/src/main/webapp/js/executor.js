@@ -194,7 +194,7 @@ org.weblogo.blockParser = function(commandString) {
 
 /** Parser for the "stub language" which operates simple commands in a flat list **/
 org.weblogo.stubParser = function(commandString) {
-    var tokens = commandString.match(/\S+|"[^"]+"/g);
+    var tokens = commandString.match(/"[^"]+"|\S+/g);
     var command = tokens[0];
     var cs = org.weblogo.turtle.commands;
     var record = cs[command];

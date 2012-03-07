@@ -206,6 +206,18 @@ org.weblogo.executors.getPosition = function(config, command) {
     return output;
 };
 
+org.weblogo.executors.print = function(config, command) {
+    var output;
+    fluid.each(config.turtles, function(turtle) {
+        output = {
+            type: "info",
+            message: command.message
+        };
+    });
+    return output;
+};
+
+
 org.weblogo.executors.help = function(config, command) {
     var commandlist = "commands: ";
 
@@ -343,6 +355,14 @@ commands.getposition = function () {
     }
 };
 commands.getposition.args = [];
+
+commands.print = function (msg) {
+    return {
+        type: "print",
+        message: msg
+    }
+};
+commands.print.args = ["string"];
 
 commands.help = function () {
     return {

@@ -115,8 +115,8 @@ function compilerdriver(inputStream) {
     compiler.depth = 0;
     compiler.scope = [];
     compiler.localscope = [];
-    var imported = org.weblogo.importReserve();
-    org.weblogo.program.program = compiler(inputStream, imported);
+    org.weblogo.program.program = org.weblogo.importReserve();
+    org.weblogo.program.program += compiler(inputStream, "");
     eval(org.weblogo.program.program);
 }
 
@@ -126,7 +126,7 @@ function compiler(inputStream, program) {
     }
     for (var i = 0; i < inputStream.length; ++i) {
         var node = inputStream[i];
-        var handler = org.weblogo.nodeHandlers[node.type];
+        var handler = org.weblogo.nodeHandlers[node.handler];
         program = handler(node, program, compiler);
     }
     return program;

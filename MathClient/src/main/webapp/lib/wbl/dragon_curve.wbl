@@ -1,0 +1,25 @@
+MAX = 10
+x = function [r] {
+  if (r < MAX) {
+    x(r+1)
+    right 89
+    y(r+1)
+    forward 2
+    right 89
+  }
+}
+
+y = function [r] {
+  if (r < MAX) {
+    left 89
+    forward 2
+    x(r+1)
+    left 89
+    y(r+1)
+  }
+}
+setspeed (3*PI)
+set color green
+set pensize 0.5
+forward 2
+x 0

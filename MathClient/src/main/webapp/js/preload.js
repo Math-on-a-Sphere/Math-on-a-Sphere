@@ -15,6 +15,7 @@ org.weblogo.preload.loadSelected = function(selected, myCodeMirror) {
 var preload = {
     blank:  "lib/wbl/blank.wbl",
     my_design: null,
+    testscope: "lib/wbl/test_scope.wbl",
     basic_drawing: "lib/wbl/basic_drawing.wbl",
     change_color: "lib/wbl/change_color.wbl",
     triple_right_triangle: "lib/wbl/triple_right_triangle.wbl",
@@ -27,7 +28,7 @@ var preload = {
     triangle_size: "lib/wbl/triangle_size.wbl",
     starburst: "lib/wbl/starburst.wbl",
     dragon_curve: "lib/wbl/dragon_curve.wbl",
-    michelles: "lib/wbl/michelles_triangles.wbl"
+    michelles: "lib/wbl/michelles_triangles.wbl",
 };
 
 }());

@@ -2,7 +2,10 @@
 // This causes the turtle to move forward 90 steps, 
 // turn right 90 degrees, repeated three times.
 
-repeat 3 {
-  forward 90
-  right 90
+repeat 4 {
+  repeat 3 {
+    forward 90
+    right 90  
+  }
+  left 90
 }

@@ -2,3 +2,7 @@
 set color "blue"
 set pensize 20
 forward 360
+set color green
+right 90
+set pensize .5
+forward 360
