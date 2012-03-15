@@ -63,7 +63,7 @@ org.weblogo.blockExecutor = function(commands) {
             var finished = !execution || execution.toTick(newTick);
             if (finished) {
                 execution = null;
-                hopalong();
+                this.messages = hopalong();
                 return index === commands.length && !execution;
             }
         };

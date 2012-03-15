@@ -24,11 +24,12 @@ var preload = {
     function_parameters_call: "lib/wbl/function_parameters_call.wbl",
     icosahedron: "lib/wbl/icosahedron.wbl",
     soccer_ball: "lib/wbl/soccer_ball.wbl",
+    fast_soccer: "lib/wbl/fast_icosido.wbl",
     fast_icosido: "lib/wbl/fast_icosido.wbl",
     triangle_size: "lib/wbl/triangle_size.wbl",
     starburst: "lib/wbl/starburst.wbl",
     dragon_curve: "lib/wbl/dragon_curve.wbl",
-    michelles: "lib/wbl/michelles_triangles.wbl",
+    michelles: "lib/wbl/dragonfly.wbl",
 };
 
 }());

@@ -57,6 +57,11 @@ org.weblogo.nodeHandlers.if_stmt = function(node, program, compiler) {
     node.value= "if ("+compiler(node.condition, "").value+") "+compiler(node.block, "");
     return node;
 }
+org.weblogo.nodeHandlers.ifelse_stmt = function(node, program, compiler) {
+    node.value= "if ("+compiler(node.condition, "").value+") "+compiler(node.block[0], "");
+    node.value += "else "+ compiler(node.block[1], "");
+    return node;
+}
 org.weblogo.nodeHandlers.block = function(node, program, compiler) {
     program += "{\n";
     for(var j = 0; j < node.value.length; ++j){

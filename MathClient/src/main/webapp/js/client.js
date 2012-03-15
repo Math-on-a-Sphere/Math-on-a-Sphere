@@ -332,7 +332,7 @@ org.weblogo.init = function() {
 
     $("#compile-button").click(function () {
         try {
-            var code = "ca\n" + myCodeMirror.getValue();
+            var code = "ca()\n" + myCodeMirror.getValue();
             var parsetree = grammar.parse(code);
             compilerdriver(parsetree);
             var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);

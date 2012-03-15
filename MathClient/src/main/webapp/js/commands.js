@@ -155,6 +155,18 @@ org.weblogo.executors.getSpeed = function(config, command) {
 //    return output;
 };
 
+org.weblogo.executors.lateralHeading = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        var pole = geom.polar_to_3(Math.PI/2, 0);
+        var eq = geom.polar_to_3(0, 0);
+        turtle.heading = geom.axis_from_heading(eq, pole); 
+        var versor = geom.versor_from_parts(eq, command.angle);
+        var newHeading = geom.quat_conj(versor, turtle.heading);
+        turtle.heading = newHeading; 
+        updateTurtleF(config, turtle);
+    });
+}
+
 org.weblogo.executors.setHeading = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
         var pole = geom.polar_to_3(Math.PI/2, 0);
@@ -337,6 +349,15 @@ commands.setheading = function (angle) {
 };
 commands.setheading.args = ["number"];
 commands.sh = commands.setheading;
+
+commands.lateralheading = function (angle) {
+    return {
+        type: "lateralHeading",
+        angle: - Math.PI * angle / 180
+    }
+};
+commands.lateralheading.args = ["number"];
+commands.lh = commands.lateralheading;
 
 commands.setpos = function (t, p) {
     return {

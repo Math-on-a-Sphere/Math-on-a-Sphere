@@ -1,0 +1,34 @@
+Command List:
+
+clearall / ca ==> Resets all turtle parameters to their default values and clears the drawing.
+cleardrawing / cd ==> Clear the drawing.
+forward / fd [steps] ==> Moves forward the number of steps specified along the current heading.  Each step corresponds to one degree on the sphere. 	
+back / bk [steps] ==> Moves the number of steps specified, in the opposite direction of the current heading.  Each step corresponds to one degree on the sphere.
+right / rt [degrees] ==> Adjust heading right by the degrees specified.  	
+left / lt [degrees] ==> Adjust heading left by the degrees specified.	
+penup / pu ==> Lifts the "pen" so that additional movement does not draw a line.
+pendown ==> Lowers the "pen" so that additional movement draws a line.
+setheading [degrees] ==> Sets the current heading.  A heading in degrees from 0 - 180 where 0 is the direction of the "north" pole and 180 is in the direction of the "south" pole.
+getheading ==> Prints the current heading to the command line window.
+setposition [x,y] ==> Sets the current position using spherical coordinates.  [0,0] is the initial position closest to the viewer.  The first parameter specifies the degrees north/south of the equatorial line, while the second parameter specified the degrees along the equator east/west of the origin.  Ranges are -180 to 180 for both parameters. 
+getposition ==> Prints the current position to the command line window.
+set <property> <value> ==> Sets the specified turtle property to the given value.  Possible properties are color and pensize.  Example:  "set color green" 
+
+
+Color Values: ( use numeric or string value)
+black: 0
+gray: 5
+white: 9.9
+red: 15
+orange: 25
+brown: 35
+yellow: 45
+green: 55
+lime: 65
+turquoise: 75
+cyan: 85
+sky: 95
+blue: 105
+violet: 115
+magenta: 125
+pink: 135

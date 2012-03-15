@@ -15,41 +15,42 @@ frac                        (?:\.[0-9]+)
 "-"                                       return '-'
 "+"                                       return '+'
 "^"                                       return '^'
+","                                       return ','
+"PI"                                      return 'PI'
+"E"                                       return 'E'
+"true"                                    return 'TRUE'
+"false"                                   return 'FALSE'
+("clearall"|"clearAll"|"ca")(\(\))?[\b\s]     return 'CLEARALL'
+("cleardrawing"|"clearDrawing"|"cd")(\(\))?[\b\s]  return 'CLEARDRAWING'
+("penup()"|"penup")[\b\s]                return 'PENUP'
+("pu()"|"pu")[\b\s]                      return 'PENUP'
+("pendown()"|"pendown")[\b\s]            return 'PENDOWN'
+("pd()"|"pd")[\b\s]                      return 'PENDOWN'
+("getheading()"|"getheading")[\b\s]      return 'GETHEADING'
+("gethead()"|"gethead")[\b\s]            return 'GETHEADING'
+("gh()"|"gh")[\b\s]                      return 'GETHEADING'
+("getposition()"|"getposition")[\b\s]    return 'GETPOSITION'
+("getpos()"|"getpos")[\b\s]              return 'GETPOSITION'
+("gp()"|"gp")[\b\s]                      return 'GETPOSITION'
+("getspeed()"|"getspeed")[\b\s]          return 'GETSPEED'
+("help()"|"help")[\b\s]                  return 'HELP'
+("demo()"|"demo")[\b\s]                  return 'DEMO'
+("testcard()"|"testcard")[\b\s]          return 'TESTCARD'
+("testheading()"|"testheading")[\b\s]    return 'TESTHEADING'
+("set ")\b                           return 'SET'
+("if"|"IF")                          return 'IF'
+("else"|"ELSE")                      return 'ELSE'
+("repeat"|"REPEAT")\b                return 'REPEAT'
+("function")\b                       return 'FUNCTION'
+\"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
+(({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
+[a-zA-Z]+([\w.0-9]*)\b        return 'IDENTIFIER'
 "("                                       return '('
 ")"                                       return ')'
 "{"                                       return '{'
 "}"                                       return '}'
 "["                                       return '['
 "]"                                       return ']'
-","                                       return ','
-"PI"                                      return 'PI'
-"E"                                       return 'E'
-"true"                                    return 'TRUE'
-"false"                                   return 'FALSE'
-("clearall"|"clearAll"|"ca")(\(\))?\b     return 'CLEARALL'
-("cleardrawing"|"clearDrawing"|"cd")(\(\))?\b  return 'CLEARDRAWING'
-("penup()"|"penup")\b                return 'PENUP'
-("pu"()|"pu")\b                      return 'PENUP'
-("pendown()"|"pendown")\b            return 'PENDOWN'
-("pd()"|"pd")\b                      return 'PENDOWN'
-("getheading()"|"getheading")\b      return 'GETHEADING'
-("gethead()"|"gethead")\b            return 'GETHEADING'
-("gh()"|"gh")\b                      return 'GETHEADING'
-("getposition()"|"getposition")\b    return 'GETPOSITION'
-("getpos()"|"getpos")\b              return 'GETPOSITION'
-("gp()"|"gp")\b                      return 'GETPOSITION'
-("getspeed()"|"getspeed")\b          return 'GETSPEED'
-("help()"|"help")\b                  return 'HELP'
-("demo()"|"demo")\b                  return 'DEMO'
-("testcard()"|"testcard")\b          return 'TESTCARD'
-("testheading()"|"testheading")\b    return 'TESTHEADING'
-("set ")\b                           return 'SET'
-("if"|"IF")                          return 'IF'
-("repeat"|"REPEAT")\b                return 'REPEAT'
-("function")\b                       return 'FUNCTION'
-\"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
-(({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
-[a-zA-Z]+([\w.0-9]*)\b        return 'IDENTIFIER'
 "=="                               return '=='
 "<"                                return '<'
 ">"                                return '>'
@@ -132,8 +133,40 @@ statement
    $$['value'] = $1;}
 ;
 
+assignment
+: identifier '=' expr
+  {$$ = {};
+    $$['type'] = 'assignment';
+    $$['handler'] = 'var_assign';
+    $$['id'] = $1;
+    $$['value'] = $3;}
+| identifier '=' FUNCTION '(' ')' block
+  {$$ = {};
+    $$['type'] = 'assignment';
+    $$['handler'] = 'fun_assign';
+    $$['id'] = $1;
+    $$['args'] = {};
+    $$['args']['type'] = 'dummy';
+    $$['args']['handler'] = 'list';
+    $$['args']['value'] = [];
+    $$['block'] = $6;}   
+| identifier '=' FUNCTION param_list block
+  {$$ = {};
+    $$['type'] = 'assignment';
+    $$['handler'] = 'fun_assign';
+    $$['id'] = $1;
+    $$['args'] = $4;
+    $$['block'] = $5;}   
+;
+
+
 function
-: value arguments
+: builtin_null
+  {$$ = {};
+   $$['type'] = 'function';
+   $$['handler'] = 'skip';
+   $$['value'] = $1;}
+| identifier arguments
   {$$ = {}; 
     $$['type'] = 'function';
     $$['handler'] = 'func';
@@ -145,16 +178,34 @@ function
     $$['handler'] = 'func';
     $$['id'] = $1;
     $$['args'] = $2;}
-| builtin_null
-  {$$ = {};
-   $$['type'] = 'function';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
 | set_stmt
   {$$ = {};
    $$['type'] = 'function';
    $$['handler'] = 'skip';
    $$['value'] = $1;}
+;
+
+repeat_stmt
+: REPEAT expr block
+  {$$ = {}; 
+    $$['type'] = 'repeat_stmt'; 
+    $$['handler'] = 'repeat_stmt'; 
+    $$['args'] = [$2, $3];}
+;
+
+if_stmt
+: IF logic_expr block
+  {$$ = {};
+    $$['type'] = 'if_stmt';
+    $$['handler'] = 'if_stmt';
+    $$['condition'] = $2;
+    $$['block'] = $3;}
+| IF logic_expr block ELSE block
+  {$$ = {};
+    $$['type'] = 'if_stmt';
+    $$['handler'] = 'ifelse_stmt';
+    $$['condition'] = $2;
+    $$['block'] = [$3, $5];}
 ;
 
 set_stmt
@@ -165,22 +216,7 @@ set_stmt
     $$['args'] = [$2, $3];}
 ;
 
-if_stmt
-: IF expr block
-  {$$ = {};
-    $$['type'] = 'if_stmt';
-    $$['handler'] = 'if_stmt';
-    $$['condition'] = $2;
-    $$['block'] = $3;}
-;
 
-repeat_stmt
-: REPEAT expr block
-  {$$ = {}; 
-    $$['type'] = 'repeat_stmt'; 
-    $$['handler'] = 'repeat_stmt'; 
-    $$['args'] = [$2, $3];}
-;
 
 builtin_null
 : CLEARALL 
@@ -262,6 +298,12 @@ expr
    $$['type'] = 'expr';
    $$['handler'] = 'uminus';
    $$['value'] = $2;}
+| logic_expr
+  {$$ = {};
+   $$['type'] = 'expr';
+   $$['handler'] = 'expr';
+   $$['value'] = $1;}
+
 ;
 
 arguments
@@ -320,15 +362,12 @@ re
    $$['type'] = 're';
    $$['handler'] = 'skip';
    $$['value'] = $1;}
-| logic_expr
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
 ;
 
 logic_expr
-: re '==' re
+: '(' logic_expr ')'
+  {$$ = $2;} 
+| re '==' re
   {$$ = {};
    $$['type'] = 'logic_expr';
    $$['handler'] = 'op';
@@ -348,31 +387,6 @@ logic_expr
    $$['args'] = [$1,$3];}
 ;
 
-assignment
-: identifier '=' expr
-  {$$ = {};
-    $$['type'] = 'assignment';
-    $$['handler'] = 'var_assign';
-    $$['id'] = $1;
-    $$['value'] = $3;}
-| identifier '=' FUNCTION '(' ')' block
-  {$$ = {};
-    $$['type'] = 'assignment';
-    $$['handler'] = 'fun_assign';
-    $$['id'] = $1;
-    $$['args'] = {};
-    $$['args']['type'] = 'dummy';
-    $$['args']['handler'] = 'list';
-    $$['args']['value'] = [];
-    $$['block'] = $6;}   
-| identifier '=' FUNCTION param_list block
-  {$$ = {};
-    $$['type'] = 'assignment';
-    $$['handler'] = 'fun_assign';
-    $$['id'] = $1;
-    $$['args'] = $4;
-    $$['block'] = $5;}   
-;
 
 param_list
 : JSONArray
