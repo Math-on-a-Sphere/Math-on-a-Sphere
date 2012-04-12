@@ -29,7 +29,9 @@ var preload = {
     triangle_size: "lib/wbl/triangle_size.wbl",
     starburst: "lib/wbl/starburst.wbl",
     dragon_curve: "lib/wbl/dragon_curve.wbl",
-    michelles: "lib/wbl/dragonfly.wbl",
+    dragon_fly: "lib/wbl/dragonfly.wbl",    
+    circles: "lib/wbl/circle.wbl",
+    rand_circles: "lib/wbl/randcircle.wbl",
 };
 
 }());

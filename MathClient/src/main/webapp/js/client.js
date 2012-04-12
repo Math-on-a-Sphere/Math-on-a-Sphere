@@ -117,6 +117,7 @@ function compilerdriver(inputStream) {
     compiler.localscope = [];
     org.weblogo.program.program = org.weblogo.importReserve();
     org.weblogo.program.program += compiler(inputStream, "");
+    
     eval(org.weblogo.program.program);
 }
 
@@ -131,12 +132,6 @@ function compiler(inputStream, program) {
     }
     return program;
 }
-
-//org.weblogo.programToCommands = function(program) {
-//    var parsetree = grammar.parse(program);
-//    var linear = compiler(parsetree);
-//    return linear;
-//};
 
 org.weblogo.turtle.commands["repeat"] = function() {
     return {type: "repeat"}
@@ -367,7 +362,7 @@ org.weblogo.init = function() {
 
     });
 
-     $("#preload-commands").change(function () {
+     $("#preload-commands").click(function () {
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
          if (selected === "noselection") { selected = "blank"; }

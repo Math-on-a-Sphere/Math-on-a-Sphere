@@ -356,7 +356,10 @@ re
    $$['handler'] = 'group_op';
    $$['args'] = [$2];}
 | '(' function ')'
-  {$$ = $2;}
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'skip';
+   $$['value'] = $2;}
 | value
   {$$ = {};
    $$['type'] = 're';

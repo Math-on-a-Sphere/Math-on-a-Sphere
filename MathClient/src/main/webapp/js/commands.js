@@ -155,14 +155,9 @@ org.weblogo.executors.getSpeed = function(config, command) {
 //    return output;
 };
 
-org.weblogo.executors.lateralHeading = function(config, command) {
+org.weblogo.executors.setRotationAxis = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
-        var pole = geom.polar_to_3(Math.PI/2, 0);
-        var eq = geom.polar_to_3(0, 0);
-        turtle.heading = geom.axis_from_heading(eq, pole); 
-        var versor = geom.versor_from_parts(eq, command.angle);
-        var newHeading = geom.quat_conj(versor, turtle.heading);
-        turtle.heading = newHeading; 
+        turtle.heading = geom.polar_to_3(command.theta, command.phi);
         updateTurtleF(config, turtle);
     });
 }
@@ -350,14 +345,15 @@ commands.setheading = function (angle) {
 commands.setheading.args = ["number"];
 commands.sh = commands.setheading;
 
-commands.lateralheading = function (angle) {
+commands.setrotationaxis = function (t, p) {
     return {
-        type: "lateralHeading",
-        angle: - Math.PI * angle / 180
+        type: "setRotationAxis",
+        theta: Math.PI * t / 180,
+        phi: Math.PI * p /180        
     }
 };
-commands.lateralheading.args = ["number"];
-commands.lh = commands.lateralheading;
+commands.setrotationaxis.args = ["number","number"];
+commands.sra = commands.setrotationaxis;
 
 commands.setpos = function (t, p) {
     return {
