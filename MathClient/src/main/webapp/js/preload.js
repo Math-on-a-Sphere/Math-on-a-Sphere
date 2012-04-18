@@ -32,6 +32,7 @@ var preload = {
     dragon_fly: "lib/wbl/dragonfly.wbl",    
     circles: "lib/wbl/circle.wbl",
     rand_circles: "lib/wbl/randcircle.wbl",
+    flower: "lib/wbl/flower.wbl",
 };
 
 }());

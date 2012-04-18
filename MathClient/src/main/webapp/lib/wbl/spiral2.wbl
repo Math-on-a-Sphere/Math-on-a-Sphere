@@ -1,0 +1,18 @@
+spiral = function [steps, angle] {
+  newcolor = 0
+  repeat steps {
+    setheading angle
+    set color newcolor
+    forward 1
+    newcolor = newcolor + 1
+  }
+}
+
+setspeed (PI*6)
+
+x = 45
+repeat 5 {
+  spiral [140, x]
+  sp [0,0] sh 0
+  x = x + 10
+}
