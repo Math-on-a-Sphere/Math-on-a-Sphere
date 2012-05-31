@@ -6,9 +6,8 @@
 <web-app>
   <servlet>
     <servlet-name>StubServlet</servlet-name>
-    <servlet-class>
-      org.mathonasphere.StubServlet
-    </servlet-class>
+    <servlet-class>org.mathonasphere.StubServlet</servlet-class>
+    <load-on-startup>0</load-on-startup>
   </servlet>
 
   <servlet-mapping>

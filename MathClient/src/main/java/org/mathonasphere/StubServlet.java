@@ -1,6 +1,5 @@
 package org.mathonasphere;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 //import java.lang.Thread;
 import java.io.BufferedReader;
@@ -13,108 +12,136 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.codec.binary.Base64;
 
-
 public class StubServlet extends HttpServlet {
-  int counter = 0;
-  int TOTAL_FRAMES = 100;
-  int BUFFER_SIZE = 50;
-  SOSConnection sos;
-  ArrayBlockingQueue<byte[]> dataQueue;
+    int counter = 0;
+    int TOTAL_FRAMES = 100;
+    int BUFFER_SIZE = 50;
+    SOSConnection sos;
+    String dir;
+    long lastGoodTime = 0;
+    int currentFrame = 0;
+    boolean connectionGood = false;
+    volatile byte[] lastData;
+    volatile Thread thread;
 
-  public void init() {
-      final String dir = System.getenv("MOS_IMAGES");
-      sos = new SOSConnection("localhost", 2468);
-      dataQueue = new ArrayBlockingQueue(10,true);
-      sos.connect();
-      System.out.println(sos.sendCommand("enable"));
-      System.out.println(sos.sendCommand("load "+dir));
-      System.out.println(sos.sendCommand("play"));
-      
-      Thread t = new Thread() 
-          {
-              int lastFN = 0;
-              public void run() 
-              {
-                  while(true)
-                  {
-                      try
-                      {
-                          //int fn = 0;
-			  int fn = Integer.parseInt(sos.sendCommand("get_frame_number"));
-			  int diff = (counter - fn + TOTAL_FRAMES)%TOTAL_FRAMES;
-                          long time = System.currentTimeMillis();
-                          System.out.print("("+counter+":"+fn+") " + (time %10000) + " ");
-                          if(diff < BUFFER_SIZE)
-                          {
-                              System.out.println("w");
-			      String str = String.format("%03d", counter);
-                              FileOutputStream fos = null;
-                              fos = new FileOutputStream(dir+"/"+str+".png");
-                              byte[] data = null;
-                              if((data = dataQueue.peek()) != null)
-                              {
-                                  fos.write(data);
-                                  if(dataQueue.size() > 1)
-                                  {
-                                      dataQueue.take();
-                                  }
-                              }
-                              fos.close();
-                              counter++;
-                              counter = counter % TOTAL_FRAMES;
-                          }
-  
-                          sleep(10);
-                      }
-                      catch(Exception e) 
-                      {
-                          e.printStackTrace();
-                      }
-                  }
-              }
-          };
+    public StubServlet() {
+        dir = System.getenv("MOS_IMAGES");
+    }
 
-      try
-      {
-          t.start();
-      }
-      catch(Exception e)
-      {
-          System.out.println("Failed to start thread.");
-      }
-  }
+    public void initConnection() {
+        sos = new SOSConnection("localhost", 2468);
+        try {
+            String playlist = dir + "/math-on-a-sphere.sos";
+            sos.connect();
+            sos.sendCommand("enable");
+            Thread.sleep(500);
+            String response = sos.sendCommand("open_playlist " + playlist);
+            Thread.sleep(500);
+            if (!response.equals("R")) {
+                throw new Exception("Invalid response when loading sequence - retrying");
+            }
+            sos.sendCommand("play");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-  public void service(ServletRequest req, ServletResponse res) {
-    HttpServletRequest hreq = (HttpServletRequest) req;
-    System.out.println(hreq.getMethod() + ": " + req.getContentLength());
-    if (hreq.getMethod() == "POST") {
-        // sos.sendCommand("get_frame_number");
-      decodePostRequest(req);
-    }
-  }
+    public void threadMethod() {
+        while (thread != null) {
+            connectionGood = true;
+            long time = System.currentTimeMillis();
+            try {
+                String response2 = sos.sendCommand("get_playlist_name");
+                if (response2.indexOf("math-on-a-sphere") == -1) {
+                    throw new Exception("Playlist not loaded - retrying");
+                }
+                currentFrame = Integer.parseInt(sos.sendCommand("get_frame_number"));
+                lastGoodTime = time;
+            } catch (Exception e) {
+                connectionGood = false;
+                if (time - lastGoodTime > 1000) {
+                    lastGoodTime = time;
+                    initConnection();
+                }
+            }
+            try {
+                int diff = (counter - currentFrame + TOTAL_FRAMES) % TOTAL_FRAMES;
 
-  private void decodePostRequest(ServletRequest req) {
-      //FileOutputStream fos = null;
-    BufferedReader br = null;
-    try {
-      br = req.getReader();
-      String header = br.readLine();
-      String body = br.readLine();
-      byte[] bytes = Base64.decodeBase64(body);
-      dataQueue.offer(bytes);
-      //      fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/output_"+counter+".png");
-      //fos.write(bytes);
+                // System.out.print("(" + counter + ":" + currentFrame + ") " +
+                // (time % 10000) + " ");
+                // if (diff < BUFFER_SIZE) {
+                // System.out.println("w");
+                String str = String.format("%03d", counter);
+                String filename = dir + "/" + str + ".png";
+                FileOutputStream fos = null;
+                if (lastData != null) {
+                    fos = new FileOutputStream(filename);
+                    byte[] data = lastData;
+                    fos.write(data);
+                    fos.close();
+                    String response = sos.sendCommand("background " + filename);
+                    lastData = null;
+                }
+
+                counter++;
+                counter = counter % TOTAL_FRAMES;
+                // }
+                Thread.sleep(20);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
-    catch (Exception e) {
-      e.printStackTrace(System.err);
+
+    public void init() {
+        initConnection();
+
+        thread = new Thread() {
+            public void run() {
+                StubServlet.this.threadMethod();
+            }
+        };
+
+        try {
+            thread.start();
+        } catch (Exception e) {
+            System.out.println("Failed to start thread.");
+        }
     }
-    finally {
-      try {
-        br.close();
-      }
-      catch (Exception e) {
-          e.printStackTrace(System.err);
-      }
+    
+    public void destroy() {
+        thread = null;
     }
-  }
+
+    public void service(ServletRequest req, ServletResponse res) {
+        HttpServletRequest hreq = (HttpServletRequest) req;
+        System.out.println(hreq.getMethod() + ": " + req.getContentLength());
+        if (hreq.getMethod() == "POST") {
+            // sos.sendCommand("get_frame_number");
+            decodePostRequest(req);
+        }
+    }
+
+    private void decodePostRequest(ServletRequest req) {
+        // FileOutputStream fos = null;
+        BufferedReader br = null;
+        try {
+            br = req.getReader();
+            String header = br.readLine();
+            String body = br.readLine();
+            lastData = Base64.decodeBase64(body);
+
+            // fos = new FileOutputStream("tomcat/webapps/StubClient-0.1/output_"+counter+".png");
+            // fos.write(bytes);
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        } finally {
+            try {
+                br.close();
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
+            }
+        }
+    }
 }
