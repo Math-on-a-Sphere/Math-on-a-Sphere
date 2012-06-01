@@ -14,7 +14,7 @@ import org.apache.commons.codec.binary.Base64;
 
 public class StubServlet extends HttpServlet {
     int counter = 0;
-    int TOTAL_FRAMES = 100;
+    int TOTAL_FRAMES = 2;
     int BUFFER_SIZE = 50;
     SOSConnection sos;
     String dir;
@@ -41,6 +41,8 @@ public class StubServlet extends HttpServlet {
                 throw new Exception("Invalid response when loading sequence - retrying");
             }
             sos.sendCommand("play");
+            sos.sendCommand("next_clip");
+            sos.sendCommand("next_clip");
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -82,10 +84,10 @@ public class StubServlet extends HttpServlet {
                     fos.close();
                     String response = sos.sendCommand("background " + filename);
                     lastData = null;
+                    counter++;
+                    counter = counter % TOTAL_FRAMES;
                 }
 
-                counter++;
-                counter = counter % TOTAL_FRAMES;
                 // }
                 Thread.sleep(20);
             } catch (Exception e) {
