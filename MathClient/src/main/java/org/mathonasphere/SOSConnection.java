@@ -47,7 +47,7 @@ public class SOSConnection {
             System.out.println("Command " + command + ": Exception on send");
             disconnect();
         }
-        System.out.println("Command: " + command + ", response: " + response);
+        //System.out.println("Command: " + command + ", response: " + response);
         return response;
     }
 

@@ -1,7 +1,8 @@
 name = Math on a Sphere
-data = transparent.png
+data = ../sos/
 fps = 30
 creator = UC Boulder
 publisher = UC Boulder
 category = interactive
 animate = 1
+zrotationenable = 1
