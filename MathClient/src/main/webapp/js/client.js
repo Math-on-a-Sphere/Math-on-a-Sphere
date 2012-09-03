@@ -360,9 +360,10 @@ org.weblogo.init = function() {
             canvas.style.display = 'none';
         }
 
-    });
+     });
 
-     $("#preload-commands").click(function () {
+     var handleSelect = function () {
+         console.log("click");
          var menu = $("#preload-commands")[0];
          var selected = menu.options[menu.selectedIndex].value;
          if (selected === "noselection") { selected = "blank"; }
@@ -374,7 +375,11 @@ org.weblogo.init = function() {
          else {
              org.weblogo.preload.loadSelected(selected, myCodeMirror);
          }
-    });
+    };
+     
+     var preload = $("#preload-commands");
+     var menu = preload.selectmenu({style:"popup", width: 200, maxHeight: 600, select: handleSelect});
+
 };
 
 

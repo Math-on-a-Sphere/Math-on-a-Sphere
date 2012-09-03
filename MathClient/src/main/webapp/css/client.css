@@ -10,6 +10,10 @@
     border: none;
 }
 
+.ui-selectmenu *, .ui-selectmenu-menu * {
+    font-size: 11px;
+}
+
 canvas { 
     border: 1px solid black; 
     background: black;

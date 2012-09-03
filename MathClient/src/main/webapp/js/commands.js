@@ -11,7 +11,9 @@ org.weblogo.restoreFrame = function(config) {
 };
 
 org.weblogo.updateTurtle = function(config, turtle) {
-    org.weblogo.testTurtle.drawAt(config, turtle.position, turtle.heading)
+    if (turtle.showing) {
+        org.weblogo.testTurtle.drawAt(config, turtle.position, turtle.heading)
+    }
 };
 
 var updateTurtle = org.weblogo.updateTurtle;
@@ -268,6 +270,9 @@ org.weblogo.executors.set = function(config, command) {
     var property = accessor.property || command.variable;
     fluid.each(config.turtles, function(turtle) {
         turtle[property] = parsed;
+        if (accessor.updator) {
+            accessor.updator(config, turtle, parsed, command);
+        }  
     });
 };
 
@@ -438,6 +443,16 @@ var scaleLens = function(scale) {
         }
     }  
 };
+
+var showingLens = {
+    write: function(value) {
+        return (value === 1 || value === "on")? true: false;
+    },
+    read: function(value) {
+        return value? "on" : "off";
+    }
+};
+
 /** Turtle "accessors", to model those turtle aspects which are represented as "variables" **/
 
 org.weblogo.turtle.accessors = {};
@@ -467,6 +482,13 @@ accessors["color"] = {
             return value + " is not a valid colour name: you can use " + Object.keys(cnames).join(', ');
         }
     }
+};
+
+accessors["showing"] = {
+    property: "showing",
+    type: "number|string",
+    lens: showingLens,
+    updator: updateTurtleF
 };
 
 }());

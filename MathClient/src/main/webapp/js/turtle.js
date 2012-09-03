@@ -12,6 +12,7 @@ org.weblogo.turtleDefaults = {
     colour: "white",
     width: Math.PI/80,
     drawing: true,
+    showing: true,
     speed: Math.PI - .001, // travel halfway round sphere in 1 second
     turnSpeed: 4*Math.PI
 };
@@ -128,9 +129,9 @@ org.weblogo.importReserve = function() {
     $.each(org.weblogo.netLogoColourNames, function(pair){
         output += pair + " = \"" + pair + "\";\n";
     });
-    
-    output += "color = \"color\";\n";
-    output += "pensize = \"pensize\";\n";
+    output += "var on = 1; var off = 0;\n";
+    //output += "color = \"color\";\n";
+    //output += "pensize = \"pensize\";\n";
     return output;
 }
 

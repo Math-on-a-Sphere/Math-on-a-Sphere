@@ -76,9 +76,8 @@ org.weblogo.nodeHandlers.set_stmt = function(node, program, compiler) {
     //var val = compiler(node.args[1], "").replace(/\"/g, ""); // strip quotes
     var prop = compiler(node.args[0], "").value;
     var val = compiler(node.args[1], "").value;
-    var commandString = "\"+"+prop+"+\" \"+"+val+"+\"";
-
-    node.value = "org.weblogo.outputStream.push(\"set "+commandString+"\");\n";
+    // TODO: proper recognition of quoted values
+    node.value = "org.weblogo.outputStream.push(\"set " + prop + " \"+" + val + ");\n";
     return node;
 }
 org.weblogo.nodeHandlers.builtin = function(node, program, compiler) {
