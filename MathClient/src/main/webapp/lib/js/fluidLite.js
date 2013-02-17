@@ -185,6 +185,12 @@ var fluid = fluid || fluid_1_4;
         return togo;
     };
     
+    fluid.getMembers = function (holder, name) {
+        return fluid.transform(holder, function(member) {
+            return fluid.get(member, name);
+        });
+    };
+    
     /** Better jQuery.each which works on hashes as well as having the arguments
      * the right way round. 
      * @param source {Arrayable or Object} The container to be iterated over

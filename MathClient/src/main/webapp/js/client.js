@@ -111,10 +111,8 @@ function compilerdriver(inputStream) {
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
     org.weblogo.program.program = {};
+    compiler.scopes = [{}];
 
-    compiler.depth = 0;
-    compiler.scope = [];
-    compiler.localscope = [];
     org.weblogo.program.program = org.weblogo.importReserve();
     org.weblogo.program.program += compiler(inputStream, "");
     
@@ -127,8 +125,13 @@ function compiler(inputStream, program) {
     }
     for (var i = 0; i < inputStream.length; ++i) {
         var node = inputStream[i];
-        var handler = org.weblogo.nodeHandlers[node.handler];
-        program = handler(node, program, compiler);
+        if (fluid.isPrimitive(node)) {
+            program = {value: node}
+        }
+        else {
+            var handler = org.weblogo.nodeHandlers[node.handler];
+            program = handler(node, program, compiler);
+        }
     }
     return program;
 }
@@ -233,7 +236,7 @@ org.weblogo.client = function(container, options) {
     
     that.element = that.locate("canvas")[0];
         
-    that.config = org.weblogo.makeConfig(that.element);
+    that.config = org.weblogo.makeConfig(that.element, {events: that.events});
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
     
@@ -370,7 +373,7 @@ org.weblogo.init = function() {
          if (selected === "my_design") {
              var saved = org.weblogo.loadAutoSave();
              myCodeMirror.setValue(saved);
-             myCoreMirror.clearHistory();
+             myCodeMirror.clearHistory();
          }
          else {
              org.weblogo.preload.loadSelected(selected, myCodeMirror);

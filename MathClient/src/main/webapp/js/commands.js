@@ -190,13 +190,15 @@ org.weblogo.executors.getHeading = function(config, command) {
     return output;
 };
 
-org.weblogo.executors.setPosition = function(config, command) {
+org.weblogo.executors.setPosition = function(config, command, tick) {
+    var angle;
     fluid.each(config.turtles, function(turtle) {
-        var oldv = turtle.position;
-        turtle.position = geom.polar_to_3(command.theta,command.phi); 
-        turtle.heading = geom.axis_from_heading(oldv, turtle.position);
-        updateTurtleF(config, turtle);
+        var newPos = geom.polar_to_3(command.theta, command.phi);
+        turtle.heading = geom.axis_from_heading(turtle.position, newPos);
+        // TODO: this command model will not work for multiple turtles
+        angle = Math.acos(geom.dot_3(turtle.position, newPos));
     });
+    return org.weblogo.executors.line(config, {distance: angle}, tick);
 };
 
 org.weblogo.executors.getPosition = function(config, command) {

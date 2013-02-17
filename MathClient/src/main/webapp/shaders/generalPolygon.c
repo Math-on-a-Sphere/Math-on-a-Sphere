@@ -166,6 +166,7 @@ void raster_point (vec3 point, out float within, out float shade) {
         float bende = PI - polyconj.bend/2.0;
         
         float ndot = dot(line3, point) + line4[3];
+
         dead *= step(polyconj.mind, ndot);
         dead *= step(ndot, polyconj.maxd);
         if (dead == 0.0) {
@@ -221,9 +222,11 @@ void main(void) {
     float within = 0.0;
     float shade = 1.0;
     raster_point(r, within, shade);
+    //pr = dot(poly[2].line4, poly[2].line4);
     
     float bshade = (shade == 1.0 || shade == 0.0)? 0.0 : shade;
-    if (bshade == 0.0 && within == 0.0) {
+    //pr = within;
+    if (bshade + within == 0.0) {
         discard;
         }
     else {

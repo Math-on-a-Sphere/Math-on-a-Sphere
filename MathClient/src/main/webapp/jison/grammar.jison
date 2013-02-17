@@ -43,20 +43,23 @@ frac                        (?:\.[0-9]+)
 ("repeat"|"REPEAT")\b                return 'REPEAT'
 ("function")\b                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
-(({int}{frac}?)|({int}?{frac})){exp}?\b  return 'NUMBER';
-[a-zA-Z]+([\w.0-9]*)\b        return 'IDENTIFIER'
+([^\.]{int}{frac}){exp}?\b     return 'NUMBER';
+{int}\b                   return 'INT';
+[a-zA-Z]+([\w]*)\b        return 'IDENTIFIER'
 "("                                       return '('
 ")"                                       return ')'
 "{"                                       return '{'
 "}"                                       return '}'
+":"                                       return ':'
 "["                                       return '['
 "]"                                       return ']'
+"."                                       return '.'
 "=="                               return '=='
 "<"                                return '<'
 ">"                                return '>'
 "="                                return '='
 <<EOF>>                            return 'EOF'
-.                                  return 'INVALID'
+.                                  return "unlexable_token"
 /lex
 
 
@@ -67,6 +70,7 @@ frac                        (?:\.[0-9]+)
 %left '*' '/'
 %left '^'
 %left UMINUS
+%left '.'
 %right '='
 %right '=='
 %right '<' '>'
@@ -116,7 +120,7 @@ statement
     $$['type'] = 'statement';
     $$['handler'] = 'statement';
     $$['value'] = $1;}
-| function
+| function_call
   {$$ = {};
     $$['type'] = 'statement';
     $$['handler'] = 'statement';
@@ -159,21 +163,27 @@ assignment
     $$['block'] = $5;}   
 ;
 
+param_list
+: JSONArray
+ {$$ = {};
+  $$['type'] = 'param_list';
+  $$['handler'] = 'skip';
+  $$['value'] = $1;}
+| '(' JSONArray ')'
+ {$$ = {};
+  $$['type'] = 'param_list';
+  $$['handler'] = 'skip';
+  $$['value'] = $2;}
+;
 
-function
+function_call
 : builtin_null
   {$$ = {};
    $$['type'] = 'function';
    $$['handler'] = 'skip';
    $$['value'] = $1;}
-| identifier arguments
+| indexable arguments
   {$$ = {}; 
-    $$['type'] = 'function';
-    $$['handler'] = 'func';
-    $$['id'] = $1;
-    $$['args'] = $2;}
-| '(' function ')' arguments
-  {$$ = {};
     $$['type'] = 'function';
     $$['handler'] = 'func';
     $$['id'] = $1;
@@ -194,13 +204,13 @@ repeat_stmt
 ;
 
 if_stmt
-: IF logic_expr block
+: IF expr block
   {$$ = {};
     $$['type'] = 'if_stmt';
     $$['handler'] = 'if_stmt';
     $$['condition'] = $2;
     $$['block'] = $3;}
-| IF logic_expr block ELSE block
+| IF expr block ELSE block
   {$$ = {};
     $$['type'] = 'if_stmt';
     $$['handler'] = 'ifelse_stmt';
@@ -209,14 +219,12 @@ if_stmt
 ;
 
 set_stmt
-: SET value expr
+: SET identifier expr
   {$$ = {}; 
     $$['type'] = 'set_stmt'; 
     $$['handler'] = 'set_stmt'; 
     $$['args'] = [$2, $3];}
 ;
-
-
 
 builtin_null
 : CLEARALL 
@@ -289,41 +297,40 @@ builtin_null
 
 expr
 : re
-  {$$ = {};
-   $$['type'] = 'expr';
-   $$['handler'] = 'expr';
-   $$['value'] = $1;}
 | '-' re %prec UMINUS
   {$$ = {};
    $$['type'] = 'expr';
    $$['handler'] = 'uminus';
    $$['value'] = $2;}
-| logic_expr
-  {$$ = {};
-   $$['type'] = 'expr';
-   $$['handler'] = 'expr';
-   $$['value'] = $1;}
-
 ;
 
 arguments
-: '(' expr ')'
-  {$$ = {};
-    $$['type'] = 'arguments';
-    $$['handler'] = 'skip';
-    $$['value'] = [$2];}
-| value
-  {$$ = {};
-   $$['type'] = 'arguments';
-   $$['handler'] = 'skip';
-   $$['value'] = [$1];}
-| JSONArray
-  {$$ = {};
-   $$['type'] = 'arguments';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
+: re
 ;
 
+index
+:INT   
+  {$$ = {};
+  $$.type = "number";
+  $$.handler = "value";
+  $$.value = Number(yytext);}
+|identifier
+|boolean
+;
+
+
+indexable
+: lhindex
+| value
+| identifier
+;
+
+lhindex
+: indexable '.' index
+  {$$ = {};
+   $$.handler = "index_op";
+   $$.args = [$1, $3];}
+;
 
 re
 : re '+' re
@@ -331,79 +338,55 @@ re
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '+';
-   $$['args'] = [$1,$3];}
+   $$['args'] = [$1, $3];}
 | re '-' re
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '-';
-   $$['args'] = [$1,$3];}
+   $$['args'] = [$1, $3];}
 | re '*' re
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '*';
-   $$['args'] = [$1,$3];}
+   $$['args'] = [$1, $3];}
 | re '/' re
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '/';
-   $$['args'] = [$1,$3];}
-| '(' re ')'
+   $$['args'] = [$1, $3];}
+| indexable
+| re '==' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '==';
+   $$['args'] = [$1, $3];}
+| re '<' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '<';
+   $$['args'] = [$1, $3];}
+| re '>' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '>';
+   $$['args'] = [$1, $3];}
+| '(' expr ')'
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'group_op';
    $$['args'] = [$2];}
-| '(' function ')'
+| '(' function_call ')'
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'skip';
    $$['value'] = $2;}
-| value
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
 ;
-
-logic_expr
-: '(' logic_expr ')'
-  {$$ = $2;} 
-| re '==' re
-  {$$ = {};
-   $$['type'] = 'logic_expr';
-   $$['handler'] = 'op';
-   $$['op'] = '==';
-   $$['args'] = [$1,$3];}
-| re '<' re
-  {$$ = {};
-   $$['type'] = 'logic_expr';
-   $$['handler'] = 'op';
-   $$['op'] = '<';
-   $$['args'] = [$1,$3];}
-| re '>' re
-  {$$ = {};
-   $$['type'] = 'logic_expr';
-   $$['handler'] = 'op';
-   $$['op'] = '>';
-   $$['args'] = [$1,$3];}
-;
-
-
-param_list
-: JSONArray
- {$$ = {};
-  $$['type'] = 'param_list';
-  $$['handler'] = 'skip';
-  $$['value'] = $1;}
-| '(' JSONArray ')'
- {$$ = {};
-  $$['type'] = 'param_list';
-  $$['handler'] = 'skip';
-  $$['value'] = $2;}
-;
-
 
 value
 : '(' ')'
@@ -411,31 +394,9 @@ value
     $$['type'] = 'value';
     $$['handler'] = 'list';
     $$['value'] = [];}
-| identifier
-  {$$ = {};
-    $$['type'] = 'value';
-    $$['handler'] = 'skip';
-    $$['value'] = $1;}
 | number
-  {$$ = {};
-    $$['type'] = 'value';
-    $$['handler'] = 'skip';
-    $$['value'] = $1;}
-| string
-  {$$ = {};
-    $$['type'] = 'value';
-    $$['handler'] = 'skip';
-    $$['value'] = $1;}
-| boolean
-  {$$ = {};
-    $$['type'] = 'value';
-    $$['handler'] = 'skip';
-    $$['value'] = $1;}
 | JSONObject
-  {$$ = {};
-   $$['type'] = 'value';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
+| JSONArray
 ;
 
 identifier
@@ -480,7 +441,7 @@ boolean
     $$['value'] = true;}
 | FALSE
   {$$ = {};
-    $$['type'] = 'boolen';
+    $$['type'] = 'boolean';
     $$['handler'] = 'value';
     $$['value'] = false;}
 ;
@@ -502,20 +463,17 @@ JSONObject
 
 JSONMemberList
 : JSONMember
-  {$$ = {}; 
-    $$['type'] = 'JSONMemberList';
-    $$['handler'] = 'JSONMember';
-    $$[$1[0]] = $1[1];}
+  {$$ = {};
+    $$ = [$1];}
 | JSONMember ',' JSONMemberList
-  {$$ = $1; $1[$3[0]] = $3[1];}
+  {$$ = [$1]; $$ = $$.concat($3);}
 ;
 
 JSONMember
 : string ':' expr
-  {$$ = {};
-    $$['type'] = 'JSONMenber';
-    $$['handler'] = 'JSONMenber';
-    $$['value'] = [$1, $3];}
+  {$$ = {key: $1, value: $3};}
+| identifier ':' expr
+  {$$ = {key: $1, value: $3};}
 ;
 
 
@@ -539,6 +497,3 @@ JSONElementList
   {$$ = $3; 
     $3.unshift($1);}
 ;
-
-
-
