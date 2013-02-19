@@ -48,13 +48,17 @@ org.weblogo.geom.scale_4 = function(a, l) {
 };
 
 org.weblogo.geom.norm_3 = function(a) {
-    var norm = Math.sqrt(geom.dot_3(a, a));
+    var norm = geom.length_3(a);
     return norm === 0? [0, 0, 1] : geom.scale_3(a, 1/norm);
 };
 
 org.weblogo.geom.dist_3 = function(a, b) {
     var diff = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
     return geom.dot_3(diff, diff); 
+};
+
+org.weblogo.geom.length_3 = function (a) {
+     return Math.sqrt(geom.dot_3(a, a));
 };
 
 
@@ -80,7 +84,7 @@ org.weblogo.geom.polar_to_3 = function(theta, phi) {
  * @return [theta, phi, r]
  */
 org.weblogo.geom.polar_from_3 = function(n) {
-    var norm = Math.sqrt(geom.dot_3(n, n));
+    var norm = geom.length_3(n);
     return [Math.asin(n[2] / norm), Math.atan2(n[0], -n[1]), norm];
 };
 
@@ -144,6 +148,7 @@ org.weblogo.geom.versor_from_parts = function(n, W) {
     return [Math.cos(W / 2), sinW * n[0], sinW * n[1], sinW * n[2]]; 
 };
 
+// TODO: optimised as point_by_angle in the GLSL code
 org.weblogo.geom.rotate_by = function(v, axis, angle) {
     var versor = geom.versor_from_parts(axis, angle);
     return geom.quat_conj(versor, v);  

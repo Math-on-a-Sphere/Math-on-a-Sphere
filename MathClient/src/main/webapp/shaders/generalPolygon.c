@@ -223,7 +223,7 @@ void main(void) {
     raster_point(r, within, shade);
     
     float bshade = (shade == 1.0 || shade == 0.0)? 0.0 : shade;
-    if (bshade == 0.0 && within == 0.0) {
+    if (bshade + within == 0.0) {
         discard;
         }
     else {

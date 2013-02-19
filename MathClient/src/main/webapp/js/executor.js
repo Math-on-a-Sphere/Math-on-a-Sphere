@@ -36,6 +36,9 @@ org.weblogo.blockExecutor = function(commands) {
         var executor = org.weblogo.executor(config);
         function quickExec(commandString) {
             var parsed = org.weblogo.stubParser(commandString);
+            if (parsed && parsed.type === "error") {
+                return parsed;
+            }
             var now = Date.now();
             execution = executor.execute(parsed.command, now);
             return execution;
@@ -50,6 +53,10 @@ org.weblogo.blockExecutor = function(commands) {
                 if (execution && execution.type === "info") {
                     //events.onInfo.fire(execution);
                     messages.push(execution);
+                    execution = null;
+                }
+                else if (execution && execution.type === "error") {
+                    config.events.onError.fire(execution);
                     execution = null;
                 }
                 ++index;

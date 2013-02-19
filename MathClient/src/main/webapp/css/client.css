@@ -19,9 +19,11 @@ canvas {
     background: black;
 }
   
-.flc-math-errors: { color: red; font-weight: bold; } 
+.flc-math-errors { color: red; font-weight: bold; } 
 
-.code: {
+.flc-math-commands { overflow-y: auto; }
+
+.code {
    border: none;
    background: black;
 }
