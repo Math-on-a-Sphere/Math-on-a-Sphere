@@ -57,9 +57,10 @@ org.weblogo.defaultConfigOptions = {
     rasterStep: Math.PI / 100
 };
 
-org.weblogo.makeConfig = function(element, options) {
+org.weblogo.makeConfig = function(element, events, options) {
     var that = {
         element: element,
+        events: events,
         context: element.getContext('2d'),
     
         width: element.width,
@@ -233,7 +234,7 @@ org.weblogo.client = function(container, options) {
     
     that.element = that.locate("canvas")[0];
         
-    that.config = org.weblogo.makeConfig(that.element);
+    that.config = org.weblogo.makeConfig(that.element, that.events);
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
     
