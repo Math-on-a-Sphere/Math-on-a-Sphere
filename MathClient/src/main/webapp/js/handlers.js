@@ -39,7 +39,7 @@ org.weblogo.nodeHandlers.list = function(node, program, compiler) {
     var params = node.value;
     var array = [];
     for (var j = 0; j < params.length; j++) {
-        array[j] = compiler(params[j].value, "");
+        array[j] = compiler(params[j], "");
     }
     return array;
 }

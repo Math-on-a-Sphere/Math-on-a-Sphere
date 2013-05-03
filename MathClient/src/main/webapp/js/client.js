@@ -371,7 +371,7 @@ org.weblogo.init = function() {
          if (selected === "my_design") {
              var saved = org.weblogo.loadAutoSave();
              myCodeMirror.setValue(saved);
-             myCoreMirror.clearHistory();
+             myCodeMirror.clearHistory();
          }
          else {
              org.weblogo.preload.loadSelected(selected, myCodeMirror);
