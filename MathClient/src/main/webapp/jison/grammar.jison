@@ -20,30 +20,15 @@ frac                        (?:\.[0-9]+)
 "E"                                       return 'E'
 "true"                                    return 'TRUE'
 "false"                                   return 'FALSE'
-("clearall"|"clearAll"|"ca")(\(\))?[\b\s]     return 'CLEARALL'
-("cleardrawing"|"clearDrawing"|"cd")(\(\))?[\b\s]  return 'CLEARDRAWING'
-("penup()"|"penup")[\b\s]                return 'PENUP'
-("pu()"|"pu")[\b\s]                      return 'PENUP'
-("pendown()"|"pendown")[\b\s]            return 'PENDOWN'
-("pd()"|"pd")[\b\s]                      return 'PENDOWN'
-("getheading()"|"getheading")[\b\s]      return 'GETHEADING'
-("gethead()"|"gethead")[\b\s]            return 'GETHEADING'
-("gh()"|"gh")[\b\s]                      return 'GETHEADING'
-("getposition()"|"getposition")[\b\s]    return 'GETPOSITION'
-("getpos()"|"getpos")[\b\s]              return 'GETPOSITION'
-("gp()"|"gp")[\b\s]                      return 'GETPOSITION'
-("getspeed()"|"getspeed")[\b\s]          return 'GETSPEED'
-("help()"|"help")[\b\s]                  return 'HELP'
-("demo()"|"demo")[\b\s]                  return 'DEMO'
-("testcard()"|"testcard")[\b\s]          return 'TESTCARD'
-("testheading()"|"testheading")[\b\s]    return 'TESTHEADING'
+("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp")     return "BUILTIN_ARG"
+("clearall"|"ca"|"cleardrawing"|"ca"|"penup"|"pu"|"pendown"|"pd"|"getheading"|"gh"|"getposition"|"gp"|"getspeed"|"help"|"demo"|"testcard")    return "BUILTIN_NULL"
 ("set ")\b                           return 'SET'
 ("if"|"IF")                          return 'IF'
 ("else"|"ELSE")                      return 'ELSE'
 ("repeat"|"REPEAT")\b                return 'REPEAT'
 ("function")\b                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
-([^\.]{int}{frac}){exp}?\b     return 'NUMBER';
+{int}{frac}?{exp}?\b     return 'NUMBER';
 {int}\b                   return 'INT';
 [a-zA-Z]+([\w]*)\b        return 'IDENTIFIER'
 "("                                       return '('
@@ -64,13 +49,12 @@ frac                        (?:\.[0-9]+)
 
 
 
-
 /* operator associations and precedence */
 %left '+' '-'
 %left '*' '/'
 %left '^'
 %left UMINUS
-%left '.'
+%left '.' '['
 %right '='
 %right '=='
 %right '<' '>'
@@ -135,6 +119,15 @@ statement
    $$['type'] = 'if';
    $$['handler'] = 'statement';
    $$['value'] = $1;}
+| set_stmt
+;
+
+set_stmt
+: SET identifier expr
+  {$$ = {}; 
+    $$['type'] = 'set_stmt'; 
+    $$['handler'] = 'set_stmt'; 
+    $$['args'] = [$2, $3];}
 ;
 
 assignment
@@ -149,50 +142,51 @@ assignment
     $$['type'] = 'assignment';
     $$['handler'] = 'fun_assign';
     $$['id'] = $1;
-    $$['args'] = {};
-    $$['args']['type'] = 'dummy';
-    $$['args']['handler'] = 'list';
-    $$['args']['value'] = [];
-    $$['block'] = $6;}   
-| identifier '=' FUNCTION param_list block
+    $$['args'] = [];
+    $$['block'] = $6;}
+| identifier '=' FUNCTION '(' param_list ')' block
   {$$ = {};
     $$['type'] = 'assignment';
     $$['handler'] = 'fun_assign';
     $$['id'] = $1;
-    $$['args'] = $4;
-    $$['block'] = $5;}   
+    $$['args'] = $5;
+    $$['block'] = $7;}   
 ;
 
 param_list
-: JSONArray
- {$$ = {};
-  $$['type'] = 'param_list';
-  $$['handler'] = 'skip';
-  $$['value'] = $1;}
-| '(' JSONArray ')'
- {$$ = {};
-  $$['type'] = 'param_list';
-  $$['handler'] = 'skip';
-  $$['value'] = $2;}
+: identifier
+ {$$ = [$1];}
+| identifier ',' param_list
+  {$$ = $3; 
+    $3.unshift($1);}
 ;
 
 function_call
-: builtin_null
-  {$$ = {};
-   $$['type'] = 'function';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
-| indexable arguments
+: BUILTIN_NULL
+  {$$ = {
+    "type": "function",
+    "handler": "builtin",
+    "id": $1
+    };}
+| BUILTIN_NULL '(' ')' 
+  {$$ = {
+    "type": "function",
+    "handler": "builtin",
+    "id": $1
+    };}
+| BUILTIN_ARG expr
+  {$$ = {    
+    "type": "function",      
+    "handler": "func",      
+    "id": $1,      
+    "args": $2
+    };}
+| identifier '(' arguments ')'
   {$$ = {}; 
     $$['type'] = 'function';
     $$['handler'] = 'func';
     $$['id'] = $1;
     $$['args'] = $2;}
-| set_stmt
-  {$$ = {};
-   $$['type'] = 'function';
-   $$['handler'] = 'skip';
-   $$['value'] = $1;}
 ;
 
 repeat_stmt
@@ -218,85 +212,9 @@ if_stmt
     $$['block'] = [$3, $5];}
 ;
 
-set_stmt
-: SET identifier expr
-  {$$ = {}; 
-    $$['type'] = 'set_stmt'; 
-    $$['handler'] = 'set_stmt'; 
-    $$['args'] = [$2, $3];}
-;
-
-builtin_null
-: CLEARALL 
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'clearall';
-    $$['args'] = [];}
-| CLEARDRAWING
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'cleardrawing';
-    $$['args'] = [];}
-| PENUP
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'penup';
-    $$['args'] = [];}
-| PENDOWN
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'pendown';
-    $$['args'] = [];}
-| GETHEADING
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'getheading';
-    $$['args'] = [];}
-| GETPOSITION
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'getposition';
-    $$['args'] = [];}
-| GETSPEED
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'getspeed';
-    $$['args'] = [];}
-| HELP
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'help';
-    $$['args'] = [];}
-| DEMO
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'demo';
-    $$['args'] = [];}
-| TESTCARD
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'testcard';
-    $$['args'] = [];}
-| TESTHEADING
-  {$$ = {};
-    $$['type'] = 'builtin_null';
-    $$['handler'] = 'builtin';
-    $$['id'] = 'testheading';
-    $$['args'] = [];}
-;
-
 expr
 : re
+| complex_value
 | '-' re %prec UMINUS
   {$$ = {};
    $$['type'] = 'expr';
@@ -315,21 +233,11 @@ index
   $$.handler = "value";
   $$.value = Number(yytext);}
 |identifier
-|boolean
 ;
 
-
-indexable
-: lhindex
-| value
-| identifier
-;
-
-lhindex
-: indexable '.' index
-  {$$ = {};
-   $$.handler = "index_op";
-   $$.args = [$1, $3];}
+complex_value
+: JSONObject
+| JSONArray 
 ;
 
 re
@@ -339,6 +247,15 @@ re
    $$['handler'] = 'op';
    $$['op'] = '+';
    $$['args'] = [$1, $3];}
+| re '[' re ']'
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'index_op';
+   $$['args'] = [$1, $3];}
+| re '.' index
+  {$$ = {};
+   $$.handler = "index_op";
+   $$.args = [$1, $3];}
 | re '-' re
   {$$ = {};
    $$['type'] = 're';
@@ -357,7 +274,8 @@ re
    $$['handler'] = 'op';
    $$['op'] = '/';
    $$['args'] = [$1, $3];}
-| indexable
+| number
+| identifier
 | re '==' re
   {$$ = {};
    $$['type'] = 're';
@@ -386,17 +304,6 @@ re
    $$['type'] = 're';
    $$['handler'] = 'skip';
    $$['value'] = $2;}
-;
-
-value
-: '(' ')'
-  {$$ = {};
-    $$['type'] = 'value';
-    $$['handler'] = 'list';
-    $$['value'] = [];}
-| number
-| JSONObject
-| JSONArray
 ;
 
 identifier

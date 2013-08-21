@@ -162,26 +162,49 @@ org.weblogo.executors.setRotationAxis = function(config, command) {
         turtle.heading = geom.polar_to_3(command.theta, command.phi);
         updateTurtleF(config, turtle);
     });
-}
+};
+
+org.weblogo.executors.towards = function(config, command) {
+    fluid.each(config.turtles, function(turtle) {
+        var target = geom.polar_to_3(command.theta, command.phi); 
+        var heading = geom.axis_from_heading(turtle.position, target);
+        turtle.heading = heading;
+        updateTurtleF(config, turtle);
+    });
+};
+
+org.weblogo.executors.distanceTo = function(config, command) {
+    var output;
+    fluid.each(config.turtles, function(turtle) {
+        var target = geom.polar_to_3(command.theta, command.phi);
+        var distance = Math.acos(geom.dot_3(turtle.position, target));
+        var message = geom.rad2deg(distance).toFixed(6);
+        output = {
+            type: "info",
+            message: message
+        };
+    });
+    return output;
+};
+
+var pole = geom.polar_to_3(Math.PI/2, 0);
 
 org.weblogo.executors.setHeading = function(config, command) {
     fluid.each(config.turtles, function(turtle) {
-        var pole = geom.polar_to_3(Math.PI/2, 0);
-        turtle.heading = geom.axis_from_heading(turtle.position, pole); 
-        var versor = geom.versor_from_parts(turtle.position, command.angle);
-        var newHeading = geom.quat_conj(versor, turtle.heading);
-        turtle.heading = newHeading; 
+        var poleAxis = geom.axis_from_heading(turtle.position, pole);
+        var newAxis = geom.point_by_angle(poleAxis, turtle.position, command.angle); 
+        turtle.heading = newAxis; 
         updateTurtleF(config, turtle);
     });
-}
+};
 
 org.weblogo.executors.getHeading = function(config, command) {
     var output;
     fluid.each(config.turtles, function(turtle) {
-        var pole = geom.polar_to_3(Math.PI/2, 0);
-        var tan = geom.cross_3(turtle.heading, turtle.position);
-        var ang = geom.rad2deg(Math.acos(geom.dot_3(tan, pole)));
-        var heading = ang.toFixed(6);
+        var poleAxis = geom.axis_from_heading(turtle.position, pole);
+        var sin = geom.length_3(geom.cross_3(turtle.heading, poleAxis));
+        var angle = Math.atan2(sin, geom.dot_3(turtle.heading, poleAxis));
+        var heading = geom.rad2deg(angle).toFixed(6);
         output = {
             type: "info",
             message: heading
@@ -362,6 +385,24 @@ commands.setrotationaxis = function (t, p) {
 commands.setrotationaxis.args = ["number","number"];
 commands.sra = commands.setrotationaxis;
 
+commands.towards = function (t, p) {
+    return {
+        type: "towards",
+        theta: Math.PI * t / 180,
+        phi: Math.PI * p /180        
+    }
+};
+commands.towards.args = ["number", "number"];
+
+commands.distanceto = function (t, p) {
+    return {
+        type: "distanceTo",
+        theta: Math.PI * t / 180,
+        phi: Math.PI * p /180        
+    }
+};
+commands.distanceto.args = ["number", "number"];
+
 commands.setpos = function (t, p) {
     return {
         type: "setPosition",
@@ -431,6 +472,7 @@ commands.clearall = function() {
     }
 };
 commands.clearall.args = [];
+commands.ca = commands.clearall;
 
 // actual value type will be parsed by the accessor
 commands.set.args = ["string", "string"];

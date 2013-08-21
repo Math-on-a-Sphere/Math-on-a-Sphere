@@ -225,7 +225,7 @@ void main(void) {
     //pr = dot(poly[2].line4, poly[2].line4);
     
     float bshade = (shade == 1.0 || shade == 0.0)? 0.0 : shade;
-    //pr = within;
+
     if (bshade + within == 0.0) {
         discard;
         }

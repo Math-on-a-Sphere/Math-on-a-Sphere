@@ -131,7 +131,7 @@ org.weblogo.nodeHandlers.fun_assign = function (node, program, compiler) {
     
     var funcname = compiler(node.id).value;
 
-    var args = node.args.value.value;
+    var args = node.args;
     var params = fluid.transform(args, function (arg) {
         return compiler(arg).value
     });
