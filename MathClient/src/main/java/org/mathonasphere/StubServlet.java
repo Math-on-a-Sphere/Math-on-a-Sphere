@@ -107,7 +107,7 @@ public class StubServlet extends HttpServlet {
                 if (diff < BUFFER_SIZE) {
  //               System.out.println("w");
                 String str = String.format("%03d", counter);
-                String filename = dir + "/" + str + ".png";
+                String filename = dir + "/images/" + str + ".png";
                 FileOutputStream fos = null;
                 if (lastData != null) {
 //                    System.out.println("Writing " + filename);
