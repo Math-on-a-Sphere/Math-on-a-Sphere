@@ -112,7 +112,7 @@ function compilerdriver(inputStream) {
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
     org.weblogo.program.program = {};
-    compiler.scopes = [{}];
+    org.weblogo.program.scopes = [{}];
 
     org.weblogo.program.program = org.weblogo.importReserve();
     org.weblogo.program.program += compiler(inputStream, "");

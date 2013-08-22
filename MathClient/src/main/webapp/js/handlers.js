@@ -14,6 +14,17 @@ org.weblogo.nodeHandlers.statement = function (node, program, compiler) {
     return program += node.value;
 };
 
+org.weblogo.nodeHandlers.set_stmt = function (node, program, compiler) {
+    //var prop = compiler(node.args[0], "").value.replace(/\"/g,""); // strip quotes
+    //var val = compiler(node.args[1], "").replace(/\"/g, "\\\""); // escape quotes
+    //var val = compiler(node.args[1], "").replace(/\"/g, ""); // strip quotes
+    var prop = compiler(node.args[0], "").value;
+    var val = compiler(node.args[1], "").value;
+    // TODO: proper recognition of quoted values
+    node.value = "org.weblogo.outputStream.push(\"set " + prop + " \"+" + val + ");\n";
+    return program += node.value;
+};
+
 org.weblogo.nodeHandlers.value = function (node, program, compiler) {
     if (node.type === "string") {
         node.value = "\""+node.value+"\"";
@@ -44,7 +55,7 @@ org.weblogo.nodeHandlers.op = function (node, program, compiler) {
 org.weblogo.nodeHandlers.index_op = function (node, program, compiler) {
     var index = compiler(node.args[1]).value;
     var lh = compiler(node.args[0]).value;
-    node.value = lh + "[" + (typeof(index) === "number" ? index : "\"" + index + "\"" ) + "]"; 
+    node.value = lh + "[" + index + "]"; 
     return node;
 };
 
@@ -64,7 +75,7 @@ org.weblogo.nodeHandlers.expr = function (node, program, compiler) {
 };
 
 org.weblogo.nodeHandlers.repeat_stmt = function (node, program, compiler) {
-    var index = ++compiler.depth;
+    var index = ++org.weblogo.compilerdepth;
     var repeatN = compiler(node.args[0], "").value;
     node.value = "for (var index"+index+" = 0; index"+index+" < "+repeatN+"; ++index"+index+") ";
     node.value += compiler(node.args[1], "");
@@ -89,17 +100,6 @@ org.weblogo.nodeHandlers.block = function (node, program, compiler) {
     }
     program += "}\n";
     return program;
-};
-
-org.weblogo.nodeHandlers.set_stmt = function (node, program, compiler) {
-    //var prop = compiler(node.args[0], "").value.replace(/\"/g,""); // strip quotes
-    //var val = compiler(node.args[1], "").replace(/\"/g, "\\\""); // escape quotes
-    //var val = compiler(node.args[1], "").replace(/\"/g, ""); // strip quotes
-    var prop = compiler(node.args[0], "").value;
-    var val = compiler(node.args[1], "").value;
-    // TODO: proper recognition of quoted values
-    node.value = "org.weblogo.outputStream.push(\"set " + prop + " \"+" + val + ");\n";
-    return node;
 };
 
 org.weblogo.nodeHandlers.builtin = function (node, program, compiler) {
@@ -127,7 +127,7 @@ org.weblogo.nodeHandlers.func = function (node, program, compiler) {
 
 org.weblogo.nodeHandlers.fun_assign = function (node, program, compiler) {
     var newscope = {};
-    compiler.scopes.unshift(newscope);
+    org.weblogo.program.scopes.unshift(newscope);
     
     var funcname = compiler(node.id).value;
 
@@ -143,7 +143,7 @@ org.weblogo.nodeHandlers.fun_assign = function (node, program, compiler) {
 
     var block = compiler(node.block, "");
     
-    compiler.scopes.shift();
+    org.weblogo.program.scopes.shift();
 
     node.value = "var " + funcname + " = function("+paramString+")";
     node.value += block;
@@ -151,18 +151,20 @@ org.weblogo.nodeHandlers.fun_assign = function (node, program, compiler) {
 };
 
 org.weblogo.nodeHandlers.var_assign = function (node, program, compiler) {
-    var defaultVal = compiler(node.value).value;
-    var varName = "";
-    var id = compiler(node.id).value;
-    if (!fluid.find(compiler.scopes, function (scope) {
-        return scope[id];
-    })) {
-       varName = "var ";
-       compiler.scopes[0][id] = true;
+    var rhs = compiler(node.value).value;
+    var maybeVar = "";
+    var isIdentifier = node.id.type === "identifier";
+    var lhs = compiler(node.id).value;
+    if (isIdentifier) {
+        if (!fluid.find(org.weblogo.program.scopes, function (scope) {
+            return scope[lhs];
+        })) {
+           maybeVar = "var ";
+           org.weblogo.program.scopes[0][lhs] = true;
+        }
     }
-    varName += id;
 
-    node.value = varName + " = " + defaultVal;
+    node.value = maybeVar + lhs + " = " + rhs;
     return node;
 };
 

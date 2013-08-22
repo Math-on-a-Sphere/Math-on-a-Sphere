@@ -9,7 +9,7 @@ frac                        (?:\.[0-9]+)
 %%
 \s+                                /* skip whitespace */
 \/\/[^\n]*                         /* skip comment */
-\#[^\n]*                              /* skip comment */
+\#[^\n]*                           /* skip comment */
 "*"                                       return '*'
 "/"                                       return '/'
 "-"                                       return '-'
@@ -28,17 +28,17 @@ frac                        (?:\.[0-9]+)
 ("repeat"|"REPEAT")\b                return 'REPEAT'
 ("function")\b                       return 'FUNCTION'
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
+{int}\b                  return 'INT';
 {int}{frac}?{exp}?\b     return 'NUMBER';
-{int}\b                   return 'INT';
-[a-zA-Z]+([\w]*)\b        return 'IDENTIFIER'
-"("                                       return '('
-")"                                       return ')'
-"{"                                       return '{'
-"}"                                       return '}'
-":"                                       return ':'
-"["                                       return '['
-"]"                                       return ']'
-"."                                       return '.'
+[a-zA-Z]+([\w]*)\b       return 'IDENTIFIER'
+"("                                return '('
+")"                                return ')'
+"{"                                return '{'
+"}"                                return '}'
+":"                                return ':'
+"["                                return '['
+"]"                                return ']'
+"."                                return '.'
 "=="                               return '=='
 "<"                                return '<'
 ">"                                return '>'
@@ -130,21 +130,33 @@ set_stmt
     $$['args'] = [$2, $3];}
 ;
 
+lvalue
+: identifier
+| lvalue '.' index
+  {$$ = {};
+   $$.handler = "index_op";
+   $$.args = [$1, $3];}
+| lvalue '[' expr ']'
+  {$$ = {};
+   $$.handler = "index_op";
+   $$.args = [$1, $3];}
+;
+
 assignment
-: identifier '=' expr
+: lvalue '=' expr
   {$$ = {};
     $$['type'] = 'assignment';
     $$['handler'] = 'var_assign';
     $$['id'] = $1;
     $$['value'] = $3;}
-| identifier '=' FUNCTION '(' ')' block
+| lvalue '=' FUNCTION '(' ')' block
   {$$ = {};
     $$['type'] = 'assignment';
     $$['handler'] = 'fun_assign';
     $$['id'] = $1;
     $$['args'] = [];
     $$['block'] = $6;}
-| identifier '=' FUNCTION '(' param_list ')' block
+| lvalue '=' FUNCTION '(' param_list ')' block
   {$$ = {};
     $$['type'] = 'assignment';
     $$['handler'] = 'fun_assign';
@@ -186,7 +198,11 @@ function_call
     $$['type'] = 'function';
     $$['handler'] = 'func';
     $$['id'] = $1;
-    $$['args'] = $2;}
+    $$['args'] = $3;}
+;
+
+arguments
+: ElementList
 ;
 
 repeat_stmt
@@ -222,17 +238,17 @@ expr
    $$['value'] = $2;}
 ;
 
-arguments
-: re
-;
-
 index
 :INT   
-  {$$ = {};
-  $$.type = "number";
-  $$.handler = "value";
-  $$.value = Number(yytext);}
+  {$$ = {
+    type: "number",
+    handler: "value",
+    value: Number(yytext)};}
 |identifier
+  {$$ = {
+    type: "string",
+    handler: "value",
+    value: $1.value};}
 ;
 
 complex_value
@@ -240,71 +256,6 @@ complex_value
 | JSONArray 
 ;
 
-re
-: re '+' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '+';
-   $$['args'] = [$1, $3];}
-| re '[' re ']'
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'index_op';
-   $$['args'] = [$1, $3];}
-| re '.' index
-  {$$ = {};
-   $$.handler = "index_op";
-   $$.args = [$1, $3];}
-| re '-' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '-';
-   $$['args'] = [$1, $3];}
-| re '*' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '*';
-   $$['args'] = [$1, $3];}
-| re '/' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '/';
-   $$['args'] = [$1, $3];}
-| number
-| identifier
-| re '==' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '==';
-   $$['args'] = [$1, $3];}
-| re '<' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '<';
-   $$['args'] = [$1, $3];}
-| re '>' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '>';
-   $$['args'] = [$1, $3];}
-| '(' expr ')'
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'group_op';
-   $$['args'] = [$2];}
-| '(' function_call ')'
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'skip';
-   $$['value'] = $2;}
-;
 
 identifier
 : IDENTIFIER
@@ -322,8 +273,13 @@ string
     $$['value'] = yytext;}
 ;
 
-number
+number_type
 : NUMBER
+| INT
+;
+
+number
+: number_type
   {$$ = {};
     $$['type'] = 'number';
     $$['handler'] = 'value';
@@ -354,6 +310,77 @@ boolean
 ;
 
 
+
+simple_value
+: number
+| identifier
+| string
+;
+
+re
+: simple_value
+| re '+' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '+';
+   $$['args'] = [$1, $3];}
+| re '[' expr ']'
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'index_op';
+   $$['args'] = [$1, $3];}
+| re '.' index
+  {$$ = {};
+   $$.handler = "index_op";
+   $$.args = [$1, $3];}
+| re '-' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '-';
+   $$['args'] = [$1, $3];}
+| re '*' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '*';
+   $$['args'] = [$1, $3];}
+| re '/' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '/';
+   $$['args'] = [$1, $3];}
+| re '==' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '==';
+   $$['args'] = [$1, $3];}
+| re '<' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '<';
+   $$['args'] = [$1, $3];}
+| re '>' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '>';
+   $$['args'] = [$1, $3];}
+| '(' expr ')'
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'group_op';
+   $$['args'] = [$2];}
+| '(' function_call ')'
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'skip';
+   $$['value'] = $2;}
+;
 
 JSONObject
 : '{' '}'
@@ -390,17 +417,17 @@ JSONArray
     $$['type'] = 'JSONArray';
     $$['handler'] = 'list';
     $$['value'] = [];}
-| '[' JSONElementList ']'
+| '[' ElementList ']'
   {$$ = {};
     $$['type'] = 'JSONArray';
     $$['handler'] = 'list';
     $$['value'] = $2;}
 ;
 
-JSONElementList
+ElementList
 : expr
   {$$ = [$1];}
-| expr ',' JSONElementList
+| expr ',' ElementList
   {$$ = $3; 
     $3.unshift($1);}
 ;
