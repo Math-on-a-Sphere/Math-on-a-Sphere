@@ -108,7 +108,7 @@ org.weblogo.nodeHandlers.builtin = function (node, program, compiler) {
 };
 
 org.weblogo.invokeFunction = function (funcname, args) {
-    org.weblogo.outputStream.push(funcname + " " + args.join(" "));
+    org.weblogo.outputStream.push(funcname + " " + fluid.makeArray(args).join(" "));
 };
 
 org.weblogo.nodeHandlers.func = function (node, program, compiler) {
@@ -117,11 +117,18 @@ org.weblogo.nodeHandlers.func = function (node, program, compiler) {
     var args = fluid.makeArray(arglist);
     if (org.weblogo.turtle.commands[funcname]) {
         // we undo one level of quoting here
-        node.value = "org.weblogo.invokeFunction(\"" + funcname + "\", [" + args.join(", ") + "]);\n";
+        node.value = "org.weblogo.invokeFunction(\"" + funcname + "\", " + args + ");\n";
     }
     else {
         node.value = funcname + "(" + args.join(", ") + ")";
     }
+    return node;
+};
+
+org.weblogo.nodeHandlers.each = function (node, program, compiler) {
+    var lvalue = compiler(node.id).value;
+    var args = compiler(node.args).value;
+    node.value = "fluid.each(" + lvalue + ", " + args + ")";
     return node;
 };
 

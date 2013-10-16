@@ -20,13 +20,16 @@ frac                        (?:\.[0-9]+)
 "E"                                       return 'E'
 "true"                                    return 'TRUE'
 "false"                                   return 'FALSE'
-("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp")     return "BUILTIN_ARG"
-("clearall"|"ca"|"cleardrawing"|"ca"|"penup"|"pu"|"pendown"|"pd"|"getheading"|"gh"|"getposition"|"gp"|"getspeed"|"help"|"demo"|"testcard")    return "BUILTIN_NULL"
+("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp")\b     return "BUILTIN_ARG"
+("clearall"|"ca"|"cleardrawing"|"ca"|"penup"|"pu"|"pendown"|"pd"|"getheading"|"gh"|"getposition"|"gp"|"getspeed"|"help"|"demo"|"testcard")\b    return "BUILTIN_NULL"
 ("set ")\b                           return 'SET'
 ("if"|"IF")                          return 'IF'
 ("else"|"ELSE")                      return 'ELSE'
 ("repeat"|"REPEAT")\b                return 'REPEAT'
-("function")\b                       return 'FUNCTION'
+"function"\b                         return 'FUNCTION'
+"each"\b                             return 'EACH'
+"transform"\b                        return 'TRANSFORM'
+
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
 {int}\b                  return 'INT';
 {int}{frac}?{exp}?\b     return 'NUMBER';
@@ -173,36 +176,58 @@ param_list
     $3.unshift($1);}
 ;
 
+
+identifier
+: IDENTIFIER
+  {$$ = {};
+    $$['type'] = 'identifier';
+    $$['handler'] = 'value';
+    $$['value'] = yytext;}
+;
+
+string
+: STRING
+  {$$ = {};
+    $$['type'] = 'string';
+    $$['handler'] = 'value';
+    $$['value'] = yytext;}
+;
+
+
 function_call
 : BUILTIN_NULL
   {$$ = {
-    "type": "function",
     "handler": "builtin",
     "id": $1
     };}
 | BUILTIN_NULL '(' ')' 
   {$$ = {
-    "type": "function",
     "handler": "builtin",
     "id": $1
     };}
 | BUILTIN_ARG expr
   {$$ = {    
-    "type": "function",      
     "handler": "func",      
     "id": $1,      
     "args": $2
     };}
-| identifier '(' arguments ')'
+| lvalue '(' arguments ')'
   {$$ = {}; 
     $$['type'] = 'function';
     $$['handler'] = 'func';
     $$['id'] = $1;
     $$['args'] = $3;}
+| lvalue '.' EACH '(' arguments ')'
+  {$$ = {
+      "handler": "each",
+      "id": $1,
+      "args": $5
+  };}
 ;
 
 arguments
-: ElementList
+:
+| ElementList
 ;
 
 repeat_stmt
@@ -257,22 +282,6 @@ complex_value
 ;
 
 
-identifier
-: IDENTIFIER
-  {$$ = {};
-    $$['type'] = 'identifier';
-    $$['handler'] = 'value';
-    $$['value'] = yytext;}
-;
-
-string
-: STRING
-  {$$ = {};
-    $$['type'] = 'string';
-    $$['handler'] = 'value';
-    $$['value'] = yytext;}
-;
-
 number_type
 : NUMBER
 | INT
@@ -309,31 +318,20 @@ boolean
     $$['value'] = false;}
 ;
 
-
-
 simple_value
 : number
-| identifier
 | string
 ;
 
 re
 : simple_value
+| lvalue
 | re '+' re
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '+';
    $$['args'] = [$1, $3];}
-| re '[' expr ']'
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'index_op';
-   $$['args'] = [$1, $3];}
-| re '.' index
-  {$$ = {};
-   $$.handler = "index_op";
-   $$.args = [$1, $3];}
 | re '-' re
   {$$ = {};
    $$['type'] = 're';
