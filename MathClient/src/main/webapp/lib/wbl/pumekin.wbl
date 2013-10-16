@@ -1,0 +1,122 @@
+// how big should your pumpkins' eyes be?
+// 3 = big, 2 = medium, 1 = tiny
+eyes = 2
+
+
+// do you want your pumpkin to have striation lines?
+// 1 = yes, 0 = no
+striations = 1
+
+// do you want your pumpkin to have teeth?  
+// 1 = yes, 0 = no
+teeth = 0
+
+
+// do you want your pumpkin to have a stem?
+// 1 = yes, 0 = no
+stem = 1
+
+
+
+setspeed 30
+
+set color orange
+set pensize 10
+repeat 30 {forward 360 right 6}
+
+if (striations == 1) {
+  set color 23
+  set pensize 1
+  pu
+  setpos [90,0]
+  pd
+  repeat 12 {forward 360 right 15}
+}
+
+
+setpos [0,0]
+setspeed 10
+set pensize 10
+
+circle2 = function [t,p,r] {
+  penup setpos [t,p] fd r
+  pd right 90
+  setrotationaxis [t,p]
+  fd 360
+}
+
+set color 0
+
+if (eyes == 3) { radius = 10}
+if (eyes == 2) { radius = 7}
+if (eyes == 1) { radius = 4}
+
+//set color red
+circle2 [30,30,radius]
+
+//set color blue
+circle2 [30,330,radius]
+
+
+
+tri = function [x,y,size] {
+    r = size*PI/180
+    a = (Math.cos(r))
+    b = (Math.sin(r))
+    c = (a - (a * a)) / (b * b)
+    theta = 180 - (Math.acos(c))*180/PI
+    pu
+    setpos[x,y]
+    setheading 30
+    pd
+    set pensize 1
+    //set color cyan
+    repeat (3) {
+        forward size
+        right theta
+    }
+} 
+
+
+tri [0,350,20]
+
+pu
+left 170
+fd 30
+left 115
+
+getposition
+getheading
+
+pd 
+set pensize 3
+fd 60
+
+
+if (teeth == 1) {
+  // teeth
+  set pensize 1
+  
+  pu
+  setpos [-22.52, -30.36]
+  setheading 109.1
+  
+  
+  pd
+  fd 5
+  repeat 5 {
+    right 60 fd 8
+    left 120 fd 8
+    right 60 fd 2
+  }
+}
+
+if (stem == 1) {
+  pu
+  setpos [70, 0]
+  setheading 20
+  set pensize 12
+  set color 22
+  pd
+  fd 25
+}
