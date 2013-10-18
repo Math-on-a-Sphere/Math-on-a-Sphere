@@ -1,0 +1,134 @@
+// What should the background color be?
+// options: green, black, gray, pink
+bckgdcolor = gray
+
+// How large should the eyes be?
+// 3 = huge, 2 = medium size, 1 = small
+eyesize = 2
+
+
+// Should your mask have a hat or headband?
+// 1 = hat, 0 = headband
+haveHat = 0
+
+// What should the color of the hat/headband be?
+// options: green, orange, pink, red, yellow
+hatHeadbandColor = pink
+
+// If your mask has a hat, how wide should the stripes be?
+// 2 = wide , 1 = narrow
+stripeWidth = 1
+
+// Do you want your mask to have a mouth?
+// 1 = yes, 0 = no
+mouth = 1
+
+
+setspeed 50
+
+repeat 18 {
+  set pensize 10
+  set color bckgdcolor
+  fd 360
+  right 10
+}
+
+set pensize 1
+set color white
+
+circle = function [t,p,r] {
+  penup setpos [t,p] fd r
+  pd right 90
+  setrotationaxis [t,p]
+  fd 360
+}
+
+
+if (eyesize == 3) {size = 20}
+if (eyesize == 2) {size = 14}
+if (eyesize == 1) {size = 10}
+
+repeats = 2*size
+
+// left eye
+repeat (repeats) { 
+   circle [350, 30, size]
+   size = size - 0.5
+}
+
+if (eyesize == 3) {size = 20}
+if (eyesize == 2) {size = 14}
+if (eyesize == 1) {size = 10}
+
+// right eye
+repeat (repeats) { 
+   circle [350, 330, size]
+   size = size - 0.5
+}
+
+
+if (haveHat == 1) {
+  // striped hat
+  set color hatHeadbandColor
+
+  if (stripeWidth == 1) {
+    set pensize 2
+    numberStripes = 20
+    stripeSpacing = 4
+  }
+
+  if (stripeWidth == 2) {
+    set pensize 6
+    numberStripes = 12
+    stripeSpacing = 8
+  }
+
+  latitude = 24
+
+  repeat numberStripes {
+    pu
+    setpos [latitude,0]
+    pd
+    setheading 180
+    setrotationaxis [90,0]
+    fd 360
+    latitude = latitude + stripeSpacing
+  }
+}
+
+if (haveHat == 0) {
+  // headband
+  set color hatHeadbandColor
+  set pensize 4
+
+  pu
+  setpos [30,0]
+  pd
+  setheading 180
+  setrotationaxis [90,0]
+  
+  angle = 58
+  
+  repeat 27 {
+    right angle fd 12 
+    left (180-angle) fd 12 
+    setheading 90
+  }
+}
+
+if (mouth == 1) {
+  // mouth
+  setspeed 2
+  pu
+
+  set color 9.9
+  set pensize 3
+  setpos [310,330]
+  setheading 135
+  pd 
+  fd 45
+}
+
+
+pu
+forward 20

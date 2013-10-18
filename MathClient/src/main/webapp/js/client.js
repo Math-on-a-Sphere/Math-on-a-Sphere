@@ -180,6 +180,7 @@ org.weblogo.client = function(container, options) {
         that.lastFrame = that.initTime;
     };
     that.events = {
+        onFileLoaded: fluid.makeEventFirer(),
         onInfo: fluid.makeEventFirer(),
         onError: fluid.makeEventFirer(),
         onDraw: fluid.makeEventFirer()
@@ -190,9 +191,16 @@ org.weblogo.client = function(container, options) {
         that.commandDone();
     });
 
-    that.events.onError.addListener(function(error) {
+    that.events.onError.addListener(function (error) {
         that.terminal.error(error.message);
         that.commandDone();
+    });
+    
+    that.events.onFileLoaded.addListener(function () {
+        if (that.queueAutoRun) {
+            that.queueAutoRun = false;
+            $("#compile-button").click();
+        }
     });
 
     
@@ -298,7 +306,15 @@ org.weblogo.init = function() {
         client.draw();
         var hash = window.location.hash;
         if (hash) {
-            client.execute(hash.substring(1));
+            if (hash.charAt(1) === "!") {
+                var preload = hash.substring(2);
+                client.queueAutoRun = true;
+                var select = $("#preload-commands");
+                select.val(preload);
+                select.selectmenu("refresh");
+            } else {
+                client.execute(hash.substring(1));
+            }
         }
     };
     var backfunc = function() {
@@ -356,34 +372,31 @@ org.weblogo.init = function() {
     $("#show2d-button").click(function () {
         var canvas = $("#hiddenCanvas")[0];
        
-        if(canvas.style.display == 'none')
-        {
-            canvas.style.display='block';
-        }
-        else
-        {
+        if (canvas.style.display === 'none') {
+            canvas.style.display = 'block';
+        } else {
             canvas.style.display = 'none';
         }
 
-     });
+    });
 
-     var handleSelect = function () {
-         console.log("click");
-         var menu = $("#preload-commands")[0];
-         var selected = menu.options[menu.selectedIndex].value;
-         if (selected === "noselection") { selected = "blank"; }
-         if (selected === "my_design") {
-             var saved = org.weblogo.loadAutoSave();
-             myCodeMirror.setValue(saved);
-             myCodeMirror.clearHistory();
-         }
-         else {
-             org.weblogo.preload.loadSelected(selected, myCodeMirror);
-         }
+    var handleSelect = function () {
+        console.log("click");
+        var menu = $("#preload-commands")[0];
+        var selected = menu.options[menu.selectedIndex].value;
+        if (selected === "noselection") { selected = "blank"; }
+        if (selected === "my_design") {
+            var saved = org.weblogo.loadAutoSave();
+            myCodeMirror.setValue(saved);
+            myCodeMirror.clearHistory();
+        }
+        else {
+            org.weblogo.preload.loadSelected(selected, myCodeMirror, client);
+        }
     };
      
-     var preload = $("#preload-commands");
-     var menu = preload.selectmenu({style:"popup", width: 200, maxHeight: 600, select: handleSelect});
+    var preload = $("#preload-commands");
+    var menu = preload.selectmenu({style:"popup", width: 200, maxHeight: 600, select: handleSelect});
 
 };
 

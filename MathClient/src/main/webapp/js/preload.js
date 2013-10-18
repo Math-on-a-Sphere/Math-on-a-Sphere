@@ -4,10 +4,11 @@ org.weblogo.preload = {};
 
 var preload = org.weblogo.preload;
 
-org.weblogo.preload.loadSelected = function(selected, myCodeMirror) {
+org.weblogo.preload.loadSelected = function(selected, myCodeMirror, client) {
     $.get(preload[selected], function(data) {
         myCodeMirror.setValue(data);
         myCodeMirror.clearHistory();
+        client.events.onFileLoaded.fire();
     }, "text");
 };
 
@@ -33,6 +34,9 @@ var preload = {
     circles: "lib/wbl/circle.wbl",
     rand_circles: "lib/wbl/randcircle.wbl",
     flower: "lib/wbl/flower.wbl",
+    pumekin: "lib/wbl/pumekin.wbl",
+    mask: "lib/wbl/mask.wbl",
+    CATT: "lib/wbl/catt.wbl"
 };
 
 }());

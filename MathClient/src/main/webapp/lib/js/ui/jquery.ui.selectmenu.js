@@ -819,6 +819,11 @@ $.widget("ui.selectmenu", {
 			return this.element[0].value;
 		}
 	},
+	
+	refresh: function() { // PATCHED AMB to conform with documentation
+	    this._refreshValue();
+	    this.select({});
+	},
 
 	_refreshValue: function() {
 		var activeClass = (this.options.style == "popup") ? " ui-state-active" : "";

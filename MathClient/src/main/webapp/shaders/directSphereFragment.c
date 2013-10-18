@@ -25,7 +25,7 @@ void main(void) {
        }
     vec3 apos = vec3( spos, sqrt(1.0 - l2)); // absolute position normal
     vec3 npos = moonMatrix * apos; // position normal in "original" space
-    vec2 tpos = vec2(atan(npos.z, -npos.x)/(2.0 * PI) + 0.5, asin(npos.y)/PI + 0.5);
+    vec2 tpos = vec2(atan(npos.z, -1.0 * npos.x)/(2.0 * PI) + 0.5, asin(npos.y)/PI + 0.5);
     vec4 ncol = texture2D(sampler, tpos);
     vec3 vLightWeighting;
     

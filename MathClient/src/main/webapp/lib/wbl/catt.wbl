@@ -1,0 +1,172 @@
+// do you want the cat to have a tail?
+// 1 = yes, 0 = no
+tail = 1
+
+// should the whiskers be triangles or lines?
+// 2 = triangles, 1 = lines
+whiskers = 1
+
+// should the ears be filled-in (or just outlines)?
+// 1 = filled-in, 0 = not filled-in
+filledEars = 1
+
+// should the eyes be outlines or filled-in circles?
+// 1 = filled-in, 0 = not filled-in
+filledEyes = 1
+
+// what color should the background be?
+// options = black, green, orange, pink, cyan
+bckgdColor = pink
+
+
+
+
+// sets background color
+setspeed 20
+set color bckgdColor
+set pensize 10
+repeat 18 {fd 360 right 10}
+
+setspeed 10
+set color white
+set pensize 1
+
+// nose
+pu fd 5 right 90 fd 5 right 90 pd
+repeat 4 {fd 8 right 90}
+
+
+if (whiskers == 2) {
+  // triangle whiskers 
+
+  // right then left upper whiskers
+  pu
+  setpos [0, 10]
+  setheading 70
+
+  repeat 2 {
+    pd
+    fd 30
+    right 110
+    fd 8
+    right 85
+    fd 26
+  
+    setpos [0, 10]
+    setheading (70+30)
+  }
+
+
+  pu
+  setpos [0, 350]
+  setheading 290
+
+  repeat 2 {
+    pd
+    fd 30
+    left 110
+    fd 8
+    left 85
+    fd 26
+  
+    setpos [0, 350]
+    setheading (290-30)
+  }
+}
+
+
+if (whiskers == 1) {
+  // line whiskers 
+
+  pu
+  setpos [0, 10]
+  setheading 75
+  pd fd 30
+  
+  setpos [0, 10]
+  setheading 105
+  fd 30
+
+
+  pu
+  setpos [0, 350]
+  setheading 285
+  pd fd 30
+  
+  setpos [0, 350]
+  setheading 255
+  fd 30
+  
+}
+
+// eyes
+
+circle = function [t,p,r] {
+  penup setpos [t,p] fd r
+  pd right 90
+  setrotationaxis [t,p]
+  fd 360
+}
+
+
+size = 5
+
+if (filledEyes == 1) {repeats = 4*size}
+if (filledEyes == 0) {repeats = 3}
+
+repeat (repeats) { 
+   setspeed 50
+   circle [20, 15, size]   // right eye
+   circle [20, 345, size]  // left eye
+   size = size - 0.25
+}
+
+
+setspeed 10
+
+// makes the ears
+tri = function [size] {
+    r = size*PI/180
+    a = (Math.cos(r))
+    b = (Math.sin(r))
+    c = (a - (a * a)) / (b * b)
+    theta = 180 - (Math.acos(c))*180/PI
+    repeat (3) {
+        forward size
+        right theta
+    }
+} 
+
+size = 40
+if (filledEars == 1) {repeats = 40}
+if (filledEars == 0) {repeats = 3}
+
+pu
+setpos [45,10]
+pd
+
+repeat (repeats) { 
+   tri size
+   size = size - 1
+}
+
+size = 40
+pu
+setpos [45, 350]
+pd
+
+left 20
+repeat (repeats) { 
+   tri size
+   size = size - 1
+}
+
+if (tail == 1) {
+  // tail
+  pu
+  setpos [0, 180]
+  setrotationaxis [340, 200]
+  set pensize 8
+  pd
+  fd 120
+}

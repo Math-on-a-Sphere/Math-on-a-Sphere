@@ -23,6 +23,10 @@ canvas {
 
 .flc-math-commands { overflow-y: auto; }
 
+#compile-button {
+    margin-top: 3px
+}
+
 .code {
    border: none;
    background: black;
