@@ -44,7 +44,7 @@ vec3 point_by_angle (vec3 point, vec3 axis, float angle) {
 // JS atan2 in range -PI to PI
 float get_parameter (vec3 conj, float angle, vec3 point) {
     vec3 upped = point_by_angle(point, conj, angle);
-    float param = atan(upped[0], -upped[1]);
+    float param = atan(upped[0], -1.0 * upped[1]); // work around HD 5000 bug
     return param;
 }
 
