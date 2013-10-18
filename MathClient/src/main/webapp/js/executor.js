@@ -1,26 +1,26 @@
-(function() {
+(function () {
 
-org.weblogo.executor = function(config) {
+org.weblogo.executor = function (config) {
     var that = {};
     
-    that.execute = function(command, tick) {
-        var executor = typeof(command) === "function"? command: org.weblogo.executors[command.type];
+    that.execute = function (command, tick) {
+        var executor = typeof(command) === "function" ? command: org.weblogo.executors[command.type];
         return executor(config, command, tick);
     };
     
     return that;
 };
 
-org.weblogo.quickStringExecutor = function(executor) {
+org.weblogo.quickStringExecutor = function (executor) {
     return {
-        execute: function(commandString) {
+        execute: function (commandString) {
             var parsed = org.weblogo.stubParser(commandString);
             if (parsed.type === "error") {
                 return parsed;
             }
             else {
                 var execution = executor.execute(parsed.command, 0);
-                if (execution && execution.type === "error") {
+                if (execution && (execution.type === "error" || execution.type === "value")) {
                     return execution;
                 }
                 if (execution && execution.toTick) {
@@ -31,8 +31,12 @@ org.weblogo.quickStringExecutor = function(executor) {
     };
 };
 
-org.weblogo.blockExecutor = function(commands) {
-    return function(config, command, tick) {
+org.weblogo.renderValue = function (value) {
+    return value.toString();
+}
+
+org.weblogo.blockExecutor = function (commands) {
+    return function (config, command, tick) {
         var executor = org.weblogo.executor(config);
         function quickExec(commandString) {
             var parsed = org.weblogo.stubParser(commandString);
@@ -50,14 +54,19 @@ org.weblogo.blockExecutor = function(commands) {
             var messages = [];
             while (!execution && index < commands.length) {
                 execution = quickExec(commands[index]);
-                if (execution && execution.type === "info") {
-                    config.events.onInfo.fire(execution);
-                    messages.push(execution);
-                    execution = null;
-                }
-                else if (execution && execution.type === "error") {
-                    config.events.onError.fire(execution);
-                    execution = null;
+                if (execution) {
+                    if (execution.type === "value") {
+                        execution = {type: "info", message: org.weblogo.renderValue(execution.value)};
+                    }
+                    if (execution.type === "info") {
+                        config.events.onInfo.fire(execution);
+                        messages.push(execution);
+                        execution = null;
+                    }
+                    else if (execution && execution.type === "error") {
+                        config.events.onError.fire(execution);
+                        execution = null;
+                    }
                 }
                 ++index;
             }
@@ -66,7 +75,7 @@ org.weblogo.blockExecutor = function(commands) {
         var messages = hopalong();
         var that = {};
         that.messages = messages;
-        that.toTick = function(newTick) {
+        that.toTick = function (newTick) {
             var finished = !execution || execution.toTick(newTick);
             if (finished) {
                 execution = null;
@@ -78,11 +87,11 @@ org.weblogo.blockExecutor = function(commands) {
     };  
 };
 
-org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
+org.weblogo.renderingExecutor = function (executor, client, tickInterval) {
     var events = client.events;
     var that = {};
     
-    that.tick = function() {
+    that.tick = function () {
         var now = Date.now();
         var finished;
         try {
@@ -99,7 +108,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
         }
     };
       
-    that.execute = function(command) {
+    that.execute = function (command) {
         var executable;
         if (typeof(command) === "string") {
             var parsed = org.weblogo.stubParser(command);
@@ -136,7 +145,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
         }
         return that.execution;
     };
-    that.stop = function() {
+    that.stop = function () {
         client.commandDone(that.execution);
         delete that.execution;
         if (that.intervalID) {
@@ -148,7 +157,7 @@ org.weblogo.renderingExecutor = function(executor, client, tickInterval) {
 };
 
 
-org.weblogo.parseToType = function(value, type) {
+org.weblogo.parseToType = function (value, type) {
   // The only types we support right now are "number" and "number|string"
   // This ridiculous junk will be cleared away when we have JISON
     var typeList = type.split("|");
@@ -175,7 +184,7 @@ org.weblogo.parseToType = function(value, type) {
     return failure? {type: "error", message: failure} : togo;
 };
 
-org.weblogo.blockParser = function(commandString) {
+org.weblogo.blockParser = function (commandString) {
     var commandObject = grammar.parse(commandString);
     var index = 0;
     var command = commandObject.command;
@@ -200,7 +209,7 @@ org.weblogo.blockParser = function(commandString) {
 };
 
 /** Parser for the "stub language" which operates simple commands in a flat list **/
-org.weblogo.stubParser = function(commandString) {
+org.weblogo.stubParser = function (commandString) {
     var tokens = commandString.match(/"[^"]+"|\S+/g);
     var command = tokens[0];
     var cs = org.weblogo.turtle.commands;

@@ -1,26 +1,28 @@
-(function() {
+(function () {
 
 var geom = org.weblogo.geom;
 
-org.weblogo.storeFrame = function(config) {
+org.weblogo.storeFrame = function (config) {
     config.frame = config.context.getImageData(0, 0, config.width, config.height);
 };
 
-org.weblogo.restoreFrame = function(config) {
+org.weblogo.restoreFrame = function (config) {
     config.context.putImageData(config.frame, 0, 0);
 };
 
-org.weblogo.updateTurtle = function(config, turtle) {
-    if (turtle.showing) {
+org.weblogo.updateTurtle = function (config, turtle) {
+    if (turtle.showing && config.interactive) {
         org.weblogo.testTurtle.drawAt(config, turtle.position, turtle.heading)
     }
 };
 
 var updateTurtle = org.weblogo.updateTurtle;
 
-var updateTurtleF = function(config, turtle) {
-    org.weblogo.restoreFrame(config);
-    updateTurtle(config, turtle);
+var updateTurtleF = function (config, turtle) {
+    if (config.interactive) {
+        org.weblogo.restoreFrame(config);
+        updateTurtle(config, turtle);
+    }
 };
 
 // An "executor" constructs an "execution object" which will persist whilst the
@@ -29,12 +31,12 @@ org.weblogo.executors = {};
 
 // Although line executors are asynchronous, they currently expect to run all
 // turtles in lockstep (so speed setting is assumed to be shared)
-org.weblogo.executors.line = function(config, command, tick) {
+org.weblogo.executors.line = function (config, command, tick) {
     var that = {};
     that.firstTick = tick;
     that.lines = {};
     
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var line = that.lines[turtle.id] = {};
         line.distance = command.distance;
         line.finalTick = tick + 1000 * Math.abs(command.distance) / (turtle.speed * config.masterSpeed);
@@ -42,8 +44,8 @@ org.weblogo.executors.line = function(config, command, tick) {
         line.lastDistance = 0;
     });
     
-    that.toTick = function(newTick) {
-        var finished = fluid.transform(config.turtles, function(turtle) {
+    that.toTick = function (newTick) {
+        var finished = fluid.transform(config.turtles, function (turtle) {
             org.weblogo.restoreFrame(config);
             var line = that.lines[turtle.id];
             var finished = false;
@@ -54,7 +56,7 @@ org.weblogo.executors.line = function(config, command, tick) {
             }
             var versor = geom.versor_from_parts(turtle.heading, newDistance);
             var newpos = geom.quat_conj(versor, line.startPos);
-            if (turtle.drawing) {
+            if (turtle.drawing && config.interactive) {
                 var sign = line.distance > 0? 1 : -1;
                 org.weblogo.raster.stroke_line({
                   config: config, 
@@ -79,11 +81,11 @@ org.weblogo.executors.line = function(config, command, tick) {
     return that;
 };
 
-org.weblogo.executors.turn = function(config, command, tick) {
+org.weblogo.executors.turn = function (config, command, tick) {
     var that = {};
     that.firstTick = tick;
     that.turns = {};
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var turn = that.turns[turtle.id] = {};
         turn.angle = command.angle;
         turn.finalTick = tick + 1000 * Math.abs(command.angle) / (turtle.turnSpeed * config.masterSpeed);
@@ -91,8 +93,8 @@ org.weblogo.executors.turn = function(config, command, tick) {
         turn.lastAngle = 0;
     });
   
-    that.toTick = function(newTick) {
-        var finished = fluid.transform(config.turtles, function(turtle) {
+    that.toTick = function (newTick) {
+        var finished = fluid.transform(config.turtles, function (turtle) {
             var turn = that.turns[turtle.id];
             var finished = false;
             var newAngle = turn.angle * (newTick - that.firstTick) / (turn.finalTick - that.firstTick);
@@ -109,46 +111,46 @@ org.weblogo.executors.turn = function(config, command, tick) {
     return that;
 };
 
-org.weblogo.executors.clearDrawing = function(config, command) {
+org.weblogo.executors.clearDrawing = function (config, command) {
     var colour = org.weblogo.colour.cssFromColour(config.backgroundColour);
     config.context.fillStyle = colour;
     config.context.fillRect(0, 0, config.width, config.height);
     org.weblogo.storeFrame(config);
 };
 
-org.weblogo.executors.clearAll = function(config, command) {
+org.weblogo.executors.clearAll = function (config, command) {
     org.weblogo.executors.clearDrawing(config, command);
     // TODO: different modes for initial state
     config.turtles = [org.weblogo.turtle()];
     org.weblogo.updateTurtle(config, config.turtles[0]);
 };
 
-org.weblogo.executors.penUp = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
+org.weblogo.executors.penUp = function (config, command) {
+    fluid.each(config.turtles, function (turtle) {
         turtle.drawing = false; 
     });
 };
 
-org.weblogo.executors.penDown = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
+org.weblogo.executors.penDown = function (config, command) {
+    fluid.each(config.turtles, function (turtle) {
         turtle.drawing = true; 
     });
 };
 
-org.weblogo.executors.setSpeed = function(config, command) {
+org.weblogo.executors.setSpeed = function (config, command) {
     config.masterSpeed = command.speed;
-//    fluid.each(config.turtles, function(turtle) {
+//    fluid.each(config.turtles, function (turtle) {
 //        turtle.speed = command.speed;
 //    });
 }
 
-org.weblogo.executors.getSpeed = function(config, command) {
-  return {
-     type: "info",
-     message: config.masterSpeed
-  };
+org.weblogo.executors.getSpeed = function (config, command) {
+    return {
+        type: "value",
+        value: config.masterSpeed
+    };
 //    var output;
-//    fluid.each(config.turtles, function(turtle) {
+//    fluid.each(config.turtles, function (turtle) {
 //        output = {
 //            type: "info",
 //            message: turtle.speed
@@ -157,15 +159,15 @@ org.weblogo.executors.getSpeed = function(config, command) {
 //    return output;
 };
 
-org.weblogo.executors.setRotationAxis = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
+org.weblogo.executors.setRotationAxis = function (config, command) {
+    fluid.each(config.turtles, function (turtle) {
         turtle.heading = geom.polar_to_3(command.theta, command.phi);
         updateTurtleF(config, turtle);
     });
 };
 
-org.weblogo.executors.towards = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
+org.weblogo.executors.towards = function (config, command) {
+    fluid.each(config.turtles, function (turtle) {
         var target = geom.polar_to_3(command.theta, command.phi); 
         var heading = geom.axis_from_heading(turtle.position, target);
         turtle.heading = heading;
@@ -173,15 +175,15 @@ org.weblogo.executors.towards = function(config, command) {
     });
 };
 
-org.weblogo.executors.distanceTo = function(config, command) {
+org.weblogo.executors.distanceTo = function (config, command) {
     var output;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var target = geom.polar_to_3(command.theta, command.phi);
         var distance = Math.acos(geom.dot_3(turtle.position, target));
-        var message = geom.rad2deg(distance).toFixed(6);
+        var distancedeg = geom.rad2deg(distance);
         output = {
-            type: "info",
-            message: message
+            type: "value",
+            value: distancedeg
         };
     });
     return output;
@@ -189,8 +191,8 @@ org.weblogo.executors.distanceTo = function(config, command) {
 
 var pole = geom.polar_to_3(Math.PI/2, 0);
 
-org.weblogo.executors.setHeading = function(config, command) {
-    fluid.each(config.turtles, function(turtle) {
+org.weblogo.executors.setHeading = function (config, command) {
+    fluid.each(config.turtles, function (turtle) {
         var poleAxis = geom.axis_from_heading(turtle.position, pole);
         var newAxis = geom.point_by_angle(poleAxis, turtle.position, command.angle); 
         turtle.heading = newAxis; 
@@ -198,24 +200,24 @@ org.weblogo.executors.setHeading = function(config, command) {
     });
 };
 
-org.weblogo.executors.getHeading = function(config, command) {
+org.weblogo.executors.getHeading = function (config, command) {
     var output;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var poleAxis = geom.axis_from_heading(turtle.position, pole);
         var sin = geom.length_3(geom.cross_3(turtle.heading, poleAxis));
         var angle = Math.atan2(sin, geom.dot_3(turtle.heading, poleAxis));
-        var heading = geom.rad2deg(angle).toFixed(6);
+        var heading = geom.rad2deg(angle);
         output = {
-            type: "info",
-            message: heading
+            type: "value",
+            value: heading
         };
     });
     return output;
 };
 
-org.weblogo.executors.setPosition = function(config, command, tick) {
+org.weblogo.executors.setPosition = function (config, command, tick) {
     var angle;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var newPos = geom.polar_to_3(command.theta, command.phi);
         turtle.heading = geom.axis_from_heading(turtle.position, newPos);
         // TODO: this command model will not work for multiple turtles
@@ -224,25 +226,25 @@ org.weblogo.executors.setPosition = function(config, command, tick) {
     return org.weblogo.executors.line(config, {distance: angle}, tick);
 };
 
-org.weblogo.executors.getPosition = function(config, command) {
+org.weblogo.executors.getPosition = function (config, command) {
     var output;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         var pos = geom.polar_from_3(turtle.position);
         var a = geom.rad2deg(pos[0]).toFixed(6);
         var b = geom.rad2deg(pos[1]).toFixed(6);
         //if (Math.abs(a) < .001) { a = 0; }
         //if (Math.abs(b) < .001) { b = 0; }
         output = {
-            type: "info",
-            message: [a, b]
+            type: "value",
+            value: [a, b]
         };
     });
     return output;
 };
 
-org.weblogo.executors.print = function(config, command) {
+org.weblogo.executors.print = function (config, command) {
     var output;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         output = {
             type: "info",
             message: command.message
@@ -252,10 +254,10 @@ org.weblogo.executors.print = function(config, command) {
 };
 
 
-org.weblogo.executors.help = function(config, command) {
+org.weblogo.executors.help = function (config, command) {
     var commandlist = "commands: ";
 
-    $.each(org.weblogo.turtle.commands, function(el){
+    $.each(org.weblogo.turtle.commands, function (el){
         commandlist += el + ", ";
     });
 
@@ -266,7 +268,7 @@ org.weblogo.executors.help = function(config, command) {
     return output;
 }
 
-org.weblogo.executors.set = function(config, command) {
+org.weblogo.executors.set = function (config, command) {
     var as = org.weblogo.turtle.accessors;
     var accessor = as[command.variable];
     if (!accessor) {
@@ -293,7 +295,7 @@ org.weblogo.executors.set = function(config, command) {
         parsed = accessor.lens.write(parsed);
     }
     var property = accessor.property || command.variable;
-    fluid.each(config.turtles, function(turtle) {
+    fluid.each(config.turtles, function (turtle) {
         turtle[property] = parsed;
         if (accessor.updator) {
             accessor.updator(config, turtle, parsed, command);
@@ -459,14 +461,14 @@ commands.pendown = function () {
 };
 commands.pendown.args = [];
 
-commands.cleardrawing = function() {
+commands.cleardrawing = function () {
     return {
         type: "clearDrawing"
     }
 };
 commands.cleardrawing.args = [];
 
-commands.clearall = function() {
+commands.clearall = function () {
     return {
         type: "clearAll"
     }
@@ -477,22 +479,22 @@ commands.ca = commands.clearall;
 // actual value type will be parsed by the accessor
 commands.set.args = ["string", "string"];
 
-var scaleLens = function(scale) {
+var scaleLens = function (scale) {
     return {
-        write: function(value) {
+        write: function (value) {
             return value / scale;
         },
-        read: function(value) {
+        read: function (value) {
             return value * scale;
         }
     }  
 };
 
 var showingLens = {
-    write: function(value) {
+    write: function (value) {
         return (value === 1 || value === "on")? true: false;
     },
-    read: function(value) {
+    read: function (value) {
         return value? "on" : "off";
     }
 };
@@ -505,7 +507,7 @@ var accessors = org.weblogo.turtle.accessors;
 accessors["pensize"] = {
     property: "width",
     type: "number|identifier",
-    rejector: function(value) {
+    rejector: function (value) {
         if (value > 90) {
             return "Cannot set pen size to greater than a quarter circle"  
         }
@@ -520,7 +522,7 @@ accessors["ps"] = accessors["pensize"];
 accessors["color"] = {
     property: "colour",
     type: "number|string",
-    rejector: function(value) {
+    rejector: function (value) {
         var cnames = org.weblogo.netLogoColourNames;
         if (typeof(value) === "string" && !cnames[value]) {
             return value + " is not a valid colour name: you can use " + Object.keys(cnames).join(', ');

@@ -1,4 +1,4 @@
-(function() {
+(function () {
 
 var s2 = Math.SQRT2;
 var s3 = Math.sqrt(3);
@@ -26,20 +26,20 @@ org.weblogo.selectors = {
     errors: ".flc-math-errors"
 };
 
-org.weblogo.binder = function(container, selectors) {
+org.weblogo.binder = function (container, selectors) {
     return {
-        locate: function(selName) {
+        locate: function (selName) {
             return $(selectors[selName], container); 
         }
     }
 };
 
-org.weblogo.postImage = function(time, dataURL, postURL, that) {
+org.weblogo.postImage = function (time, dataURL, postURL, that) {
     var image64 = dataURL.replace(/data:image\/png;base64,/, '');
     console.log(image64.length);
     try {
     var xhr = new XMLHttpRequest();
-        xhr.loadend = function(pe) {
+        xhr.loadend = function (pe) {
             that.locate("serverStatus").text(pe);
         }
         xhr.open("POST", postURL);
@@ -57,7 +57,7 @@ org.weblogo.defaultConfigOptions = {
     rasterStep: Math.PI / 100
 };
 
-org.weblogo.makeConfig = function(element, events, options) {
+org.weblogo.makeConfig = function (element, events, options) {
     var that = {
         element: element,
         events: events,
@@ -67,25 +67,26 @@ org.weblogo.makeConfig = function(element, events, options) {
         height: element.height,
         backgroundColour: "black",
         masterSpeed: 1.0,
+        interactive: true,
         turtles: []
     };
     $.extend(true, that, org.weblogo.defaultConfigOptions, options);
     return that;
 };
 
-org.weblogo.turtle.commands.demo = function() {
+org.weblogo.turtle.commands.demo = function () {
     return {type: "demo"}
 };
 org.weblogo.turtle.commands.demo.args = [];
 
-org.weblogo.executors.demo = function(config, command, tick) {
+org.weblogo.executors.demo = function (config, command, tick) {
     var period = 1500;
     var radius = 50;
     
     var that = {
         initTime: tick
     };
-    that.toTick = function(now) {
+    that.toTick = function (now) {
         var geom = org.weblogo.geom;
         var phase = (now - that.initTime) / period;
         var x = radius * Math.cos(phase);
@@ -107,20 +108,24 @@ org.weblogo.executors.demo = function(config, command, tick) {
     return that;
 };
 
-function compilerdriver(inputStream) {
+org.weblogo.compilerdriver = function (inputStream, config) {
     org.weblogo.outputStream = [];
+    org.weblogo.config = config;
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
+    org.weblogo.program.executor = org.weblogo.quickStringExecutor(org.weblogo.executor(config));
     org.weblogo.program.program = {};
     org.weblogo.program.scopes = [{}];
 
     org.weblogo.program.program = org.weblogo.importReserve();
-    org.weblogo.program.program += compiler(inputStream, "");
+    org.weblogo.program.program += org.weblogo.compiler(inputStream, "");
     
+    config.interactive = false;
     eval(org.weblogo.program.program);
+    config.interactive = true;
 }
 
-function compiler(inputStream, program) {
+org.weblogo.compiler = function (inputStream, program) {
     if (fluid.isPrimitive(inputStream) || !inputStream.length) {
         inputStream = [inputStream];
     }
@@ -131,18 +136,18 @@ function compiler(inputStream, program) {
         }
         else {
             var handler = org.weblogo.nodeHandlers[node.handler];
-            program = handler(node, program, compiler);
+            program = handler(node, program, org.weblogo.compiler);
         }
     }
     return program;
 }
 
-org.weblogo.turtle.commands["repeat"] = function() {
+org.weblogo.turtle.commands["repeat"] = function () {
     return {type: "repeat"}
 };
 org.weblogo.turtle.commands["repeat"].args = ["number", "string"];
 
-org.weblogo.executors.repeat = function(config, command, tick) {
+org.weblogo.executors.repeat = function (config, command, tick) {
     var repeat = command.args[0];
     var commands = command.args[1];
     for(var i = 0; i < repeat; ++i) {
@@ -152,7 +157,7 @@ org.weblogo.executors.repeat = function(config, command, tick) {
 
 
 
-org.weblogo.loadAutoSave = function() {
+org.weblogo.loadAutoSave = function () {
     try {
         return localStorage.getItem("org.weblogo.autoSave") || "";
     }
@@ -161,20 +166,20 @@ org.weblogo.loadAutoSave = function() {
     }
 };
 
-org.weblogo.saveAutoSave = function(text) {
+org.weblogo.saveAutoSave = function (text) {
     try {
         localStorage.setItem("org.weblogo.autoSave", text);
     }
     catch (e) {}
 };
 
-org.weblogo.client = function(container, options) {
+org.weblogo.client = function (container, options) {
     var that = {};
     that.locate = org.weblogo.binder(container, org.weblogo.selectors).locate;
-    that.receiveBlob = function(blob) {
+    that.receiveBlob = function (blob) {
         that.locate("frameSize").text(blob.size);
     };
-    that.initFrame = function() {
+    that.initFrame = function () {
         that.frameNo = 0;
         that.initTime = Date.now();
         that.lastFrame = that.initTime;
@@ -186,7 +191,7 @@ org.weblogo.client = function(container, options) {
         onDraw: fluid.makeEventFirer()
     };
     
-    that.events.onInfo.addListener(function(info) {
+    that.events.onInfo.addListener(function (info) {
         that.terminal.echo(info.message);
         that.commandDone();
     });
@@ -204,16 +209,16 @@ org.weblogo.client = function(container, options) {
     });
 
     
-    that.commandStart = function() {
+    that.commandStart = function () {
         that.busy = true;
         that.initFrame();
         that.locate("stop").prop("disabled", false);
     };
     
-    that.commandDone = function() {
+    that.commandDone = function () {
         that.busy = false;
         that.locate("stop").prop("disabled", true);
-        window.setTimeout(function() {
+        window.setTimeout(function () {
             fluid.log("Idle at " + Date.now() + " lag " + (Date.now() - that.initTime) + "ms");
         });
         // damnable thing behaves badly in synchronous case
@@ -223,7 +228,7 @@ org.weblogo.client = function(container, options) {
         that.wasDisabled = false;
     };
     
-    that.draw = function(execution) {
+    that.draw = function (execution) {
         var url = "1";
         if (that.serverUrl) {
             url = that.element.toDataURL("image/png");
@@ -250,7 +255,7 @@ org.weblogo.client = function(container, options) {
     that.executor = org.weblogo.renderingExecutor(
             org.weblogo.executor(that.config), that, 33);
     
-    that.execute = function(command) {
+    that.execute = function (command) {
         that.executor.execute(command);
         that.wasEnabled = that.terminal.enabled();
         if (that.wasEnabled) {
@@ -261,10 +266,10 @@ org.weblogo.client = function(container, options) {
     that.config.context.font = "50px Arial";
     
     
-    that.locate("commands").terminal(function(command, terminal) {
+    that.locate("commands").terminal(function (command, terminal) {
         command += "\n";
         var parsetree = grammar.parse(command);
-        compilerdriver(parsetree);
+        org.weblogo.compilerdriver(parsetree, that.config);
         var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
         that.execute(executor);
     }, {
@@ -273,7 +278,7 @@ org.weblogo.client = function(container, options) {
         width: 500,
         height: 100,
         prompt: "weblogo>",
-        onInit: function(terminal) {
+        onInit: function (terminal) {
             that.terminal = terminal;
         }
     });
@@ -284,12 +289,12 @@ org.weblogo.client = function(container, options) {
     that.locate("stop").click(that.executor.stop).prop("disabled", true);
     var connect = that.locate("connect");
     var disconnect = that.locate("disconnect");
-    connect.click(function() {
+    connect.click(function () {
         that.serverUrl = that.locate("serverUrl").val();
         disconnect.prop("disabled", false);
         connect.prop("disabled", true);
     });
-    disconnect.click(function() {
+    disconnect.click(function () {
         that.serverUrl = null;
         connect.prop("disabled", false);
         disconnect.prop("disabled", true);
@@ -298,10 +303,10 @@ org.weblogo.client = function(container, options) {
     return that;
 }
 
-org.weblogo.init = function() {
+org.weblogo.init = function () {
     var client = org.weblogo.client("body");
     var countbacks = 0;
-    var startfunc = function() {
+    var startfunc = function () {
         org.weblogo.executors.clearAll(client.config);
         client.draw();
         var hash = window.location.hash;
@@ -317,7 +322,7 @@ org.weblogo.init = function() {
             }
         }
     };
-    var backfunc = function() {
+    var backfunc = function () {
         ++countbacks;
         if (countbacks == 2) {
             startfunc();
@@ -339,7 +344,7 @@ org.weblogo.init = function() {
     var saved = org.weblogo.loadAutoSave(); 
     myCodeMirror.setValue(saved);
     
-    setInterval(function() {
+    setInterval(function () {
         var history = myCodeMirror.historySize();
         if (history.undo + history.redo > 0) {
             org.weblogo.saveAutoSave(myCodeMirror.getValue());
@@ -350,7 +355,7 @@ org.weblogo.init = function() {
         try {
             var code = "ca()\n" + myCodeMirror.getValue();
             var parsetree = grammar.parse(code);
-            compilerdriver(parsetree);
+            org.weblogo.compilerdriver(parsetree, client.config);
             var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
             client.execute(executor);
         }
@@ -405,17 +410,17 @@ org.weblogo.init = function() {
 // **************** Test Cases **************** //
 
 
-org.weblogo.turtle.commands.rununittests = function() {
+org.weblogo.turtle.commands.rununittests = function () {
     return {type: "rununittests"}
 }
 org.weblogo.turtle.commands.rununittests.args = [];
 
-org.weblogo.turtle.commands["testheading"] = function() {
+org.weblogo.turtle.commands["testheading"] = function () {
     return {type: "testHeading"}
 }
 org.weblogo.turtle.commands["testheading"].args = [];
 
-org.weblogo.turtle.commands["testcard"] = function() {
+org.weblogo.turtle.commands["testcard"] = function () {
     return {type: "testCard"}
 }
 org.weblogo.turtle.commands["testcard"].args = [];
@@ -451,7 +456,7 @@ function makeTestHeadingCommands() {
 
 org.weblogo.executors.testHeading = org.weblogo.blockExecutor(makeTestHeadingCommands()); 
 
-org.weblogo.executors.rununittests = function() {
+org.weblogo.executors.rununittests = function () {
     testCase1();
     testCase2();
 }
@@ -463,17 +468,17 @@ x = 100 \
 y = x/2 \
 forward y';
 
-    compilerdriver(grammar.parse(testCase));
+    org.weblogo.compilerdriver(grammar.parse(testCase));
    
     var passCase = [];
     passCase.push("ca ");
     passCase.push("forward 50");
-    for(i=0;i<passCase.length-1;i++) {
+    for (i=0;i<passCase.length-1;i++) {
         if(org.weblogo.outputStream[i] != passCase[i]) {
             throw new Error("Test1 Failed at element "+i);
         }
     }
-    if(passCase.length != org.weblogo.outputStream.length) {
+    if (passCase.length != org.weblogo.outputStream.length) {
         throw new Error("Test1 Failed at length check.");
     }        
     console.info("passed.");
@@ -482,23 +487,23 @@ function testCase2() {
     var testCase = '\
 ca() \
 x = 100 \
-fun = function() { \
+fun = function () { \
 forward x \
 } \
 fun()';
 
-    compilerdriver(grammar.parse(testCase));
+    org.weblogo.compilerdriver(grammar.parse(testCase));
    
     var passCase = [];
     passCase.push("ca ");
     passCase.push("forward 100");
 
-    for(i=0;i<passCase.length-1;i++) {
+    for (i=0;i<passCase.length-1;i++) {
         if(org.weblogo.outputStream[i] != passCase[i]) {
             throw new Error("Test2 Failed at element "+i);
         }
     }
-    if(passCase.length != org.weblogo.outputStream.length) {
+    if (passCase.length != org.weblogo.outputStream.length) {
         throw new Error("Test2 Failed at length check.");
     }        
     console.info("passed.");

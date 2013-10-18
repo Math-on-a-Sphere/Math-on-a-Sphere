@@ -11,6 +11,7 @@ frac                        (?:\.[0-9]+)
 \/\/[^\n]*                         /* skip comment */
 \#[^\n]*                           /* skip comment */
 "*"                                       return '*'
+"%"                                       return '%'
 "/"                                       return '/'
 "-"                                       return '-'
 "+"                                       return '+'
@@ -54,7 +55,7 @@ frac                        (?:\.[0-9]+)
 
 /* operator associations and precedence */
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %left '^'
 %left UMINUS
 %left '.' '['
@@ -343,6 +344,12 @@ re
    $$['type'] = 're';
    $$['handler'] = 'op';
    $$['op'] = '*';
+   $$['args'] = [$1, $3];}
+| re '%' re
+  {$$ = {};
+   $$['type'] = 're';
+   $$['handler'] = 'op';
+   $$['op'] = '%';
    $$['args'] = [$1, $3];}
 | re '/' re
   {$$ = {};
