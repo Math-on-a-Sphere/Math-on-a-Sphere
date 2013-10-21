@@ -1,4 +1,4 @@
-(function() {
+(function () {
     org.weblogo.preview = {};
 
     org.weblogo.preview.glConfig = {
@@ -12,6 +12,7 @@
             sampler: "uniform",
             useLighting: "uniform",
             ambientColor: "uniform",
+            backgroundColor: "uniform",
             lightingDirection: "uniform",
             directionalColor: "uniform"
         },
@@ -76,7 +77,7 @@
         lastMouseY = newY;
     }
 
-    org.weblogo.preview.userDraw = function(that) {
+    org.weblogo.preview.userDraw = function (that) {
         var shaderProgram = that.shaderProgram;
         var gl = that.gl;
 
@@ -96,6 +97,7 @@
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, moonTexture);
         gl.uniform1i(shaderProgram.sampler, 0);
+        gl.uniform3f(shaderProgram.backgroundColor, 0.0, 0.0, 0.5); // TODO: proper options system, for the sake of Mike!
         if (oldTexture) {
             gl.deleteTexture(oldTexture);
             oldTexture = null;
@@ -106,23 +108,23 @@
         gl.uniformMatrix3fv(shaderProgram.moonMatrix, false, mat3.transpose(mat4.toMat3(moonRotationMatrix)));
     };
  
-    org.weblogo.preview.componentInit = function(that) {
-       that.updateTexture = function() {
-           canvasToTexture(that.gl, that.canvas2d);
-       };
-       that.updateTexture();
-       that.events.onDraw.addListener(that.updateTexture);
-       
-       that.gl.clearColor(0.0, 0.0, 0.5, 1.0);
-    
-       that.container.mousedown(handleMouseDown);
-       $(document).mouseup(handleMouseUp);
-       $(document).mousemove(handleMouseMove);
+    org.weblogo.preview.componentInit = function (that) {
+        that.updateTexture = function () {
+            canvasToTexture(that.gl, that.canvas2d);
+        };
+        that.updateTexture();
+        that.events.onDraw.addListener(that.updateTexture);
+        
+        that.gl.clearColor(0.0, 0.0, 0.5, 1.0);
+      
+        that.container.mousedown(handleMouseDown);
+        $(document).mouseup(handleMouseUp);
+        $(document).mousemove(handleMouseMove);
     };
 
-    org.weblogo.preview.webGLStart = function(canvas3d, canvas2d, client, callback) {
+    org.weblogo.preview.webGLStart = function (canvas3d, canvas2d, client, callback) {
       
-        var that = org.weblogo.webgl.initWebGLComponent(canvas3d, 
+        var that = org.weblogo.webgl.initWebGLComponent(canvas3d,
             org.weblogo.preview.glConfig, {
                 userDraw: org.weblogo.preview.userDraw,
                 initBuffers: org.weblogo.webgl.makeSquareVertexBuffer,

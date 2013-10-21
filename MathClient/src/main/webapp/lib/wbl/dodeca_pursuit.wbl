@@ -1,0 +1,73 @@
+a = 41.9
+setspeed 100
+
+points = []
+penup
+
+go = function (angle) {
+    points.push(getposition)
+    forward a
+    right angle
+    }
+    
+go(60) go(60) go(60) go(-60) go(60)
+go(60) go(-60) go(60) go(-60) go(60) go(-60) go(60) go(-60)
+go(-60) go(60) go(-60) go(-60) go(-60) go(-60)
+go(60)
+
+facepoints = [
+  [0, 1, 2, 3, 4],
+  [0, 4, 5, 6, 7],
+  [1, 0, 7, 8, 9],
+  [2, 1, 9, 10, 11],
+  [3, 2, 11, 12, 13],
+  [4, 3, 13, 14, 5],
+  [5, 14, 15, 16, 6],
+  [7, 6, 16, 17, 8],
+  [9, 8, 17, 18, 10],
+  [11, 10, 18, 19, 12],
+  [13, 12, 19, 15, 14]
+  ]
+
+indexpoints = function(index) {
+    return points[index]
+    }
+
+indexface = function(indexes) {
+    return indexes.transform(indexpoints)
+    }
+
+faces = facepoints.transform(indexface)
+
+drawandshrink = function (points) {
+    togo = []
+    sides = points.length
+    oneside = function (point, index) {
+        nextpoint = points[(index + 1) % sides]
+        penup
+        setposition point
+        distance = distanceto(nextpoint)
+        towards nextpoint
+        forward distance / 5
+        togo.push(getposition)
+        setposition point
+        pendown
+        setposition nextpoint
+        }
+    points.each(oneside)
+    return togo
+    }
+    
+shrinktimes = function (points, color, times) {
+    repeat times {
+        set color color
+        points = drawandshrink(points)
+        color = color - 1.0
+        }
+    }
+
+shrinkface = function (face) {
+    shrinktimes(face, 9.9, 10)
+    }
+    
+faces.each(shrinkface)

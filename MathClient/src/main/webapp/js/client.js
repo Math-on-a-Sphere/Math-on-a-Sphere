@@ -108,12 +108,12 @@ org.weblogo.executors.demo = function (config, command, tick) {
     return that;
 };
 
-org.weblogo.compilerdriver = function (inputStream, config) {
+org.weblogo.compilerdriver = function (inputStream, config, immediate) {
     org.weblogo.outputStream = [];
     org.weblogo.config = config;
     org.weblogo.compilerdepth = 0;
     org.weblogo.program = {};
-    org.weblogo.program.executor = org.weblogo.quickStringExecutor(org.weblogo.executor(config));
+    org.weblogo.program.executor = immediate? org.weblogo.nullExecutor : org.weblogo.quickStringExecutor(org.weblogo.executor(config));
     org.weblogo.program.program = {};
     org.weblogo.program.scopes = [{}];
 
@@ -269,13 +269,13 @@ org.weblogo.client = function (container, options) {
     that.locate("commands").terminal(function (command, terminal) {
         command += "\n";
         var parsetree = grammar.parse(command);
-        org.weblogo.compilerdriver(parsetree, that.config);
-        var executor = org.weblogo.blockExecutor(org.weblogo.outputStream);
+        org.weblogo.compilerdriver(parsetree, that.config, true);
+        var executor = org.weblogo.blockExecutor(org.weblogo.outputStream, true);
         that.execute(executor);
     }, {
         greetings: "WebLogo Command Interpreter © Math on a Sphere, 2011-",
         enabled: false,
-        width: 500,
+        width: 600,
         height: 100,
         prompt: "weblogo>",
         onInit: function (terminal) {
@@ -338,7 +338,7 @@ org.weblogo.init = function () {
     var code = $("#code");
     var myCodeMirror = client.codeMirror = CodeMirror.fromTextArea(code[0], {
         lineNumbers: "true",
-        mode: "javascript"
+        mode: "weblogo",
     });
     
     var saved = org.weblogo.loadAutoSave(); 

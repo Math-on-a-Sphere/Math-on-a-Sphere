@@ -10,6 +10,8 @@ org.weblogo.nodeHandlers.statement = function (node, program, compiler) {
     node.value = compiler(node.value, "").value;
     if (node.type === "statement") {
         node.value += ";\n";
+    } else {
+        node.value += "\n";
     }
     return program += node.value;
 };
@@ -27,7 +29,7 @@ org.weblogo.nodeHandlers.set_stmt = function (node, program, compiler) {
 
 org.weblogo.nodeHandlers.value = function (node, program, compiler) {
     if (node.type === "string") {
-        node.value = "\""+node.value+"\"";
+        node.value = JSON.stringify(node.value);
     }
     return node;
 };
@@ -82,6 +84,11 @@ org.weblogo.nodeHandlers.repeat_stmt = function (node, program, compiler) {
     return node;
 };
 
+org.weblogo.nodeHandlers.return_stmt = function (node, program, compiler) {
+    node.value = "return " + compiler(node.arg).value;
+    return node;
+};
+
 org.weblogo.nodeHandlers.if_stmt = function (node, program, compiler) {
     node.value= "if (" + compiler(node.condition, "").value + ") " + compiler(node.block, "");
     return node;
@@ -98,12 +105,12 @@ org.weblogo.nodeHandlers.block = function (node, program, compiler) {
     for(var j = 0; j < node.value.length; ++j){
         program += compiler(node.value[j], "");
     }
-    program += "}\n";
+    program += "}";
     return program;
 };
 
 org.weblogo.nodeHandlers.builtin = function (node, program, compiler) {
-    node.value = "org.weblogo.invokeBuiltinFunction(\"" + node.id + "\")\n";
+    node.value = "org.weblogo.invokeBuiltinFunction(\"" + node.id + "\")";
     return node;
 };
 
@@ -116,13 +123,18 @@ org.weblogo.invokeBuiltinFunction = function (funcname, args) {
     }
 };
 
+org.weblogo.compileArray = function (array, compiler) {
+    return fluid.transform(array, function (arg) {
+        return compiler(arg).value
+    });
+}
+
 org.weblogo.nodeHandlers.func = function (node, program, compiler) {
     var funcname = compiler(node.id).value;
-    var arglist = compiler(node.args).value;
-    var args = fluid.makeArray(arglist);
+    var args = org.weblogo.compileArray(fluid.makeArray(node.args), compiler);
     if (org.weblogo.turtle.commands[funcname]) {
         // we undo one level of quoting here
-        node.value = "org.weblogo.invokeBuiltinFunction(\"" + funcname + "\", " + args + ");\n";
+        node.value = "org.weblogo.invokeBuiltinFunction(\"" + funcname + "\", " + args + ")";
     }
     else {
         node.value = funcname + "(" + args.join(", ") + ")";
@@ -137,16 +149,20 @@ org.weblogo.nodeHandlers.each = function (node, program, compiler) {
     return node;
 };
 
+org.weblogo.nodeHandlers.transform = function (node, program, compiler) {
+    var lvalue = compiler(node.id).value;
+    var args = compiler(node.args).value;
+    node.value = "fluid.transform(" + lvalue + ", " + args + ")";
+    return node;
+};
+
 org.weblogo.nodeHandlers.fun_assign = function (node, program, compiler) {
     var newscope = {};
     org.weblogo.program.scopes.unshift(newscope);
     
     var funcname = compiler(node.id).value;
 
-    var args = node.args;
-    var params = fluid.transform(args, function (arg) {
-        return compiler(arg).value
-    });
+    var params = org.weblogo.compileArray(node.args, compiler) 
     var paramString = params.join(", ");
     
     fluid.each(params, function (param) {

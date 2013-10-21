@@ -11,6 +11,12 @@ org.weblogo.executor = function (config) {
     return that;
 };
 
+org.weblogo.nullExecutor = {
+    execute: function (commandString) {
+        return null;
+    }  
+};
+
 org.weblogo.quickStringExecutor = function (executor) {
     return {
         execute: function (commandString) {
@@ -32,10 +38,23 @@ org.weblogo.quickStringExecutor = function (executor) {
 };
 
 org.weblogo.renderValue = function (value) {
-    return value.toString();
+    if (typeof(value) === "number") {
+        return value.toFixed(6);
+    } else if (fluid.isPrimitive(value)) {
+        return JSON.stringify(value);
+    } else if (fluid.isArrayable(value)) {
+        var values = fluid.transform(value, org.weblogo.renderValue);
+        return "[" + values.join(", ") + "]";
+    } else {
+        var values = [];
+        var values = fluid.transform(value, function (value, key) {
+            values.push(key + ": " + org.weblogo.renderValue(value));
+        });
+        return "{" + values.join(",\n") + "}";
+    }
 }
 
-org.weblogo.blockExecutor = function (commands) {
+org.weblogo.blockExecutor = function (commands, terminal) {
     return function (config, command, tick) {
         var executor = org.weblogo.executor(config);
         function quickExec(commandString) {
@@ -56,14 +75,17 @@ org.weblogo.blockExecutor = function (commands) {
                 execution = quickExec(commands[index]);
                 if (execution) {
                     if (execution.type === "value") {
-                        execution = {type: "info", message: org.weblogo.renderValue(execution.value)};
+                        execution = terminal ? {type: "info", message: org.weblogo.renderValue(execution.value)} 
+                            : {toTick: function () { return true; }};
                     }
                     if (execution.type === "info") {
                         config.events.onInfo.fire(execution);
-                        messages.push(execution);
+                        if (!terminal) {
+                            messages.push(execution);
+                        }
                         execution = null;
                     }
-                    else if (execution && execution.type === "error") {
+                    else if (execution.type === "error") {
                         config.events.onError.fire(execution);
                         execution = null;
                     }

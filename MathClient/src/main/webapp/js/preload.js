@@ -25,6 +25,7 @@ var preload = {
     function_parameters_call: "lib/wbl/function_parameters_call.wbl",
     icosahedron: "lib/wbl/icosahedron.wbl",
     soccer_ball: "lib/wbl/soccer_ball.wbl",
+    dodeca_pursuit: "lib/wbl/dodeca_pursuit.wbl",
     fast_soccer: "lib/wbl/fast_icosido.wbl",
     fast_icosido: "lib/wbl/fast_icosido.wbl",
     triangle_size: "lib/wbl/triangle_size.wbl",

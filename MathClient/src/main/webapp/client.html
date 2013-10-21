@@ -14,6 +14,8 @@
     <script type="text/javascript" src="lib/js/jquery.terminal-0.3.6.js"></script>
     <script type="text/javascript" src="lib/js/gl-matrix.js"></script>
     <script type="text/javascript" src="lib/js/codemirror.js"></script>
+
+    <script type="text/javascript" src="js/codemirror-weblogo.js"></script>
         
     <script type="text/javascript" src="js/geometry.js"></script>
 
@@ -33,13 +35,13 @@
 
     <link rel="stylesheet" href="lib/css/jquery.terminal.css" />
     <link rel="stylesheet" href="lib/css/codemirror.css">
-    <link rel="stylesheet" href="lib/css/default.css">
     
     <link rel="stylesheet" href="lib/css/themes/base/jquery.ui.core.css" />
     <link rel="stylesheet" href="lib/css/themes/base/jquery.ui.selectmenu.css" />
     <link rel="stylesheet" href="lib/css/themes/ui-darkness/jquery-ui.css" />
 
     <link rel="stylesheet" href="css/client.css" />
+    <link rel="stylesheet" href="css/codemirror-weblogo.css" />
 
     </head>
 
@@ -60,6 +62,7 @@
                     <option value="circles">circle size</option>
                     <option value="icosahedron">icosahedron</option>
                     <option value="fast_soccer">soccer ball</option>
+                    <option value="dodeca_pursuit">dodecahedral pursuit</option>
                     <option value="starburst">starburst</option>
                     <option value="pumekin">pumpkin</option>
                     <option value="mask">mask</option>
@@ -77,7 +80,7 @@
             </tr>
             <tr>
               <td style="vertical-align:top">
-                <form><textarea id="code" class="code" name="code" rows="50" cols="50">
+                <form><textarea id="code" class="code" name="code" style: "width: 600px"">
                 </textarea></form>
                 <button id="compile-button">run commands</button>
                 <br/>

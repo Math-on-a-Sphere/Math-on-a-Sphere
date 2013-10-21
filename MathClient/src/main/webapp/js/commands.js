@@ -46,7 +46,9 @@ org.weblogo.executors.line = function (config, command, tick) {
     
     that.toTick = function (newTick) {
         var finished = fluid.transform(config.turtles, function (turtle) {
-            org.weblogo.restoreFrame(config);
+            if (config.interactive) {
+                org.weblogo.restoreFrame(config);
+            }
             var line = that.lines[turtle.id];
             var finished = false;
             var newDistance = line.distance * (newTick - that.firstTick) / (line.finalTick - that.firstTick);
@@ -221,7 +223,7 @@ org.weblogo.executors.setPosition = function (config, command, tick) {
         var newPos = geom.polar_to_3(command.theta, command.phi);
         turtle.heading = geom.axis_from_heading(turtle.position, newPos);
         // TODO: this command model will not work for multiple turtles
-        angle = Math.acos(geom.dot_3(turtle.position, newPos));
+        angle = Math.acos(geom.safe_dot_3(turtle.position, newPos));
     });
     return org.weblogo.executors.line(config, {distance: angle}, tick);
 };
@@ -230,10 +232,8 @@ org.weblogo.executors.getPosition = function (config, command) {
     var output;
     fluid.each(config.turtles, function (turtle) {
         var pos = geom.polar_from_3(turtle.position);
-        var a = geom.rad2deg(pos[0]).toFixed(6);
-        var b = geom.rad2deg(pos[1]).toFixed(6);
-        //if (Math.abs(a) < .001) { a = 0; }
-        //if (Math.abs(b) < .001) { b = 0; }
+        var a = geom.rad2deg(pos[0]);
+        var b = geom.rad2deg(pos[1]);
         output = {
             type: "value",
             value: [a, b]
@@ -311,7 +311,7 @@ var commands = org.weblogo.turtle.commands;
 commands.forward = function (distance) {
     return {
         type: "line",
-        distance: Math.PI * distance / 180
+        distance: geom.deg2rad(distance)
     }
 };
 commands.forward.args = ["number"];
@@ -321,7 +321,7 @@ commands.fd = commands.forward;
 commands.back = function (distance) {
     return {
         type: "line",
-        distance: - Math.PI * distance / 180
+        distance: -geom.deg2rad(distance)
     }
 };
 commands.back.args = ["number"];
@@ -330,7 +330,7 @@ commands.bk = commands.back;
 commands.left = function (angle) {
     return {
         type: "turn",
-        angle: Math.PI * angle / 180
+        angle: geom.deg2rad(angle)
     }
 };
 commands.left.args = ["number"];
@@ -339,7 +339,7 @@ commands.lt = commands.left;
 commands.right = function (angle) {
     return {
         type: "turn",
-        angle: - Math.PI * angle / 180
+        angle: -geom.deg2rad(angle)
     }
 };
 commands.right.args = ["number"];
@@ -371,7 +371,7 @@ commands.getheading.args = [];
 commands.setheading = function (angle) {
     return {
         type: "setHeading",
-        angle: - Math.PI * angle / 180
+        angle: -geom.deg2rad(angle)
     }
 };
 commands.setheading.args = ["number"];
@@ -380,8 +380,8 @@ commands.sh = commands.setheading;
 commands.setrotationaxis = function (t, p) {
     return {
         type: "setRotationAxis",
-        theta: Math.PI * t / 180,
-        phi: Math.PI * p /180        
+        theta: geom.deg2rad(t),
+        phi:   geom.deg2rad(p)      
     }
 };
 commands.setrotationaxis.args = ["number","number"];
@@ -390,8 +390,8 @@ commands.sra = commands.setrotationaxis;
 commands.towards = function (t, p) {
     return {
         type: "towards",
-        theta: Math.PI * t / 180,
-        phi: Math.PI * p /180        
+        theta: geom.deg2rad(t),
+        phi:   geom.deg2rad(p),
     }
 };
 commands.towards.args = ["number", "number"];
@@ -399,8 +399,8 @@ commands.towards.args = ["number", "number"];
 commands.distanceto = function (t, p) {
     return {
         type: "distanceTo",
-        theta: Math.PI * t / 180,
-        phi: Math.PI * p /180        
+        theta: geom.deg2rad(t),
+        phi:   geom.deg2rad(p),
     }
 };
 commands.distanceto.args = ["number", "number"];
@@ -408,8 +408,8 @@ commands.distanceto.args = ["number", "number"];
 commands.setpos = function (t, p) {
     return {
         type: "setPosition",
-        theta: Math.PI * t / 180,
-        phi: Math.PI * p /180
+        theta: geom.deg2rad(t),
+        phi:   geom.deg2rad(p),
     }
 };
 commands.setpos.args = ["number","number"];

@@ -21,7 +21,7 @@ frac                        (?:\.[0-9]+)
 "E"                                       return 'E'
 "true"                                    return 'TRUE'
 "false"                                   return 'FALSE'
-("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp")\b     return "BUILTIN_ARG"
+("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp"|"setspeed"|"print")\b     return "BUILTIN_ARG"
 ("clearall"|"ca"|"cleardrawing"|"ca"|"penup"|"pu"|"pendown"|"pd"|"getheading"|"gh"|"getposition"|"gp"|"getspeed"|"help"|"demo"|"testcard")\b    return "BUILTIN_NULL"
 ("set ")\b                           return 'SET'
 ("if"|"IF")                          return 'IF'
@@ -30,10 +30,11 @@ frac                        (?:\.[0-9]+)
 "function"\b                         return 'FUNCTION'
 "each"\b                             return 'EACH'
 "transform"\b                        return 'TRANSFORM'
+"return"\b                           return 'RETURN'
 
 \"(?:{esc}["bfnrt/{esc}]|{esc}"u"[a-fA-F0-9]{4}|[^"{esc}])*\"  yytext = yytext.substr(1,yyleng-2); return 'STRING';
-{int}\b                  return 'INT';
 {int}{frac}?{exp}?\b     return 'NUMBER';
+{int}\b                  return 'INT';
 [a-zA-Z]+([\w]*)\b       return 'IDENTIFIER'
 "("                                return '('
 ")"                                return ')'
@@ -87,10 +88,7 @@ weblogo
 
 block
 : '{' statements '}'
-  {$$ = {};
-    $$['type'] = 'block';
-    $$['handler'] = 'block';
-    $$['value'] = $2;}
+  {$$ = {handler: "block", value: $2};}
 ;
 
 statements
@@ -104,25 +102,17 @@ statements
 
 statement
 : assignment
-  {$$ = {};
-    $$['type'] = 'statement';
-    $$['handler'] = 'statement';
-    $$['value'] = $1;}
+  {$$ = {type: "statement", handler: "statement", value: $1};}
 | function_call
-  {$$ = {};
-    $$['type'] = 'statement';
-    $$['handler'] = 'statement';
-    $$['value'] = $1;}
+  {$$ = {type: "statement", handler: "statement", value: $1};}
+| bare_function_call
+  {$$ = {type: "statement", handler: "statement", value: $1};}
+| return_stmt
+  {$$ = {type: "statement", handler: "statement", value: $1};}
 | repeat_stmt
-  {$$ = {};
-   $$['type'] = 'repeat';
-   $$['handler'] = 'statement';
-   $$['value'] = $1;}
+  {$$ = {type: "repeat", handler: "statement", value: $1};}
 | if_stmt
-  {$$ = {};
-   $$['type'] = 'if';
-   $$['handler'] = 'statement';
-   $$['value'] = $1;}
+  {$$ = {type: "if", handler: "statement", value: $1};}
 | set_stmt
 ;
 
@@ -194,36 +184,27 @@ string
     $$['value'] = yytext;}
 ;
 
+bare_function_call
+: BUILTIN_ARG expr
+  {$$ = {handler: "func", id: $1, args: $2};}
+;
+
+arged_function_call
+: BUILTIN_ARG '(' arguments ')'
+  {$$ = {handler: "func", id: $1, args: $3};}
+;
 
 function_call
 : BUILTIN_NULL
-  {$$ = {
-    "handler": "builtin",
-    "id": $1
-    };}
+  {$$ = {handler: "builtin", id: $1};}
 | BUILTIN_NULL '(' ')' 
-  {$$ = {
-    "handler": "builtin",
-    "id": $1
-    };}
-| BUILTIN_ARG expr
-  {$$ = {    
-    "handler": "func",      
-    "id": $1,      
-    "args": $2
-    };}
+  {$$ = {handler: "builtin", id: $1};}
 | lvalue '(' arguments ')'
-  {$$ = {}; 
-    $$['type'] = 'function';
-    $$['handler'] = 'func';
-    $$['id'] = $1;
-    $$['args'] = $3;}
+  {$$ = {handler: "func", id: $1, args: $3};}
 | lvalue '.' EACH '(' arguments ')'
-  {$$ = {
-      "handler": "each",
-      "id": $1,
-      "args": $5
-  };}
+  {$$ = {handler: "each", id: $1, args: $5};}
+| lvalue '.' TRANSFORM '(' arguments ')'
+  {$$ = {handler: "transform", id: $1, args: $5};}
 ;
 
 arguments
@@ -233,48 +214,26 @@ arguments
 
 repeat_stmt
 : REPEAT expr block
-  {$$ = {}; 
-    $$['type'] = 'repeat_stmt'; 
-    $$['handler'] = 'repeat_stmt'; 
-    $$['args'] = [$2, $3];}
+  {$$ = {handler: "repeat_stmt", args: [$2, $3]};}
+;
+
+return_stmt
+: RETURN expr
+   {$$ = {handler: "return_stmt", arg: $2};}
 ;
 
 if_stmt
 : IF expr block
-  {$$ = {};
-    $$['type'] = 'if_stmt';
-    $$['handler'] = 'if_stmt';
-    $$['condition'] = $2;
-    $$['block'] = $3;}
+  {$$ = {handler: "if_stmt", condition: $2, block: $3};}
 | IF expr block ELSE block
-  {$$ = {};
-    $$['type'] = 'if_stmt';
-    $$['handler'] = 'ifelse_stmt';
-    $$['condition'] = $2;
-    $$['block'] = [$3, $5];}
-;
-
-expr
-: re
-| complex_value
-| '-' re %prec UMINUS
-  {$$ = {};
-   $$['type'] = 'expr';
-   $$['handler'] = 'uminus';
-   $$['value'] = $2;}
+  {$$ = {handler: "ifelse_stmt", condition: $2, block: [$3, $5]};}
 ;
 
 index
 :INT   
-  {$$ = {
-    type: "number",
-    handler: "value",
-    value: Number(yytext)};}
+  {$$ = {type: "number", handler: "value", value: Number(yytext)};}
 |identifier
-  {$$ = {
-    type: "string",
-    handler: "value",
-    value: $1.value};}
+  {$$ = {type: "string", handler: "value", value: $1.value};}
 ;
 
 complex_value
@@ -290,33 +249,18 @@ number_type
 
 number
 : number_type
-  {$$ = {};
-    $$['type'] = 'number';
-    $$['handler'] = 'value';
-    $$['value'] = Number(yytext);}
+  {$$ = {handler: "value", value: Number(yytext)};}
 | E
-  {$$ = {};
-    $$['type'] = 'number';
-    $$['handler'] = 'value';
-    $$['value'] = Math.E;}
+  {$$ = {handler: "value", value: Math.E};}
 | PI
-  {$$ = {};
-    $$['type'] = 'number';
-    $$['handler'] = 'value';
-    $$['value'] = Math.PI;}
+  {$$ = {handler: "value", value: Math.PI};}
 ;
 
 boolean
 : TRUE
-  {$$ = {};
-    $$['type'] = 'boolean';
-    $$['handler'] = 'value';
-    $$['value'] = true;}
+  {$$ = {handler: "value", value: true};}
 | FALSE
-  {$$ = {};
-    $$['type'] = 'boolean';
-    $$['handler'] = 'value';
-    $$['value'] = false;}
+  {$$ = {handler: "value", value: false};}
 ;
 
 simple_value
@@ -324,67 +268,46 @@ simple_value
 | string
 ;
 
+expr
+: re
+| complex_value
+| '-' re %prec UMINUS
+  {$$ = {};
+   $$['type'] = 'expr';
+   $$['handler'] = 'uminus';
+   $$['value'] = $2;}
+;
+
 re
 : simple_value
 | lvalue
 | re '+' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '+';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '-' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '-';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '*' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '*';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '%' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '%';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '/' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '/';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '==' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '==';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '<' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '<';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | re '>' re
-  {$$ = {};
-   $$['type'] = 're';
-   $$['handler'] = 'op';
-   $$['op'] = '>';
-   $$['args'] = [$1, $3];}
+  {$$ = {handler: "op", op: $2, args: [$1, $3]};}
 | '(' expr ')'
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'group_op';
    $$['args'] = [$2];}
-| '(' function_call ')'
+| function_call
   {$$ = {};
    $$['type'] = 're';
    $$['handler'] = 'skip';
-   $$['value'] = $2;}
+   $$['value'] = $1;}
+| arged_function_call
 ;
 
 JSONObject
