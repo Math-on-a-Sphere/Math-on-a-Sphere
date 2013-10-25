@@ -36,7 +36,8 @@ var preload = {
     flower: "lib/wbl/flower.wbl",
     pumekin: "lib/wbl/pumekin.wbl",
     mask: "lib/wbl/mask.wbl",
-    CATT: "lib/wbl/catt.wbl"
+    CATT: "lib/wbl/catt.wbl",
+    spider: "lib/wbl/spider.wbl"
 };
 
 }());

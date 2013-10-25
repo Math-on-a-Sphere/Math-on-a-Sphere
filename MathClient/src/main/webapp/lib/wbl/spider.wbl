@@ -1,0 +1,133 @@
+// Colors: gray, white, red, orange, yellow, brown, green
+// lime, turquoise, cyan, sky, blue, violet, magenta, pink
+
+
+// What color do you want the first set of lines to be?
+firstcolor = white
+
+// What color do you want the second set of lines to be?
+secondcolor = pink
+
+setspeed 50
+set pensize 1
+set color firstcolor
+repeat 8 {right 45 fd 360}
+
+setspeed 10
+set pensize 2
+set color secondcolor
+
+// Front side
+//inner rings
+
+pu
+setpos [330,0] 
+pd
+setrotationaxis [335, 29]
+bk 90
+
+setrotationaxis [25, 29]
+bk 90
+
+setrotationaxis [25, 331]
+bk 90
+
+setrotationaxis [335, 331]
+bk 90
+
+
+
+//middle rings
+
+pu
+setpos [322,0] 
+pd
+setrotationaxis [327, 43]
+bk 90
+
+setrotationaxis [33, 43]
+bk 90
+
+setrotationaxis [33, 317]
+bk 90
+
+setrotationaxis [327, 317]
+bk 90
+
+
+
+//outer rings
+
+pu
+setpos [315,0] 
+pd
+setrotationaxis [320, 60]
+bk 90
+
+setrotationaxis [40, 60]
+bk 90
+
+setrotationaxis [40, 300]
+bk 90
+
+setrotationaxis [320, 300]
+bk 90
+
+
+
+// Back side
+//inner rings
+
+pu
+setpos [330,180] 
+pd
+setrotationaxis [335, 209]
+bk 90
+
+setrotationaxis [25, 209]
+bk 90
+
+setrotationaxis [25, 151]
+bk 90
+
+setrotationaxis [335, 151]
+bk 90
+
+
+
+//middle rings
+
+pu
+setpos [322,180] 
+pd
+setrotationaxis [327, 223]
+bk 90
+
+setrotationaxis [33, 223]
+bk 90
+
+setrotationaxis [33, 137]
+bk 90
+
+setrotationaxis [327, 137]
+bk 90
+
+
+
+//outer rings
+
+pu
+setpos [315,180] 
+pd
+setrotationaxis [320, 240]
+bk 90
+
+setrotationaxis [40, 240]
+bk 90
+
+setrotationaxis [40, 120]
+bk 90
+
+setrotationaxis [320, 120]
+bk 90
+
