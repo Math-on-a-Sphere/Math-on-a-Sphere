@@ -1,5 +1,5 @@
 // This program projects a 20-sided object onto a sphere 
-setspeed (2*PI)
+setspeed 2*PI
 x = 63.5 
 theta = 108
 thetatwo = 72/2

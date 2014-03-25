@@ -453,6 +453,7 @@ commands.penup = function () {
     }  
 };
 commands.penup.args = [];
+commands.pu = commands.penup;
 
 commands.pendown = function () {
     return {
@@ -460,6 +461,7 @@ commands.pendown = function () {
     }  
 };
 commands.pendown.args = [];
+commands.pd = commands.pendown;
 
 commands.cleardrawing = function () {
     return {

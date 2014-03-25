@@ -1,5 +1,5 @@
-circle1 = function [t,p,r] {
-  penup setpos [t,p] fd r
+circle1 = function (t,p,r) {
+  pu setpos [t,p] fd r
   pd right 90
   steps = 2*r*PI
   repeat steps {
@@ -8,14 +8,14 @@ circle1 = function [t,p,r] {
 }
 
 set color blue
-circle1 [45,45,10]
+circle1 (45,45,10)
 
-circle2 = function [t,p,r] {
-  penup setpos [t,p] fd r
+circle2 = function (t,p,r) {
+  pu setpos [t,p] fd r
   pd right 90
   setrotationaxis [t,p]
   fd 360
 }
 
 set color red
-circle2 [45,45,10]
+circle2 (45,45,10)

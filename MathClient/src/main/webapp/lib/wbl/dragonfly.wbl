@@ -1,29 +1,29 @@
-set pensize .5
+set pensize 0.5
 set color white
-setspeed (3*PI)
-fd 360 rt 90 fd (360+90) rt 90 fd 360
+setspeed 3*PI
+fd 360 rt 90 fd 360+90 rt 90 fd 360
 
 x = 54
 body = 60
 
-dragon_tail = function [body_color] {
+dragon_tail = function (body_color) {
   rt 43
   set color body_color
   repeat 5 {
     repeat 2 {
       pendown fd body 
-      penup fd (180-body)
+      penup fd 180-body
     }
     rt 1
   }
   lt 47
 }
 
-wing = function [wing_color] {
+wing = function (wing_color) {
   set color wing_color
   repeat 5 {
     repeat 2 {
-      pendown fd (90-x)
+      pendown fd 90-x
       penup fd 90
       pendown fd x
     }
@@ -32,11 +32,11 @@ wing = function [wing_color] {
 }
 
 dragon = function () {
-  dragon_tail blue
-  fd 90 rt (90+45) fd x
-  wing red
-  rt (180-24)
-  wing red
+  dragon_tail(blue)
+  fd 90 rt 90+45 fd x
+  wing(red)
+  rt 180-24
+  wing(red)
 }
 
 

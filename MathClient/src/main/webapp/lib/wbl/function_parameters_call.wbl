@@ -1,7 +1,7 @@
 // This demonstrates how to write and call a function
 // that has more than one parameter.
 
-tri = function [x,newcolor] {
+tri = function (x, newcolor) {
     set color newcolor
     repeat 3 {
         forward x
@@ -9,4 +9,4 @@ tri = function [x,newcolor] {
     }
 } 
 
-tri [90,"green"]
+tri (90, "green")

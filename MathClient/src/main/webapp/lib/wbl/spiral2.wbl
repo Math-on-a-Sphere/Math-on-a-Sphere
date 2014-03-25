@@ -1,4 +1,4 @@
-spiral = function [steps, angle] {
+spiral = function (steps, angle) {
   newcolor = 0
   repeat steps {
     setheading angle
@@ -8,11 +8,13 @@ spiral = function [steps, angle] {
   }
 }
 
-setspeed (PI*6)
+setspeed PI*6
 
 x = 45
 repeat 5 {
-  spiral [140, x]
+  spiral(140, x)
+  pu
   sp [0,0] sh 0
+  pd
   x = x + 10
 }

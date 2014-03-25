@@ -1,5 +1,4 @@
-
-petal = function [x,y,length] {
+petal = function (x, y, length) {
   sra [x,y]
   fd length
   lt 90
@@ -7,28 +6,31 @@ petal = function [x,y,length] {
   setpos [0,0]
 }
 
+toRadians = function (deg) {
+  return PI*deg / 180
+}
 
-flower = function [newcolor,radius,length] {
+flower = function (newcolor, radius, length) {
   number = 12
-  angle = (360/number)
-  y = ((Math.cos(PI*angle/180))*radius)
-  x = ((Math.sin(PI*angle/180))*radius)
+  angle = 360/number
+  y = Math.cos(toRadians(angle))*radius
+  x = Math.sin(toRadians(angle))*radius
   a = angle
   set color newcolor
   repeat number {
-     petal [x,y,length]
-     a = (a + angle)
-     y = ((Math.cos(PI*a/180))*radius)
-     x = ((Math.sin(PI*a/180))*radius)
+     petal(x, y, length)
+     a = a + angle
+     y = Math.cos(toRadians(a))*radius
+     x = Math.sin(toRadians(a))*radius
   }
 }
 
 set pensize 1
-flower [blue,40,106]
+flower(blue, 40, 106)
 set pensize 2
-flower [red,30, 98]
+flower(red, 30, 98)
 set pensize 3
-flower [yellow,20,95]
+flower(yellow, 20, 95)
 
 penup
 sh 0

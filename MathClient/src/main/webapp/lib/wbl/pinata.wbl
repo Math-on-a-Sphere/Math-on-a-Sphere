@@ -1,4 +1,4 @@
-colorline = function [steps] {
+colorline = function (steps) {
   newcolor = 0
   repeat steps {
     set color newcolor
@@ -7,16 +7,18 @@ colorline = function [steps] {
   }
 }
 
-hemi = function [angle] {
+hemi = function (angle) {
   cheading = 0
-  repeat (360/5) {
-    sp [angle,0] sh [cheading]
-    colorline 90
+  repeat 360/5 {
+    pu
+    sp [angle, 0] sh [cheading]
+    pd
+    colorline(90)
     cheading = cheading + 5
   }
 }
 
-setspeed (PI*6)
-hemi 0
-hemi 180
+setspeed PI*6
+hemi(0)
+hemi(180)
 

@@ -1,13 +1,13 @@
-tri = function [size] {
+tri = function (size) {
     r = size*PI/180
-    a = (Math.cos(r))
-    b = (Math.sin(r))
+    a = Math.cos(r)
+    b = Math.sin(r)
     c = (a - (a * a)) / (b * b)
-    theta = 180 - (Math.acos(c))*180/PI
+    theta = 180 - Math.acos(c)*180/PI
     repeat (3) {
         forward size
         right theta
     }
 } 
 
-tri 10
+tri (10)

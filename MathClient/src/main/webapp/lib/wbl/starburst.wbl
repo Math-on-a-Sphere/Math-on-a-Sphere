@@ -1,9 +1,9 @@
 // This demonstrates how to write and call a function
 // that has no parameters.
-setspeed (6*PI)
-starburst = function [] {
+setspeed 6*PI
+starburst = function () {
     repeat 30 {
-    	set color yellow
+      set color yellow
         forward 88
         right 170
         forward 30
@@ -13,9 +13,9 @@ starburst = function [] {
     } 
 } 
 
-starburst2 = function [] {
+starburst2 = function () {
     repeat 30 {
-    	set color blue
+      set color blue
         forward 88
         right 170
         forward 30

@@ -1,7 +1,7 @@
 // This demonstrates how to write and call a function
 // that has no parameters.
 
-tri = function [] {
+tri = function () {
     repeat 3 {
         forward 90
         right 90

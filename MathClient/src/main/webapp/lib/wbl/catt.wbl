@@ -101,7 +101,7 @@ if (whiskers == 1) {
 
 // eyes
 
-circle = function [t,p,r] {
+circle = function (t,p,r) {
   penup setpos [t,p] fd r
   pd right 90
   setrotationaxis [t,p]
@@ -116,8 +116,8 @@ if (filledEyes == 0) {repeats = 3}
 
 repeat (repeats) { 
    setspeed 50
-   circle [20, 15, size]   // right eye
-   circle [20, 345, size]  // left eye
+   circle (20, 15, size)   // right eye
+   circle (20, 345, size)  // left eye
    size = size - 0.25
 }
 
@@ -125,12 +125,12 @@ repeat (repeats) {
 setspeed 10
 
 // makes the ears
-tri = function [size] {
+tri = function (size) {
     r = size*PI/180
-    a = (Math.cos(r))
-    b = (Math.sin(r))
+    a = Math.cos(r)
+    b = Math.sin(r)
     c = (a - (a * a)) / (b * b)
-    theta = 180 - (Math.acos(c))*180/PI
+    theta = 180 - Math.acos(c)*180/PI
     repeat (3) {
         forward size
         right theta
@@ -146,7 +146,7 @@ setpos [45,10]
 pd
 
 repeat (repeats) { 
-   tri size
+   tri(size)
    size = size - 1
 }
 
@@ -157,7 +157,7 @@ pd
 
 left 20
 repeat (repeats) { 
-   tri size
+   tri(size)
    size = size - 1
 }
 

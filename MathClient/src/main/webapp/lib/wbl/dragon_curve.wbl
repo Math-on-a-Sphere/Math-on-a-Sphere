@@ -1,5 +1,5 @@
 MAX = 10
-x = function [r] {
+x = function (r) {
   if (r < MAX) {
     x(r+1)
     right 89
@@ -9,7 +9,7 @@ x = function [r] {
   }
 }
 
-y = function [r] {
+y = function (r) {
   if (r < MAX) {
     left 89
     forward 2
@@ -18,8 +18,8 @@ y = function [r] {
     y(r+1)
   }
 }
-setspeed (3*PI)
+setspeed 3*PI
 set color green
 set pensize 0.5
 forward 2
-x 0
+x(0)

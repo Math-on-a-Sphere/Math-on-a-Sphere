@@ -1,21 +1,21 @@
-rightTri = function [size] {
+rightTri = function (size) {
     r = size*PI/180
-    a = (Math.cos(r))
-    b = (Math.sin(r))
+    a = Math.cos(r)
+    b = Math.sin(r)
     c = (a - (a * a)) / (b * b)
-    theta = 180 - (Math.acos(c))*180/PI
+    theta = 180 - Math.acos(c)*180/PI
     repeat (3) {
         forward size
         right theta
     }
 } 
 
-leftTri = function [size] {
+leftTri = function (size) {
     r = size*PI/180
-    a = (Math.cos(r))
-    b = (Math.sin(r))
+    a = Math.cos(r)
+    b = Math.sin(r)
     c = (a - (a * a)) / (b * b)
-    theta = 180 - (Math.acos(c))*180/PI
+    theta = 180 - Math.acos(c)*180/PI
     repeat (3) {
         forward size
         left theta
@@ -26,9 +26,9 @@ leftTri = function [size] {
 x = 10
 
 repeat 3 {
-    rightTri x
-    forward (x/2) 
-    leftTri x
-    forward (x/2)
-    x = (2*x)
+    rightTri(x)
+    forward x/2 
+    leftTri(x)
+    forward x/2
+    x = 2*x
 }

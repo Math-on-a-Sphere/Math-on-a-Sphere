@@ -21,7 +21,7 @@ frac                        (?:\.[0-9]+)
 "E"                                       return 'E'
 "true"                                    return 'TRUE'
 "false"                                   return 'FALSE'
-("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp"|"setspeed"|"print")\b     return "BUILTIN_ARG"
+("forward"|"fd"|"back"|"bk"|"left"|"lt"|"right"|"rt"|"setheading"|"sh"|"towards"|"distanceto"|"setposition"|"setpos"|"sp"|"setrotationaxis"|"sra"|"setspeed"|"print")\b     return "BUILTIN_ARG"
 ("clearall"|"ca"|"cleardrawing"|"ca"|"penup"|"pu"|"pendown"|"pd"|"getheading"|"gh"|"getposition"|"gp"|"getspeed"|"help"|"demo"|"testcard")\b    return "BUILTIN_NULL"
 ("set ")\b                           return 'SET'
 ("if"|"IF")                          return 'IF'

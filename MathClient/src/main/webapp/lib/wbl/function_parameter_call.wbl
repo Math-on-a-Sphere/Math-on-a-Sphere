@@ -1,7 +1,7 @@
 // This demonstrates how to write and call a function
 // that has a single parameter.
 
-tri = function [newcolor] {
+tri = function (newcolor) {
     set color newcolor
     repeat 3 {
         forward 90

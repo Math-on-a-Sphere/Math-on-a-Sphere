@@ -1,4 +1,4 @@
-circle2 = function [t,p,r] {
+circle2 = function (t,p,r) {
   penup setpos [t,p] fd r
   pd right 90
   setrotationaxis [t,p]
@@ -7,8 +7,8 @@ circle2 = function [t,p,r] {
 
 
 repeat 14 {
-  rand = (Math.random())
-  circle2 [rand*360,rand*360,rand*60]
-  set color (rand*139)
-  set pensize (rand*50)
+  rand = Math.random()
+  circle2(rand*360, rand*360, rand*60)
+  set color rand*139
+  set pensize rand*50
 }

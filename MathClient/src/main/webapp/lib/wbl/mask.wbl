@@ -36,7 +36,7 @@ repeat 18 {
 set pensize 1
 set color white
 
-circle = function [t,p,r] {
+circle = function (t,p,r) {
   penup setpos [t,p] fd r
   pd right 90
   setrotationaxis [t,p]
@@ -52,7 +52,7 @@ repeats = 2*size
 
 // left eye
 repeat (repeats) { 
-   circle [350, 30, size]
+   circle (350, 30, size)
    size = size - 0.5
 }
 
@@ -62,7 +62,7 @@ if (eyesize == 1) {size = 10}
 
 // right eye
 repeat (repeats) { 
-   circle [350, 330, size]
+   circle (350, 330, size)
    size = size - 0.5
 }
 

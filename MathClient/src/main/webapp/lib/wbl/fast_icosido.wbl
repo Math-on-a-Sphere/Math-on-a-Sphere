@@ -4,7 +4,7 @@ x = 23.282
 a6 = 55.697
 a5 = 68.604
 
-pac = function [sides] {
+pac = function (sides) {
     repeat sides {
         repeat 6 {forward x right a6}
         forward x left a5

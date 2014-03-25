@@ -38,7 +38,7 @@ setpos [0,0]
 setspeed 10
 set pensize 10
 
-circle2 = function [t,p,r] {
+circle2 = function (t,p,r) {
   penup setpos [t,p] fd r
   pd right 90
   setrotationaxis [t,p]
@@ -52,21 +52,21 @@ if (eyes == 2) { radius = 7}
 if (eyes == 1) { radius = 4}
 
 //set color red
-circle2 [30,30,radius]
+circle2 (30, 30, radius)
 
 //set color blue
-circle2 [30,330,radius]
+circle2 (30, 330, radius)
 
 
 
-tri = function [x,y,size] {
+tri = function (x,y,size) {
     r = size*PI/180
-    a = (Math.cos(r))
-    b = (Math.sin(r))
+    a = Math.cos(r)
+    b = Math.sin(r)
     c = (a - (a * a)) / (b * b)
-    theta = 180 - (Math.acos(c))*180/PI
+    theta = 180 - Math.acos(c)*180/PI
     pu
-    setpos[x,y]
+    setpos [x,y]
     setheading 30
     pd
     set pensize 1
@@ -78,7 +78,7 @@ tri = function [x,y,size] {
 } 
 
 
-tri [0,350,20]
+tri (0,350,20)
 
 pu
 left 170
