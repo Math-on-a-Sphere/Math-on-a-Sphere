@@ -202,7 +202,8 @@ org.weblogo.executors.getHeading = function(config, command) {
     var output;
     fluid.each(config.turtles, function(turtle) {
         var poleAxis = geom.axis_from_heading(turtle.position, pole);
-        var sin = geom.length_3(geom.cross_3(turtle.heading, poleAxis));
+        var cross = geom.cross_3(turtle.heading, poleAxis);
+        var sin = geom.dot_3(cross, turtle.position);
         var angle = Math.atan2(sin, geom.dot_3(turtle.heading, poleAxis));
         var heading = geom.rad2deg(angle).toFixed(6);
         output = {

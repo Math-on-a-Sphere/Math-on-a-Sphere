@@ -51,7 +51,7 @@ org.weblogo.blockExecutor = function(commands) {
             while (!execution && index < commands.length) {
                 execution = quickExec(commands[index]);
                 if (execution && execution.type === "info") {
-                    config.events.onInfo.fire(execution);
+                    // config.events.onInfo.fire(execution);
                     messages.push(execution);
                     execution = null;
                 }
