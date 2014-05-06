@@ -59,7 +59,7 @@ org.weblogo.executors.line = function (config, command, tick) {
             var versor = geom.versor_from_parts(turtle.heading, newDistance);
             var newpos = geom.quat_conj(versor, line.startPos);
             if (turtle.drawing && config.interactive) {
-                var sign = line.distance > 0? 1 : -1;
+                var sign = geom.sign(line.distance);
                 org.weblogo.raster.stroke_line({
                   config: config, 
                   start: sign === 1? turtle.position : newpos, 
@@ -206,7 +206,8 @@ org.weblogo.executors.getHeading = function (config, command) {
     var output;
     fluid.each(config.turtles, function (turtle) {
         var poleAxis = geom.axis_from_heading(turtle.position, pole);
-        var sin = geom.length_3(geom.cross_3(turtle.heading, poleAxis));
+        var cross = geom.cross_3(turtle.heading, poleAxis);
+        var sin = geom.dot_3(cross, turtle.position);
         var angle = Math.atan2(sin, geom.dot_3(turtle.heading, poleAxis));
         var heading = geom.rad2deg(angle);
         output = {
